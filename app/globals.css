@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* OutreachPilot Design System — Dark Theme Only */
+    --bg-primary: #0B0713;
+    --bg-secondary: #110D1D;
+    --bg-card: #1A1025;
+    --bg-input: #151020;
+    --bg-hover: #1F1830;
+
+    --purple-500: #8B5CF6;
+    --purple-600: #7C3AED;
+    --gold-400: #EAB308;
+    --gold-300: #FDE047;
+    --teal-400: #2DD4BF;
+    --green-500: #22C55E;
+    --red-500: #EF4444;
+    --orange-500: #F97316;
+    --blue-500: #3B82F6;
+    --cyan-400: #22D3EE;
+
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-default: rgba(255, 255, 255, 0.10);
+
+    /* shadcn/ui CSS variables — mapped to dark theme */
+    --background: 263 50% 5%;
+    --foreground: 210 40% 98%;
+    --card: 270 35% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 270 35% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 258 90% 66%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 264 30% 12%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 264 30% 12%;
+    --muted-foreground: 215 16% 57%;
+    --accent: 264 30% 15%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 0 0% 100% / 0.10;
+    --input: 264 30% 10%;
+    --ring: 258 90% 66%;
+    --chart-1: 258 90% 66%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.75rem;
+  }
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+}

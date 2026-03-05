@@ -1,0 +1,359 @@
+// Copyright (c) Said Borna. All rights reserved.
+// OutreachPilot — Prisma Schema (matches CLAUDE.md database spec)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── NextAuth Models ────────────────────────────────────
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique
+  passwordHash  String?   @map("password_hash")
+  fullName      String?   @map("full_name")
+  avatarUrl     String?   @map("avatar_url")
+  emailVerified DateTime? @map("email_verified") @db.Timestamptz
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  sessions          Session[]
+  accounts          Account[]
+  workspaceMembers  WorkspaceMember[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  sessionToken String   @unique @map("session_token")
+  expires      DateTime @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @map("user_id") @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  accessToken       String? @map("access_token") @db.Text
+  refreshToken      String? @map("refresh_token") @db.Text
+  expiresAt         Int?    @map("expires_at")
+  tokenType         String? @map("token_type")
+  scope             String?
+  idToken           String? @map("id_token") @db.Text
+  sessionState      String? @map("session_state")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime @db.Timestamptz
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── Workspace Models ───────────────────────────────────
+
+model Workspace {
+  id                   String   @id @default(uuid()) @db.Uuid
+  name                 String
+  plan                 String   @default("free")
+  stripeCustomerId     String?  @map("stripe_customer_id")
+  stripeSubscriptionId String?  @map("stripe_subscription_id")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  members            WorkspaceMember[]
+  linkedinAccounts   LinkedinAccount[]
+  campaigns          Campaign[]
+  leads              Lead[]
+  messages           Message[]
+  contentPosts       ContentPost[]
+  inboundAutomations InboundAutomation[]
+  icpConfigs         IcpConfig[]
+  activityLogs       ActivityLog[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  workspaceId String @map("workspace_id") @db.Uuid
+  userId      String @map("user_id") @db.Uuid
+  role        String @default("member")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+// ─── LinkedIn Accounts ──────────────────────────────────
+
+model LinkedinAccount {
+  id                   String    @id @default(uuid()) @db.Uuid
+  workspaceId          String    @map("workspace_id") @db.Uuid
+  accountName          String    @map("account_name")
+  linkedinUrl          String?   @map("linkedin_url")
+  status               String    @default("disconnected")
+  accountType          String    @default("basic") @map("account_type")
+  dailyConnectionLimit Int       @default(20) @map("daily_connection_limit")
+  dailyMessageLimit    Int       @default(50) @map("daily_message_limit")
+  dailyConnectionsUsed Int       @default(0) @map("daily_connections_used")
+  dailyMessagesUsed    Int       @default(0) @map("daily_messages_used")
+  sessionCookie        String?   @map("session_cookie")
+  proxyUrl             String?   @map("proxy_url")
+  lastSyncAt           DateTime? @map("last_sync_at") @db.Timestamptz
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  workspace                  Workspace                   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaignAccounts           CampaignAccount[]
+  campaignLeads              CampaignLead[]
+  messages                   Message[]
+  contentPosts               ContentPost[]
+  inboundAutomationAccounts  InboundAutomationAccount[]
+  activityLogs               ActivityLog[]
+
+  @@map("linkedin_accounts")
+}
+
+// ─── Campaigns ──────────────────────────────────────────
+
+model Campaign {
+  id                  String   @id @default(uuid()) @db.Uuid
+  workspaceId         String   @map("workspace_id") @db.Uuid
+  name                String
+  status              String   @default("draft")
+  totalLeads          Int      @default(0) @map("total_leads")
+  connectionsSent     Int      @default(0) @map("connections_sent")
+  connectionsAccepted Int      @default(0) @map("connections_accepted")
+  messagesSent        Int      @default(0) @map("messages_sent")
+  repliesReceived     Int      @default(0) @map("replies_received")
+  opportunitiesValue  Decimal  @default(0) @map("opportunities_value") @db.Decimal(10, 2)
+  scheduleTimezone    String   @default("Europe/Stockholm") @map("schedule_timezone")
+  scheduleStartHour   Int      @default(9) @map("schedule_start_hour")
+  scheduleEndHour     Int      @default(17) @map("schedule_end_hour")
+  scheduleDays        String[] @default(["mon", "tue", "wed", "thu", "fri"]) @map("schedule_days")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  workspace        Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaignAccounts CampaignAccount[]
+  campaignLeads    CampaignLead[]
+  sequences        Sequence[]
+  messages         Message[]
+  activityLogs     ActivityLog[]
+
+  @@map("campaigns")
+}
+
+model CampaignAccount {
+  campaignId       String @map("campaign_id") @db.Uuid
+  linkedinAccountId String @map("linkedin_account_id") @db.Uuid
+
+  campaign        Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  linkedinAccount LinkedinAccount @relation(fields: [linkedinAccountId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, linkedinAccountId])
+  @@map("campaign_accounts")
+}
+
+// ─── Leads ──────────────────────────────────────────────
+
+model Lead {
+  id               String   @id @default(uuid()) @db.Uuid
+  workspaceId      String   @map("workspace_id") @db.Uuid
+  firstName        String?  @map("first_name")
+  lastName         String?  @map("last_name")
+  fullName         String?  @map("full_name")
+  linkedinUrl      String?  @map("linkedin_url")
+  email            String?
+  phone            String?
+  title            String?
+  company          String?
+  companySize      String?  @map("company_size")
+  industry         String?
+  location         String?
+  headline         String?
+  avatarUrl        String?  @map("avatar_url")
+  icpScore         Int?     @map("icp_score")
+  tags             String[]
+  source           String?
+  enrichmentStatus String   @default("pending") @map("enrichment_status")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaignLeads CampaignLead[]
+  messages      Message[]
+  activityLogs  ActivityLog[]
+
+  @@index([workspaceId])
+  @@index([workspaceId, icpScore(sort: Desc)])
+  @@map("leads")
+}
+
+model CampaignLead {
+  id                String    @id @default(uuid()) @db.Uuid
+  campaignId        String    @map("campaign_id") @db.Uuid
+  leadId            String    @map("lead_id") @db.Uuid
+  linkedinAccountId String?   @map("linkedin_account_id") @db.Uuid
+  status            String    @default("pending")
+  currentSequenceStep Int     @default(0) @map("current_sequence_step")
+  nextActionAt      DateTime? @map("next_action_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  campaign        Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead            Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  linkedinAccount LinkedinAccount? @relation(fields: [linkedinAccountId], references: [id])
+
+  @@index([campaignId, status])
+  @@index([nextActionAt])
+  @@map("campaign_leads")
+}
+
+// ─── Sequences ──────────────────────────────────────────
+
+model Sequence {
+  id             String   @id @default(uuid()) @db.Uuid
+  campaignId     String   @map("campaign_id") @db.Uuid
+  stepOrder      Int      @map("step_order")
+  actionType     String   @map("action_type")
+  messageTemplate String? @map("message_template")
+  waitDays       Int      @default(1) @map("wait_days")
+  conditionType  String?  @map("condition_type")
+  conditionValue String?  @map("condition_value")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("sequences")
+}
+
+// ─── Messages ───────────────────────────────────────────
+
+model Message {
+  id                String   @id @default(uuid()) @db.Uuid
+  workspaceId       String   @map("workspace_id") @db.Uuid
+  linkedinAccountId String?  @map("linkedin_account_id") @db.Uuid
+  leadId            String?  @map("lead_id") @db.Uuid
+  campaignId        String?  @map("campaign_id") @db.Uuid
+  direction         String?
+  content           String
+  messageType       String   @default("text") @map("message_type")
+  read              Boolean  @default(false)
+  starred           Boolean  @default(false)
+  sentAt            DateTime @default(now()) @map("sent_at") @db.Timestamptz
+
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  linkedinAccount LinkedinAccount? @relation(fields: [linkedinAccountId], references: [id])
+  lead            Lead?            @relation(fields: [leadId], references: [id])
+  campaign        Campaign?        @relation(fields: [campaignId], references: [id])
+
+  @@index([linkedinAccountId, leadId, sentAt(sort: Desc)])
+  @@map("messages")
+}
+
+// ─── Content ────────────────────────────────────────────
+
+model ContentPost {
+  id                String    @id @default(uuid()) @db.Uuid
+  workspaceId       String    @map("workspace_id") @db.Uuid
+  category          String?
+  topic             String?
+  targetAudience    String?   @map("target_audience")
+  language          String    @default("en")
+  tone              String    @default("professional")
+  generatedContent  String?   @map("generated_content")
+  status            String    @default("draft")
+  scheduledAt       DateTime? @map("scheduled_at") @db.Timestamptz
+  linkedinAccountId String?   @map("linkedin_account_id") @db.Uuid
+  postedAt          DateTime? @map("posted_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  linkedinAccount LinkedinAccount? @relation(fields: [linkedinAccountId], references: [id])
+
+  @@map("content_posts")
+}
+
+// ─── Inbound Automations ────────────────────────────────
+
+model InboundAutomation {
+  id               String   @id @default(uuid()) @db.Uuid
+  workspaceId      String   @map("workspace_id") @db.Uuid
+  name             String
+  postUrl          String?  @map("post_url")
+  triggerKeywords  String[] @map("trigger_keywords")
+  autoReplyComment String?  @map("auto_reply_comment")
+  autoDmMessage    String?  @map("auto_dm_message")
+  status           String   @default("paused")
+  triggersCount    Int      @default(0) @map("triggers_count")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  workspace Workspace                  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  accounts  InboundAutomationAccount[]
+
+  @@map("inbound_automations")
+}
+
+model InboundAutomationAccount {
+  automationId      String @map("automation_id") @db.Uuid
+  linkedinAccountId String @map("linkedin_account_id") @db.Uuid
+
+  automation      InboundAutomation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  linkedinAccount LinkedinAccount   @relation(fields: [linkedinAccountId], references: [id], onDelete: Cascade)
+
+  @@id([automationId, linkedinAccountId])
+  @@map("inbound_automation_accounts")
+}
+
+// ─── ICP Config ─────────────────────────────────────────
+
+model IcpConfig {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  criteria    Json
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("icp_configs")
+}
+
+// ─── Activity Log ───────────────────────────────────────
+
+model ActivityLog {
+  id                String   @id @default(uuid()) @db.Uuid
+  workspaceId       String   @map("workspace_id") @db.Uuid
+  linkedinAccountId String?  @map("linkedin_account_id") @db.Uuid
+  campaignId        String?  @map("campaign_id") @db.Uuid
+  leadId            String?  @map("lead_id") @db.Uuid
+  action            String
+  metadata          Json?
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  linkedinAccount LinkedinAccount? @relation(fields: [linkedinAccountId], references: [id])
+  campaign        Campaign?        @relation(fields: [campaignId], references: [id])
+  lead            Lead?            @relation(fields: [leadId], references: [id])
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@map("activity_log")
+}
