@@ -29,11 +29,19 @@
 - No src/ directory: Per CLAUDE.md file structure spec, app/ lives at project root
 
 ### Next Steps
-- **User action required:** Create GitHub repo "pilot", connect Cloudflare Pages, set up Railway
-- Run Prisma migrations once Railway PostgreSQL is available
-- Verify Hello World deploys to Cloudflare Pages
-- Get live URL confirmed before starting Phase 1
+- **User must confirm: live URL works** → then Phase 1 begins
+- Set up Cloudflare Pages GitHub integration (auto-deploy on push) via dashboard
+- Delete duplicate Railway Postgres service "Postgres-bK3b" from Railway dashboard
+- Phase 1: Foundation — Layout + Sidebar + Auth pages
 
 ### Git
 - Branch: main (+ dev)
 - Commit: e40bb7b — chore: initialize project with Next.js 14, Prisma 6, NextAuth, Tailwind + shadcn/ui
+- Commit: 8b00db4 — docs: add SESSION_LOG.md for Phase 0
+- Commit: e8dbbf3 — chore: add Railway infra + Prisma migration + CF Pages deploy
+
+### Infrastructure
+- GitHub: https://github.com/S-Borna/pilot (main + dev branches)
+- Railway: OutreachPilot project (PostgreSQL + Redis provisioned)
+- Cloudflare Pages: https://outreach-pilot.pages.dev (Hello World live)
+- Prisma migration "init" applied — 18 tables created on Railway PostgreSQL
