@@ -45,3 +45,41 @@
 - Railway: OutreachPilot project (PostgreSQL + Redis provisioned)
 - Cloudflare Pages: https://outreach-pilot.pages.dev (Hello World live)
 - Prisma migration "init" applied — 18 tables created on Railway PostgreSQL
+
+---
+
+## Session 2025-03-05 — Phase 1 (Foundation)
+
+### Completed
+- Auth layout with centered card + OutreachPilot logo branding (app/(auth)/layout.tsx)
+- Login page — client component, email/password form, NextAuth signIn(), error handling (app/(auth)/login/page.tsx)
+- Signup page — client component, full name/email/password form, POST to /api/auth/signup (app/(auth)/signup/page.tsx)
+- Signup API route — Zod validation, duplicate email check (409), bcrypt password hash, creates user + workspace + member in $transaction (app/api/auth/signup/route.ts)
+- SessionProvider wrapper for client components (components/providers/session-provider.tsx)
+- Sidebar navigation — fixed left (220px), logo, "+ Create Campaign" CTA, ScrollArea with grouped nav items matching Velaris hierarchy, user avatar section with "1 Sender" badge, active state via usePathname() (components/layout/sidebar.tsx)
+- Top bar — sticky header with breadcrumb navigation from pathname, SEGMENT_LABELS for display names (components/layout/top-bar.tsx)
+- Navigation constants — NavItem/NavGroup types, TOP_NAV_ITEMS + NAV_GROUPS with Lucide icons (lib/constants/navigation.ts)
+- App layout shell — server-side getServerSession auth guard, redirects to /login, SessionProvider + Sidebar + TopBar + main content area (app/(app)/layout.tsx)
+- Reusable PagePlaceholder component for stub pages (components/common/page-placeholder.tsx)
+- 14 page stubs: dashboard, unibox, linkedin/accounts, campaigns (list, [id], [id]/create, new), leads/extractor, leads/database, content/assistant, automations/inbound, integrations, academy, settings
+- Root page redirects to /dashboard
+- shadcn/ui components installed: avatar, badge, button, input, label, scroll-area, separator, sheet, tooltip
+- TypeScript strict check passes (zero errors)
+- Next.js build passes cleanly (19 routes)
+
+### Issues
+- Zod `.errors` → `.issues` — ZodError uses `issues` property, not `errors`. Fixed.
+
+### Design Decisions
+- Route groups: `(auth)` for login/signup (no sidebar), `(app)` for authenticated pages (with sidebar)
+- Server-side auth guard in (app)/layout.tsx — redirect to /login if no session
+- JWT session strategy continues from Phase 0 (required for Credentials provider)
+- Sidebar width 220px matching CLAUDE.md spec
+
+### Git
+- Commit: 037bab4 — feat: Phase 1 foundation — auth pages, sidebar layout, 14 page stubs
+
+### Next Steps
+- User reviews locally (npm run dev) and takes screenshots
+- Checkpoint D1: await design direction for sidebar animations/hover states
+- Phase 2: Dashboard + LinkedIn Accounts
