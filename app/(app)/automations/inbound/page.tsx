@@ -466,7 +466,7 @@ export default function InboundAutomationsPage() {
                                         className={`flex w-full items-center gap-4 rounded-lg border p-4 text-left transition ${isSelected
                                             ? "border-purple-500/50 bg-purple-500/10"
                                             : "border-white/10 bg-[var(--bg-input)] hover:bg-white/5"
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/20 text-sm font-medium text-purple-300">
                                             {sender.avatar}
@@ -762,7 +762,7 @@ export default function InboundAutomationsPage() {
                                         : isDone
                                             ? "border-green-500/30 bg-green-500/10 text-green-300"
                                             : "border-white/10 bg-[var(--bg-input)] text-[var(--text-muted)]"
-                                    }`}
+                                        }`}
                                 >
                                     {isDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
                                     {s.label}

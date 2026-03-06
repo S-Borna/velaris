@@ -190,7 +190,7 @@ export default function AcademyPage() {
                                         : isCurrent
                                             ? "bg-purple-500/15 text-purple-400"
                                             : "bg-white/5 text-[var(--text-muted)]"
-                                    }`}>
+                                        }`}>
                                         {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <span className="text-xs font-medium">{i + 1}</span>}
                                     </div>
                                     <div className="flex-1">
@@ -326,7 +326,7 @@ export default function AcademyPage() {
                             className={`rounded-lg border p-4 text-center transition ${achievement.earned
                                 ? "border-amber-500/20 bg-amber-500/5"
                                 : "border-white/6 bg-[var(--bg-card)] opacity-50"
-                            }`}
+                                }`}
                         >
                             <div className="text-2xl">{achievement.icon}</div>
                             <p className="mt-2 text-xs font-medium text-[var(--text-primary)]">{achievement.title}</p>
