@@ -122,3 +122,29 @@
 
 - Keep Cloudflare Pages Build command set to `npm run build:cf`
 - Continue to Phase 2 implementation only after deploy pipeline remains stable on next push
+
+---
+
+## Session 2026-03-06 — Login Redesign Checkpoint
+
+### Completed
+
+- Rebuilt auth background to deep purple-black atmospheric gradient with radial glow + subtle grain overlay
+- Reworked brand header with premium mark and serif wordmark styling in auth layout
+- Rebuilt login card visual style to match spec: translucent dark card, subtle border, blur, depth shadow, and under-glow
+- Restyled form controls to premium dark UI tokens (`bg-[#151020]`, subtle borders, purple focus states, larger `h-12` controls)
+- Replaced generic CTA with elevated gradient button interaction (lift + stronger hover shadow)
+- Updated text hierarchy and link styling for cleaner premium typography
+- Verified compile + build after redesign (`npx tsc --noEmit`, `npm run build`)
+
+### Issues
+
+- Prior login design looked generic/template-like and did not match CLAUDE.md dark premium direction
+
+### Design Decisions
+
+- Keep visual design intentionally minimal but premium (depth, layering, atmospheric lighting) without adding extra components or pages
+
+### Next Steps
+
+- Continue Phase 2 implementation from stabilized deploy + upgraded auth visual baseline

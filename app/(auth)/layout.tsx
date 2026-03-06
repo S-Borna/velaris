@@ -1,6 +1,13 @@
 // Copyright (c) Said Borna. All rights reserved.
 
+import { Playfair_Display } from "next/font/google";
+
 const APP_NAME = "OutreachPilot";
+
+const playfairDisplay = Playfair_Display({
+    subsets: ["latin"],
+    weight: ["600", "700"],
+});
 
 export default function AuthLayout({
     children,
@@ -8,18 +15,30 @@ export default function AuthLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)]">
-            <div className="w-full max-w-md px-4">
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-[#0B0713] via-[#110D1D] to-[#0B0713] px-4">
+            <div
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.08),transparent_70%)]"
+                aria-hidden="true"
+            />
+            <div
+                className="pointer-events-none absolute inset-0 opacity-[0.06]"
+                style={{
+                    backgroundImage:
+                        "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.35) 1px, transparent 0)",
+                    backgroundSize: "3px 3px",
+                }}
+                aria-hidden="true"
+            />
+
+            <div className="relative z-10 w-full max-w-md">
                 <div className="mb-8 flex flex-col items-center gap-3">
                     <div className="flex items-center gap-3">
-                        <div
-                            className="h-9 w-9 rounded-lg"
-                            style={{
-                                background: "linear-gradient(135deg, #8B5CF6, #A855F7)",
-                            }}
-                            aria-hidden="true"
-                        />
-                        <span className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                        <div className="relative h-9 w-9 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg shadow-purple-900/40">
+                            <div className="absolute inset-1 rounded-full border border-white/20" />
+                        </div>
+                        <span
+                            className={`${playfairDisplay.className} text-3xl tracking-tight text-white`}
+                        >
                             {APP_NAME}
                         </span>
                     </div>
