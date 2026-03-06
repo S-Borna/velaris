@@ -410,10 +410,74 @@
 
 ### Git
 
-- Commit hash will be added after commit
+- `525cd97` — feat: Phase 6 content assistant
 
 ### Next Steps
 
 - Phase 7: Inbound Automations
 - Phase 8: Integrations + Academy
 - Phase 9: Settings + Billing
+
+---
+
+## Session 2026-03-06 — Phases 7-9 (Inbound Automations, Integrations, Academy, Settings)
+
+### Completed
+
+- **Seed Script** (`prisma/seed.ts`):
+  - Demo user: said@saidborna.com / REDACTED-PASSWORD
+  - Auto-creates workspace + owner membership
+  - Committed as `d0837e1`
+
+- **Phase 7 — Inbound Automations** (`app/(app)/automations/inbound/page.tsx` — 8.39kB):
+  - Automation list table: name (clickable), status (active/paused), completed/processing/failed counts, created date, actions (play/pause, duplicate, dashboard, delete)
+  - 5-step creation wizard: Details → Action Words → Message → Senders → Review
+  - Step 1 (Details): Campaign name + LinkedIn post URL + 7-step instruction guide
+  - Step 2 (Action Words): Keyword tag input with Enter/Add, removable badges, tip panel
+  - Step 3 (Message): DM template with {firstName} personalization + comment replies list (add/remove)
+  - Step 4 (Senders): Select LinkedIn accounts with checkmarks
+  - Step 5 (Review): Full summary of all fields before creation
+  - Per-automation dashboard: 4 KPI cards (Completed/Processing/Failed/Total), post info with keywords + senders, detected comments table with status badges
+  - Empty state with CTA
+  - 3 mock automations with realistic data
+
+- **Phase 8 — Integrations** (`app/(app)/integrations/page.tsx` — 5.55kB):
+  - Three tabs: Apps / API Keys / Webhooks
+  - Apps: 8 integrations (HubSpot, Salesforce, Pipedrive, Slack, Zapier, Monday.com, Copper CRM, Browserbase) with Connect/Disconnect, status indicators (healthy/syncing), category badges, last sync
+  - API Keys: 3 mock keys with show/hide toggle, copy button, refresh/revoke actions, creation date + last used
+  - Webhooks: 3 mock endpoints with event badges, success rate indicators, status (active/failing), test webhook panel
+  - Health monitoring with color-coded success rates
+
+- **Phase 8 — Academy** (`app/(app)/academy/page.tsx` — 5.34kB):
+  - 6 courses: "Get Your First Reply", "Fix Low Reply Rates", "Scale Without Getting Banned", "ICP Scoring Mastery", "Content That Converts", "Inbound Automation Playbook"
+  - Course cards with progress bars, level badges (beginner/intermediate/advanced), lesson count, duration
+  - Course detail view with lesson list (completed/current/locked states), progress bar, start/replay buttons
+  - Overall progress tracking: completed courses, total lessons, percentage
+  - 6 achievement badges: First Campaign, Reply Master, Content Creator, Scale Pro, Automation Guru, ICP Expert
+  - Earned/unearned visual states
+
+- **Phase 9 — Settings** (`app/(app)/settings/page.tsx` — 6.13kB):
+  - Sidebar tab layout: Profile / Workspace / Plan & Billing / Notifications / Security
+  - Profile: avatar upload, full name, email, job title, timezone
+  - Workspace: summary cards (workspaces/accounts/members), workspace card with ACTIVE badge + sender count, white-label branding section (Agency plan)
+  - Billing: current plan display (Solo $49/mo), 4 plan cards (Free/Solo/Team/Agency) with features and upgrade CTA, payment method (Visa 4242)
+  - Notifications: toggle grid (email + push) for 6 event types with custom switch components
+  - Security: password change form, 2FA status, active sessions list with revoke, danger zone (delete account)
+
+### Validation
+
+- `npx tsc --noEmit` — zero errors
+- `npm run build` — all 20 routes compiled, zero placeholders remaining
+- Route sizes: inbound 8.39kB, integrations 5.55kB, academy 5.34kB, settings 6.13kB
+
+### Git
+
+- All phases committed in single commit (hash below)
+
+### Status
+
+- **ALL placeholder pages are now fully implemented**
+- Zero PagePlaceholder imports remain
+- Every route in the sidebar is functional with mock data
+- Full app is browsable end-to-end after login
+
