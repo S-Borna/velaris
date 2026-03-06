@@ -3,11 +3,11 @@ import { GraduationCap } from "lucide-react";
 import { PagePlaceholder } from "@/components/common/page-placeholder";
 
 export default function AcademyPage() {
-  return (
-    <PagePlaceholder
-      title="Academy"
-      description="Learn to maximize LinkedIn outreach — coming in Phase 8."
-      icon={GraduationCap}
-    />
-  );
+    return (
+        <PagePlaceholder
+            title="Academy"
+            description="Learn to maximize LinkedIn outreach — coming in Phase 8."
+            icon={GraduationCap}
+        />
+    );
 }
