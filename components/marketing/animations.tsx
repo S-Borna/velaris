@@ -90,7 +90,7 @@ export function AnimatedSection({
         <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: threshold }}
+            viewport={{ once: false, amount: threshold }}
             variants={variants}
             className={className}
         >
@@ -122,7 +122,7 @@ export function AnimatedGroup({
         <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: threshold }}
+            viewport={{ once: false, amount: threshold }}
             variants={stagger}
             className={className}
         >

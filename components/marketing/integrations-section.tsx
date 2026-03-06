@@ -71,7 +71,7 @@ export function IntegrationsSection() {
                 <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     whileInView={{ scale: 1, opacity: 1 }}
-                    viewport={{ once: true, amount: 0.5 }}
+                    viewport={{ once: false, amount: 0.5 }}
                     transition={{ duration: 0.6 }}
                     className="relative z-10 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 shadow-2xl shadow-purple-500/30"
                 >
