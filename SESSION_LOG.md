@@ -218,4 +218,36 @@
 	- `/dashboard`
 	- `/linkedin/accounts`
 - If blank page recurs, inspect runtime errors in terminal and browser console first, then fix root cause before any phase advancement
+
+---
+
+## Session 2026-03-06 — Migrate Frontend from Cloudflare Pages to Vercel
+
+### Completed
+
+- Removed all Cloudflare-specific infrastructure:
+  - Deleted `wrangler.toml`, `open-next.config.ts`, `scripts/prepare-pages-output.mjs`
+  - Removed `.open-next/` and `.wrangler/` build artifact directories
+  - Removed `@opennextjs/cloudflare` dependency from package.json
+  - Removed `build:cf` script from package.json
+  - Updated `.gitignore`: replaced `/.open-next/` and `/.wrangler/` with `/.vercel/`
+- Verified clean production build (all 19 routes, zero errors)
+- Verified dev server responds correctly (`/login` 200, `/dashboard` and `/linkedin/accounts` 307 auth redirect)
+
+### Deployment Target
+
+- **Vercel** (zero-config for Next.js): connect GitHub repo, auto-deploy on push
+- Railway remains for PostgreSQL + Redis backend services
+- Environment variables to set in Vercel dashboard:
+  - `DATABASE_URL` (Railway PostgreSQL)
+  - `REDIS_URL` (Railway Redis)
+  - `NEXTAUTH_SECRET`
+  - `NEXTAUTH_URL` (Vercel production URL)
+  - `ANTHROPIC_API_KEY`
+  - `NEXT_PUBLIC_APP_URL` (Vercel production URL)
+
+### Next Steps
+
+- User connects repo to Vercel dashboard and triggers first deploy
+- Continue Phase 2 visual QA, then Phase 3 per CLAUDE.md build order
 - After local stability is confirmed, run final Phase 2 checkpoint summary for user review

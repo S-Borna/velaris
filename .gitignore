@@ -15,9 +15,8 @@
 # production
 /build
 
-# OpenNext / Cloudflare
-/.open-next/
-/.wrangler/
+# Vercel
+/.vercel/
 
 # misc
 .DS_Store
