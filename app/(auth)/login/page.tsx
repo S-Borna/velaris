@@ -50,19 +50,24 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-8">
-            <div className="mb-6 text-center">
-                <h1 className="text-xl font-semibold text-[var(--text-primary)]">
+        <div className="relative rounded-2xl border border-white/[0.06] bg-[#1A1025]/80 p-10 shadow-2xl shadow-purple-900/20 backdrop-blur-xl">
+            <div
+                className="pointer-events-none absolute -bottom-8 left-1/2 h-16 w-64 -translate-x-1/2 rounded-full bg-purple-500/20 blur-3xl"
+                aria-hidden="true"
+            />
+
+            <div className="relative mb-8 text-center">
+                <h1 className="text-2xl font-bold text-white">
                     {PAGE_TITLE}
                 </h1>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                <p className="mt-2 text-sm text-slate-400">
                     {PAGE_SUBTITLE}
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="email" className="text-[var(--text-secondary)]">
+            <form onSubmit={handleSubmit} className="relative space-y-5">
+                <div className="space-y-2.5">
+                    <Label htmlFor="email" className="text-sm font-medium text-slate-300">
                         Email
                     </Label>
                     <Input
@@ -73,13 +78,13 @@ export default function LoginPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         disabled={isLoading}
-                        className="border-white/10 bg-[var(--bg-input)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-[var(--purple-500)]"
+                        className="h-12 rounded-lg border border-white/[0.08] bg-[#151020] text-white placeholder:text-slate-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
                         aria-label="Email address"
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="password" className="text-[var(--text-secondary)]">
+                <div className="space-y-2.5">
+                    <Label htmlFor="password" className="text-sm font-medium text-slate-300">
                         Password
                     </Label>
                     <Input
@@ -90,13 +95,13 @@ export default function LoginPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={isLoading}
-                        className="border-white/10 bg-[var(--bg-input)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-[var(--purple-500)]"
+                        className="h-12 rounded-lg border border-white/[0.08] bg-[#151020] text-white placeholder:text-slate-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
                         aria-label="Password"
                     />
                 </div>
 
                 {error && (
-                    <p className="text-sm text-[var(--red-500)]" role="alert">
+                    <p className="text-sm text-red-400" role="alert">
                         {error}
                     </p>
                 )}
@@ -104,17 +109,17 @@ export default function LoginPage() {
                 <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-[var(--purple-500)] to-[#A855F7] font-medium text-white hover:from-[var(--purple-600)] hover:to-[var(--purple-500)]"
+                    className="h-12 w-full rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] hover:from-purple-500 hover:to-purple-400 hover:shadow-lg hover:shadow-purple-900/40"
                 >
                     {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
+            <p className="relative mt-7 text-center text-sm text-slate-400">
                 Don&apos;t have an account?{" "}
                 <Link
                     href="/signup"
-                    className="font-medium text-[var(--purple-500)] hover:text-[var(--purple-600)]"
+                    className="font-medium text-purple-400 transition-colors hover:text-purple-300"
                 >
                     Sign up
                 </Link>
