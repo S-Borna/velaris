@@ -284,7 +284,7 @@ function FeatureBlock({
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.5 }}
+                        viewport={{ once: false, amount: 0.5 }}
                         transition={{ duration: 0.5, delay: 0.3 }}
                         className="mt-6 inline-flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3"
                     >
