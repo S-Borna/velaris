@@ -149,7 +149,7 @@ export default function SettingsPage() {
                             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${activeTab === tab.key
                                 ? "bg-purple-500/15 font-medium text-purple-300"
                                 : "text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-secondary)]"
-                            }`}
+                                }`}
                         >
                             <tab.icon className="h-4 w-4" />
                             {tab.label}
@@ -324,7 +324,7 @@ export default function SettingsPage() {
                                             : plan.popular
                                                 ? "border-purple-500/20 bg-[var(--bg-card)]"
                                                 : "border-white/6 bg-[var(--bg-card)]"
-                                        }`}
+                                            }`}
                                     >
                                         {plan.popular && (
                                             <Badge className="mb-3 bg-gradient-to-r from-purple-500 to-purple-600 text-[10px] text-white">
@@ -350,7 +350,7 @@ export default function SettingsPage() {
                                             className={`mt-4 w-full ${plan.current
                                                 ? "border-purple-500/30 text-purple-300"
                                                 : "bg-gradient-to-r from-purple-500 to-purple-600 text-white"
-                                            }`}
+                                                }`}
                                             disabled={plan.current}
                                         >
                                             {plan.current ? "Current Plan" : "Upgrade"}

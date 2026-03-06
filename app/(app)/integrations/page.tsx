@@ -138,7 +138,7 @@ export default function IntegrationsPage() {
                         className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition ${activeTab === tab.key
                             ? "bg-purple-500/15 text-purple-300"
                             : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                        }`}
+                            }`}
                     >
                         <tab.icon className="h-4 w-4" />
                         {tab.label}

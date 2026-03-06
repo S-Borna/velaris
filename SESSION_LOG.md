@@ -156,14 +156,14 @@
 ### Completed
 
 - Replaced dashboard placeholder with Phase 2 mock implementation including:
- 	- top controls (share, time filter, campaign filter)
- 	- 5 KPI cards with color-coded accents
- 	- activity timeline chart section
- 	- account analytics table with sortable-style headers
+  - top controls (share, time filter, campaign filter)
+  - 5 KPI cards with color-coded accents
+  - activity timeline chart section
+  - account analytics table with sortable-style headers
 - Replaced LinkedIn Accounts placeholder with management table including:
- 	- "+ Add LinkedIn Account" CTA
- 	- status badges (Connected / Syncing / Error)
- 	- account type, usage, connections, last sync, actions
+  - "+ Add LinkedIn Account" CTA
+  - status badges (Connected / Syncing / Error)
+  - account type, usage, connections, last sync, actions
 - Verified compile and build after implementation (`npx tsc --noEmit`, `npm run build`)
 
 ### Design Decisions
@@ -183,28 +183,28 @@
 ### Completed in this handoff window
 
 - Dashboard functional pass completed and committed:
- 	- interactive time range filter (1 day / 1 week / 1 month)
- 	- campaign filter
- 	- sortable account analytics
- 	- conversion funnel panel
- 	- real-time activity feed
+  - interactive time range filter (1 day / 1 week / 1 month)
+  - campaign filter
+  - sortable account analytics
+  - conversion funnel panel
+  - real-time activity feed
 - LinkedIn Accounts functional enhancement completed and committed:
- 	- account health score badges
- 	- usage bars per account
- 	- warmup mode toggles
- 	- proxy configured/not set indicators
- 	- summary cards for connected/health/warmup/proxy
+  - account health score badges
+  - usage bars per account
+  - warmup mode toggles
+  - proxy configured/not set indicators
+  - summary cards for connected/health/warmup/proxy
 - Validated with:
- 	- `npx tsc --noEmit`
- 	- `npm run build`
+  - `npx tsc --noEmit`
+  - `npm run build`
 
 ### Current Git State
 
 - `main` is ahead of `origin/main` by 2 commits
 - Latest commits:
- 	- `0756d18` feat: enhance linkedin accounts with health warmup and proxy controls
- 	- `7c085e7` feat: add interactive dashboard filters, sorting, funnel and live feed
- 	- `16875c8` feat: implement Phase 2 dashboard and linkedin accounts pages
+  - `0756d18` feat: enhance linkedin accounts with health warmup and proxy controls
+  - `7c085e7` feat: add interactive dashboard filters, sorting, funnel and live feed
+  - `16875c8` feat: implement Phase 2 dashboard and linkedin accounts pages
 
 ### Remaining / Known Issues
 
@@ -215,8 +215,8 @@
 ### Next Agent Immediate Actions
 
 - Start dev server cleanly and verify routes:
- 	- `/dashboard`
- 	- `/linkedin/accounts`
+  - `/dashboard`
+  - `/linkedin/accounts`
 - If blank page recurs, inspect runtime errors in terminal and browser console first, then fix root cause before any phase advancement
 
 ---
@@ -425,7 +425,7 @@
 ### Completed
 
 - **Seed Script** (`prisma/seed.ts`):
-  - Demo user: said@saidborna.com / REDACTED-PASSWORD
+  - Demo user: <said@saidborna.com> / REDACTED-PASSWORD
   - Auto-creates workspace + owner membership
   - Committed as `d0837e1`
 
@@ -480,4 +480,3 @@
 - Zero PagePlaceholder imports remain
 - Every route in the sidebar is functional with mock data
 - Full app is browsable end-to-end after login
-
