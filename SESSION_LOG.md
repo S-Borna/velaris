@@ -368,8 +368,51 @@
 
 ### Git
 
-- Commit hash will be added after commit
+- `dfaf84a` — feat: Phase 5 unibox — conversation list, message thread, AI suggestions
 
 ### Next Steps
 
 - Phase 6: Content Assistant — AI content generation + preview
+
+---
+
+## Session 2026-03-06 — Phase 6 (Content Assistant)
+
+### Completed
+
+- **Content Assistant page** (`app/(app)/content/assistant/page.tsx` — 8.47kB):
+  - Three tabs: Create Post / Library / Schedule
+  - **Create tab:**
+    - Left panel: Category (10 options), Topic, Target Audience, Language (8 langs), Tone (6 options with emoji grid)
+    - Generate button with loading animation ("Generating 3 variants...")
+    - Right panel: 3 AI-generated post variants with hook score badges
+    - LinkedIn post preview: avatar, name, content (whitespace-preserved), hashtags, engagement bar (Like/Comment/Repost/Send)
+    - Performance Predictor: hook score bar + predicted reach + readability badge
+    - Hashtag suggestions panel with + Add
+    - Copy + Schedule Post actions
+    - Brand Voice Training teaser (Coming Soon)
+    - Carousel Creator teaser (Coming Soon)
+  - **Library tab:**
+    - Post cards with status badges (Draft/Scheduled/Posted), content preview (line-clamp-2)
+    - Posted items show metrics: impressions, reactions, comments
+  - **Schedule tab:**
+    - Split view: Scheduled posts (left) + Recently Posted (right)
+    - Scheduled: avatar, account name, scheduled time, content preview
+    - Posted: status badge, post time, metrics (impressions/reactions/comments)
+  - 3 realistic generated post variants with different hook styles
+  - Mock library with 5 posts across draft/scheduled/posted states
+
+### Validation
+
+- `npx tsc --noEmit` — zero errors
+- `npm run build` — all 19 routes compiled (content/assistant 8.47kB)
+
+### Git
+
+- Commit hash will be added after commit
+
+### Next Steps
+
+- Phase 7: Inbound Automations
+- Phase 8: Integrations + Academy
+- Phase 9: Settings + Billing
