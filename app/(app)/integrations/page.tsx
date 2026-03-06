@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
     Puzzle,
     Plus,
@@ -105,18 +106,21 @@ export default function IntegrationsPage() {
     const [integrations, setIntegrations] = useState(MOCK_INTEGRATIONS);
 
     function toggleConnection(id: string): void {
+        const target = integrations.find((i) => i.id === id);
+        const nextConnected = target ? !target.connected : true;
         setIntegrations((prev) =>
             prev.map((int) =>
                 int.id === id
                     ? {
                         ...int,
-                        connected: !int.connected,
-                        status: !int.connected ? "syncing" as const : undefined,
-                        lastSync: !int.connected ? "Just now" : undefined,
+                        connected: nextConnected,
+                        status: nextConnected ? "syncing" as const : undefined,
+                        lastSync: nextConnected ? "Just now" : undefined,
                     }
                     : int,
             ),
         );
+        toast.success(target ? `${target.name} ${nextConnected ? "connected" : "disconnected"}` : "Integration updated");
     }
 
     return (
@@ -218,6 +222,7 @@ export default function IntegrationsPage() {
                         <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => toast.info("Create API key dialog coming soon")}
                             className="gap-1.5 border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
                         >
                             <Plus className="h-3.5 w-3.5" />
@@ -242,11 +247,12 @@ export default function IntegrationsPage() {
                                             </code>
                                             <button
                                                 onClick={() => setShowKey(showKey === apiKey.id ? null : apiKey.id)}
-                                                className="rounded p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                                aria-label={showKey === apiKey.id ? "Hide API key" : "Show API key"}
+                                                className="rounded p-1 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500"
                                             >
                                                 {showKey === apiKey.id ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                                             </button>
-                                            <button className="rounded p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                                            <button onClick={() => { navigator.clipboard.writeText(apiKey.key); toast.success("API key copied"); }} aria-label="Copy API key" className="rounded p-1 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500">
                                                 <Copy className="h-3 w-3" />
                                             </button>
                                         </div>
@@ -257,10 +263,10 @@ export default function IntegrationsPage() {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <button className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]">
+                                        <button onClick={() => toast.info(`"${apiKey.name}" regenerated`)} className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]">
                                             <RefreshCw className="h-3.5 w-3.5" />
                                         </button>
-                                        <button className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-red-400">
+                                        <button onClick={() => toast.success(`"${apiKey.name}" revoked`)} className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-red-400">
                                             <Trash2 className="h-3.5 w-3.5" />
                                         </button>
                                     </div>
@@ -288,6 +294,7 @@ export default function IntegrationsPage() {
                         <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => toast.info("Add webhook dialog coming soon")}
                             className="gap-1.5 border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
                         >
                             <Plus className="h-3.5 w-3.5" />
@@ -327,13 +334,13 @@ export default function IntegrationsPage() {
                                         </div>
 
                                         <div className="flex items-center gap-1">
-                                            <button className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]" title="View logs">
+                                            <button onClick={() => toast.info("Webhook logs coming soon")} className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]" title="View logs">
                                                 <ExternalLink className="h-3.5 w-3.5" />
                                             </button>
-                                            <button className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]" title="Retry failed">
+                                            <button onClick={() => toast.success("Retry triggered")} className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]" title="Retry failed">
                                                 <RefreshCw className="h-3.5 w-3.5" />
                                             </button>
-                                            <button className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-red-400" title="Delete">
+                                            <button onClick={() => toast.success("Webhook deleted")} className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-red-400" title="Delete">
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </button>
                                         </div>
@@ -351,7 +358,7 @@ export default function IntegrationsPage() {
                                 placeholder="https://your-endpoint.com/webhook"
                                 className="border-white/10 bg-[var(--bg-input)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                             />
-                            <Button variant="outline" size="sm" className="shrink-0 border-purple-500/30 text-purple-300 hover:bg-purple-500/10">
+                            <Button variant="outline" size="sm" onClick={() => toast.success("Test webhook sent")} className="shrink-0 border-purple-500/30 text-purple-300 hover:bg-purple-500/10">
                                 Send Test
                             </Button>
                         </div>

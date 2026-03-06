@@ -6,8 +6,6 @@ import { SessionProvider } from "@/components/providers/session-provider";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 
-const SIDEBAR_WIDTH = "220px";
-
 /**
  * Authenticated app layout — sidebar + top bar + main content.
  * Redirects unauthenticated users to /login.
@@ -30,9 +28,12 @@ export default async function AppLayout({
             <div className="flex min-h-screen bg-[var(--bg-primary)]">
                 <Sidebar userName={userName} />
 
-                <div className="flex flex-1 flex-col" style={{ marginLeft: SIDEBAR_WIDTH }}>
+                {/* Desktop: offset by sidebar width. Mobile: full width with top padding for hamburger */}
+                <div
+                    className="flex flex-1 flex-col md:ml-[220px]"
+                >
                     <TopBar />
-                    <main className="flex-1 p-6">{children}</main>
+                    <main className="flex-1 animate-fade-in p-4 pt-14 md:p-6 md:pt-6">{children}</main>
                 </div>
             </div>
         </SessionProvider>

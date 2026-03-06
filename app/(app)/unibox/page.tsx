@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/common/empty-state";
 import {
     Archive,
     ChevronDown,
@@ -207,8 +208,8 @@ export default function UniboxPage() {
                             key={tab.value}
                             onClick={() => setFilterTab(tab.value)}
                             className={`flex-1 py-2.5 text-center text-xs font-medium transition-colors ${filterTab === tab.value
-                                    ? "border-b-2 border-purple-500 text-purple-300"
-                                    : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                                ? "border-b-2 border-purple-500 text-purple-300"
+                                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                                 }`}
                         >
                             {tab.label}
@@ -236,20 +237,15 @@ export default function UniboxPage() {
                 {/* Conversation list */}
                 <div className="flex-1 overflow-y-auto">
                     {filtered.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <Inbox className="mb-3 h-8 w-8 text-[var(--text-muted)]" />
-                            <p className="text-sm text-[var(--text-muted)]">
-                                No conversations found
-                            </p>
-                        </div>
+                        <EmptyState icon={Inbox} title="No conversations yet" description="Start a campaign to begin receiving replies from leads." actionLabel="Create Campaign" actionHref="/campaigns/new" />
                     ) : (
                         filtered.map((convo) => (
                             <button
                                 key={convo.id}
                                 onClick={() => setSelectedConversation(convo.id)}
                                 className={`w-full border-b border-white/4 px-4 py-3 text-left transition-colors ${selectedConversation === convo.id
-                                        ? "bg-purple-500/10 border-l-2 border-l-purple-500"
-                                        : "hover:bg-white/3"
+                                    ? "bg-purple-500/10 border-l-2 border-l-purple-500"
+                                    : "hover:bg-white/3"
                                     } ${convo.unreadCount > 0 ? "bg-white/[0.02]" : ""}`}
                             >
                                 <div className="flex items-start gap-3">
@@ -270,8 +266,8 @@ export default function UniboxPage() {
                                         <div className="flex items-center justify-between">
                                             <span
                                                 className={`text-sm truncate ${convo.unreadCount > 0
-                                                        ? "font-semibold text-[var(--text-primary)]"
-                                                        : "font-medium text-[var(--text-primary)]"
+                                                    ? "font-semibold text-[var(--text-primary)]"
+                                                    : "font-medium text-[var(--text-primary)]"
                                                     }`}
                                             >
                                                 {convo.leadName}
@@ -285,8 +281,8 @@ export default function UniboxPage() {
                                         </p>
                                         <p
                                             className={`mt-1 text-xs truncate ${convo.unreadCount > 0
-                                                    ? "text-[var(--text-secondary)]"
-                                                    : "text-[var(--text-muted)]"
+                                                ? "text-[var(--text-secondary)]"
+                                                : "text-[var(--text-muted)]"
                                                 }`}
                                         >
                                             {convo.lastMessageDirection === "sent" && (
@@ -365,8 +361,8 @@ export default function UniboxPage() {
                                 size="sm"
                                 onClick={() => toggleStar(activeConvo.id)}
                                 className={`h-8 w-8 p-0 ${starredIds.has(activeConvo.id)
-                                        ? "text-amber-400"
-                                        : "text-[var(--text-muted)] hover:text-amber-400"
+                                    ? "text-amber-400"
+                                    : "text-[var(--text-muted)] hover:text-amber-400"
                                     }`}
                                 title="Star"
                             >
@@ -430,14 +426,14 @@ export default function UniboxPage() {
                                 <div
                                     key={msg.id}
                                     className={`flex ${msg.direction === "sent"
-                                            ? "justify-end"
-                                            : "justify-start"
+                                        ? "justify-end"
+                                        : "justify-start"
                                         }`}
                                 >
                                     <div
                                         className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${msg.direction === "sent"
-                                                ? "bg-purple-500/20 text-[var(--text-primary)]"
-                                                : "bg-white/5 text-[var(--text-primary)]"
+                                            ? "bg-purple-500/20 text-[var(--text-primary)]"
+                                            : "bg-white/5 text-[var(--text-primary)]"
                                             }`}
                                     >
                                         {msg.type === "connection_request" && (
@@ -453,8 +449,8 @@ export default function UniboxPage() {
                                         </p>
                                         <p
                                             className={`mt-1.5 text-[10px] ${msg.direction === "sent"
-                                                    ? "text-purple-300/60"
-                                                    : "text-[var(--text-muted)]"
+                                                ? "text-purple-300/60"
+                                                : "text-[var(--text-muted)]"
                                                 }`}
                                         >
                                             {msg.timestamp}
@@ -497,6 +493,7 @@ export default function UniboxPage() {
                             <div className="flex-1">
                                 <textarea
                                     placeholder="Type a message..."
+                                    aria-label="Message input"
                                     value={messageInput}
                                     onChange={(e) => setMessageInput(e.target.value)}
                                     rows={messageInput.split("\n").length > 3 ? 4 : 2}
@@ -524,8 +521,8 @@ export default function UniboxPage() {
                                         size="sm"
                                         onClick={() => setShowAiSuggestions(!showAiSuggestions)}
                                         className={`h-7 gap-1 px-2 text-xs ${showAiSuggestions
-                                                ? "text-purple-400"
-                                                : "text-[var(--text-muted)] hover:text-purple-400"
+                                            ? "text-purple-400"
+                                            : "text-[var(--text-muted)] hover:text-purple-400"
                                             }`}
                                     >
                                         <Sparkles className="h-3.5 w-3.5" />

@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,12 +166,14 @@ export default function ContentAssistantPage() {
             setGenerated(MOCK_GENERATED);
             setSelectedVariant("g1");
             setIsGenerating(false);
+            toast.success("3 content variants generated!");
         }, 2000);
     }
 
     function handleCopy(text: string) {
         navigator.clipboard.writeText(text);
         setCopied(true);
+        toast.success("Content copied to clipboard");
         setTimeout(() => setCopied(false), 2000);
     }
 

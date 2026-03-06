@@ -120,22 +120,20 @@ export function PricingSection() {
                     <button
                         type="button"
                         onClick={() => setYearly(false)}
-                        className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
-                            !yearly
+                        className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${!yearly
                                 ? "bg-white/[0.1] text-white shadow-sm"
                                 : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                        }`}
+                            }`}
                     >
                         Monthly
                     </button>
                     <button
                         type="button"
                         onClick={() => setYearly(true)}
-                        className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all ${
-                            yearly
+                        className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all ${yearly
                                 ? "bg-purple-500/15 text-purple-300 shadow-sm"
                                 : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                        }`}
+                            }`}
                     >
                         Yearly
                         <span className="rounded-full bg-green-500/15 px-2 py-0.5 text-[10px] font-semibold text-green-300">
@@ -151,11 +149,10 @@ export function PricingSection() {
                     <motion.div
                         key={tier.name}
                         variants={fadeInUpCard}
-                        className={`relative flex flex-col overflow-hidden rounded-xl border transition-all hover:-translate-y-1 ${
-                            tier.highlighted
+                        className={`relative flex flex-col overflow-hidden rounded-xl border transition-all hover:-translate-y-1 ${tier.highlighted
                                 ? "border-purple-500/40 bg-[var(--bg-card)] shadow-xl shadow-purple-500/10"
                                 : "border-white/[0.08] bg-[var(--bg-card)]"
-                        }`}
+                            }`}
                     >
                         {/* Recommended badge */}
                         {tier.highlighted && (
@@ -197,11 +194,10 @@ export function PricingSection() {
                             {/* CTA */}
                             <Link
                                 href="/signup"
-                                className={`mt-6 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
-                                    tier.highlighted
+                                className={`mt-6 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${tier.highlighted
                                         ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/20 hover:brightness-110"
                                         : "border border-white/[0.12] text-white hover:bg-white/[0.05]"
-                                }`}
+                                    }`}
                             >
                                 Get Started
                                 <ArrowRight className="h-3.5 w-3.5" />

@@ -183,7 +183,7 @@ export default function AcademyPage() {
                             return (
                                 <div
                                     key={`lesson-${course.id}-${i}`}
-                                    className={`flex items-center gap-4 px-5 py-4 ${isCurrent ? "bg-purple-500/5" : ""}`}
+                                    className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-white/[0.02] ${isCurrent ? "bg-purple-500/5" : ""}`}
                                 >
                                     <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isCompleted
                                         ? "bg-green-500/15 text-green-400"
@@ -323,9 +323,9 @@ export default function AcademyPage() {
                     {ACHIEVEMENTS.map((achievement) => (
                         <div
                             key={achievement.id}
-                            className={`rounded-lg border p-4 text-center transition ${achievement.earned
-                                ? "border-amber-500/20 bg-amber-500/5"
-                                : "border-white/6 bg-[var(--bg-card)] opacity-50"
+                            className={`rounded-lg border p-4 text-center transition-all duration-200 hover:-translate-y-0.5 ${achievement.earned
+                                ? "border-amber-500/20 bg-amber-500/5 hover:border-amber-500/40"
+                                : "border-white/6 bg-[var(--bg-card)] opacity-50 hover:opacity-70"
                                 }`}
                         >
                             <div className="text-2xl">{achievement.icon}</div>

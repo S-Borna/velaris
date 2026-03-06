@@ -81,7 +81,7 @@ export default function CampaignDetailPage() {
                 <div className="space-y-6">
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                         {KPI_DATA.map((kpi) => (
-                            <div key={kpi.label} className={`rounded-xl border-t-2 ${kpi.accent} border border-white/10 bg-[var(--bg-card)] p-4`}>
+                            <div key={kpi.label} className={`rounded-xl border-t-2 ${kpi.accent} border border-white/10 bg-[var(--bg-card)] p-4 transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5`}>
                                 <p className="text-2xl font-bold text-[var(--text-primary)]">{kpi.value.toLocaleString()}</p>
                                 <p className="mt-1 text-xs text-[var(--text-secondary)]">{kpi.label}</p>
                             </div>
@@ -91,7 +91,7 @@ export default function CampaignDetailPage() {
                         <h3 className="mb-4 text-sm font-medium text-[var(--text-secondary)]">Campaign Performance Over Time</h3>
                         <div className="flex h-48 items-end gap-2">
                             {[35, 42, 58, 45, 72, 65, 80, 68, 90, 78, 95, 88].map((v, i) => (
-                                <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-purple-600 to-purple-400" style={{ height: `${v}%` }} />
+                                <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-purple-600 to-purple-400 transition-all duration-200 hover:from-purple-500 hover:to-purple-300" style={{ height: `${v}%` }} />
                             ))}
                         </div>
                         <div className="mt-2 flex justify-between text-[10px] text-[var(--text-muted)]">
@@ -115,7 +115,7 @@ export default function CampaignDetailPage() {
                             </thead>
                             <tbody>
                                 {LEAD_ROWS.map((lead) => (
-                                    <tr key={lead.name} className="border-b border-white/6 text-[var(--text-primary)]">
+                                    <tr key={lead.name} className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]">
                                         <td className="px-3 py-3 font-medium">{lead.name}</td>
                                         <td className="px-3 py-3 text-[var(--text-secondary)]">{lead.title}</td>
                                         <td className="px-3 py-3"><Badge className="border border-white/10 bg-white/5 text-[var(--text-secondary)]">{lead.status}</Badge></td>
@@ -173,12 +173,12 @@ export default function CampaignDetailPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="border-b border-white/6 text-[var(--text-primary)]">
+                                <tr className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]">
                                     <td className="px-3 py-3">Mathias Warg</td>
                                     <td className="px-3 py-3"><Badge className="border border-green-500/30 bg-green-500/15 text-green-300">Connected</Badge></td>
                                     <td className="px-3 py-3">312</td>
                                 </tr>
-                                <tr className="border-b border-white/6 text-[var(--text-primary)]">
+                                <tr className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]">
                                     <td className="px-3 py-3">[redacted]</td>
                                     <td className="px-3 py-3"><Badge className="border border-green-500/30 bg-green-500/15 text-green-300">Connected</Badge></td>
                                     <td className="px-3 py-3">288</td>

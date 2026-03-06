@@ -202,7 +202,7 @@ export default function DashboardPage() {
                         aria-label="Filter by campaign"
                         value={campaignFilter}
                         onChange={(event) => setCampaignFilter(event.target.value as CampaignFilter)}
-                        className="h-9 rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 text-sm text-[var(--text-primary)]"
+                        className="h-9 rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 text-sm text-[var(--text-primary)] focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                     >
                         {campaigns.map((campaign) => (
                             <option key={campaign} value={campaign}>
@@ -218,7 +218,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)]">
+                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)] transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5">
                     <div className="h-1 bg-blue-500" />
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Connections Sent</p>
@@ -227,7 +227,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)]">
+                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)] transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5">
                     <div className="h-1 bg-purple-500" />
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Connections Accepted</p>
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)]">
+                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)] transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5">
                     <div className="h-1 bg-orange-500" />
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Messages Sent</p>
@@ -245,7 +245,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)]">
+                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)] transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5">
                     <div className="h-1 bg-red-500" />
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Reply Received</p>
@@ -254,7 +254,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)]">
+                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)] transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5">
                     <div className="h-1 bg-cyan-400" />
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Opportunities</p>
@@ -299,7 +299,7 @@ export default function DashboardPage() {
                         </div>
                         <ul className="space-y-3 text-sm">
                             {REALTIME_FEED.map((event) => (
-                                <li key={event.id} className="rounded-lg border border-white/8 bg-white/[0.02] p-3">
+                                <li key={event.id} className="rounded-lg border border-white/8 bg-white/[0.02] p-3 transition-colors duration-150 hover:bg-white/[0.04]">
                                     <p className="text-[var(--text-primary)]"><span className="font-medium">{event.actor}</span> {event.action}</p>
                                     <p className="mt-1 text-xs text-[var(--text-secondary)]">{event.when}</p>
                                 </li>
@@ -321,25 +321,25 @@ export default function DashboardPage() {
                             <tr className="border-b border-white/10 text-left text-[var(--text-secondary)]">
                                 <th className="px-3 py-3 font-medium">Account</th>
                                 <th className="px-3 py-3 font-medium">
-                                    <button type="button" onClick={() => toggleSort("sent")} className="inline-flex items-center gap-1 hover:text-white">Conn. Sent <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "sent" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
+                                    <button type="button" onClick={() => toggleSort("sent")} className="inline-flex items-center gap-1 transition-colors hover:text-white">Conn. Sent <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "sent" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
                                 </th>
                                 <th className="px-3 py-3 font-medium">
-                                    <button type="button" onClick={() => toggleSort("accepted")} className="inline-flex items-center gap-1 hover:text-white">Accepted <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "accepted" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
+                                    <button type="button" onClick={() => toggleSort("accepted")} className="inline-flex items-center gap-1 transition-colors hover:text-white">Accepted <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "accepted" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
                                 </th>
                                 <th className="px-3 py-3 font-medium">
-                                    <button type="button" onClick={() => toggleSort("messages")} className="inline-flex items-center gap-1 hover:text-white">Msgs Sent <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "messages" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
+                                    <button type="button" onClick={() => toggleSort("messages")} className="inline-flex items-center gap-1 transition-colors hover:text-white">Msgs Sent <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "messages" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
                                 </th>
                                 <th className="px-3 py-3 font-medium">
-                                    <button type="button" onClick={() => toggleSort("replies")} className="inline-flex items-center gap-1 hover:text-white">Replies <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "replies" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
+                                    <button type="button" onClick={() => toggleSort("replies")} className="inline-flex items-center gap-1 transition-colors hover:text-white">Replies <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "replies" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
                                 </th>
                                 <th className="px-3 py-3 font-medium">
-                                    <button type="button" onClick={() => toggleSort("opportunitiesValue")} className="inline-flex items-center gap-1 hover:text-white">Opportunities <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "opportunitiesValue" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
+                                    <button type="button" onClick={() => toggleSort("opportunitiesValue")} className="inline-flex items-center gap-1 transition-colors hover:text-white">Opportunities <ChevronUp className={`h-3.5 w-3.5 ${sortKey === "opportunitiesValue" && sortOrder === "asc" ? "rotate-180" : ""}`} /></button>
                                 </th>
                             </tr>
                         </thead>
                         <tbody>
                             {sortedRows.map((row) => (
-                                <tr key={row.account} className="border-b border-white/6 text-[var(--text-primary)]">
+                                <tr key={row.account} className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]">
                                     <td className="px-3 py-3">{row.account}</td>
                                     <td className="px-3 py-3">{Math.round(row.sent * multiplier)}</td>
                                     <td className="px-3 py-3">{Math.round(row.accepted * multiplier)}</td>

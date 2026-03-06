@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
     User,
     Building2,
@@ -108,6 +109,7 @@ export default function SettingsPage() {
 
     function handleSave(): void {
         setSaved(true);
+        toast.success("Settings saved successfully");
         setTimeout(() => setSaved(false), 2000);
     }
 
