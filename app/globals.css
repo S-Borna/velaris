@@ -63,3 +63,30 @@ body {
     color: var(--text-primary);
     font-family: var(--font-plus-jakarta), system-ui, sans-serif;
 }
+
+/* Marquee animations for trust logos (continuous horizontal scroll) */
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes marquee-reverse {
+    from {
+        transform: translateX(-50%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.animate-marquee {
+    animation: marquee linear infinite;
+}
+
+.animate-marquee-reverse {
+    animation: marquee-reverse linear infinite;
+}
