@@ -335,8 +335,41 @@
 
 ### Git
 
-- Commit hash will be added after commit
+- `419dd64` — feat: Phase 4 lead management — database with filters, extractor with enrichment
 
 ### Next Steps
 
 - Phase 5: Unibox — conversation list + message thread
+
+---
+
+## Session 2026-03-06 — Phase 5 (Unibox)
+
+### Completed
+
+- **Unibox page** (`app/(app)/unibox/page.tsx` — 7.93kB):
+  - Split-view layout: conversation list (left, 384px) + message thread (right)
+  - 8 mock conversations with realistic LinkedIn message exchanges
+  - Filter tabs: All / Unread / Starred / Archived with counts
+  - Full-text search across name, company, message content
+  - Account filter dropdown
+  - Conversation list items: avatar with unread badge, lead name + title + company, message preview with "You:" prefix for sent, timestamp, sentiment badge (Positive/Neutral/Negative), campaign tag, LinkedIn account badge
+  - Message thread: bubble layout (sent = purple, received = dark), connection request labels, whitespace-preserved content, timestamps
+  - Thread header: lead info, star toggle (fill state), notes/archive/delete actions
+  - Note banner (amber) and campaign banner (purple) in thread
+  - AI Reply Suggestions panel: toggle via "AI Suggest" button, 2-3 suggestions per conversation, click to populate input
+  - Message input: resizable textarea, emoji/attach/AI suggest buttons, "via [account]" badge, send button with gradient
+  - Star/unstar toggle with state persistence
+
+### Validation
+
+- `npx tsc --noEmit` — zero errors
+- `npm run build` — all 19 routes compiled (unibox 7.93kB)
+
+### Git
+
+- Commit hash will be added after commit
+
+### Next Steps
+
+- Phase 6: Content Assistant — AI content generation + preview
