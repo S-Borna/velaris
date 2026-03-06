@@ -83,18 +83,16 @@ function ContactIcons({
     return (
         <div className="flex items-center gap-2">
             <Mail
-                className={`h-4 w-4 ${
-                    email
+                className={`h-4 w-4 ${email
                         ? "text-green-400"
                         : "text-[var(--text-muted)] opacity-40"
-                }`}
+                    }`}
             />
             <Phone
-                className={`h-4 w-4 ${
-                    phone
+                className={`h-4 w-4 ${phone
                         ? "text-green-400"
                         : "text-[var(--text-muted)] opacity-40"
-                }`}
+                    }`}
             />
         </div>
     );
@@ -123,9 +121,8 @@ function SortHeader({
         >
             {label}
             <ArrowUpDown
-                className={`h-3 w-3 ${
-                    isActive ? "text-purple-400" : "text-[var(--text-muted)]"
-                }`}
+                className={`h-3 w-3 ${isActive ? "text-purple-400" : "text-[var(--text-muted)]"
+                    }`}
             />
             {isActive && (
                 <span className="text-[10px] text-purple-400">
@@ -348,11 +345,10 @@ export function LeadTable({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => onPageChange(p)}
-                                className={`h-7 w-7 border-white/10 p-0 text-xs ${
-                                    p === page
+                                className={`h-7 w-7 border-white/10 p-0 text-xs ${p === page
                                         ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
                                         : "bg-white/5 text-[var(--text-secondary)] hover:bg-white/10"
-                                }`}
+                                    }`}
                             >
                                 {p}
                             </Button>

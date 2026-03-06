@@ -168,11 +168,10 @@ export default function LeadDatabasePage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setView(VIEW_TABLE)}
-                                className={`h-8 rounded-r-none px-2.5 ${
-                                    view === VIEW_TABLE
+                                className={`h-8 rounded-r-none px-2.5 ${view === VIEW_TABLE
                                         ? "bg-purple-500/20 text-purple-300"
                                         : "text-[var(--text-muted)]"
-                                }`}
+                                    }`}
                             >
                                 <LayoutList className="h-4 w-4" />
                             </Button>
@@ -180,11 +179,10 @@ export default function LeadDatabasePage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setView(VIEW_GRID)}
-                                className={`h-8 rounded-l-none px-2.5 ${
-                                    view === VIEW_GRID
+                                className={`h-8 rounded-l-none px-2.5 ${view === VIEW_GRID
                                         ? "bg-purple-500/20 text-purple-300"
                                         : "text-[var(--text-muted)]"
-                                }`}
+                                    }`}
                             >
                                 <LayoutGrid className="h-4 w-4" />
                             </Button>
@@ -258,13 +256,12 @@ export default function LeadDatabasePage() {
                                         {lead.icpScore !== null && (
                                             <Badge
                                                 variant="outline"
-                                                className={`text-xs ${
-                                                    lead.icpScore >= 80
+                                                className={`text-xs ${lead.icpScore >= 80
                                                         ? "border-green-500/30 bg-green-500/15 text-green-300"
                                                         : lead.icpScore >= 50
-                                                          ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
-                                                          : "border-red-500/30 bg-red-500/15 text-red-300"
-                                                }`}
+                                                            ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
+                                                            : "border-red-500/30 bg-red-500/15 text-red-300"
+                                                    }`}
                                             >
                                                 {lead.icpScore}
                                             </Badge>

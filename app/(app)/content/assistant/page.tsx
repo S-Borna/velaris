@@ -201,11 +201,10 @@ export default function ContentAssistantPage() {
                             variant={activeTab === tab.value ? "default" : "ghost"}
                             size="sm"
                             onClick={() => setActiveTab(tab.value)}
-                            className={`gap-1.5 ${
-                                activeTab === tab.value
+                            className={`gap-1.5 ${activeTab === tab.value
                                     ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
                                     : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                            }`}
+                                }`}
                         >
                             <tab.icon className="h-3.5 w-3.5" />
                             {tab.label}
@@ -292,11 +291,10 @@ export default function ContentAssistantPage() {
                                         <button
                                             key={opt.value}
                                             onClick={() => setTone(opt.value)}
-                                            className={`rounded-lg border px-3 py-2 text-xs transition-colors ${
-                                                tone === opt.value
+                                            className={`rounded-lg border px-3 py-2 text-xs transition-colors ${tone === opt.value
                                                     ? "border-purple-500/40 bg-purple-500/10 text-purple-300"
                                                     : "border-white/6 bg-white/3 text-[var(--text-secondary)] hover:border-white/10"
-                                            }`}
+                                                }`}
                                         >
                                             <span className="mr-1">{opt.emoji}</span>
                                             {opt.label}
@@ -369,22 +367,20 @@ export default function ContentAssistantPage() {
                                             variant="outline"
                                             size="sm"
                                             onClick={() => setSelectedVariant(post.id)}
-                                            className={`gap-1.5 ${
-                                                selectedVariant === post.id
+                                            className={`gap-1.5 ${selectedVariant === post.id
                                                     ? "border-purple-500/40 bg-purple-500/15 text-purple-300"
                                                     : "border-white/10 bg-white/5 text-[var(--text-secondary)]"
-                                            }`}
+                                                }`}
                                         >
                                             Variant {post.variant}
                                             <Badge
                                                 variant="outline"
-                                                className={`text-[9px] ${
-                                                    post.hookScore >= 90
+                                                className={`text-[9px] ${post.hookScore >= 90
                                                         ? "border-green-500/30 text-green-300"
                                                         : post.hookScore >= 85
-                                                          ? "border-amber-500/30 text-amber-300"
-                                                          : "border-white/10 text-[var(--text-muted)]"
-                                                }`}
+                                                            ? "border-amber-500/30 text-amber-300"
+                                                            : "border-white/10 text-[var(--text-muted)]"
+                                                    }`}
                                             >
                                                 {post.hookScore}%
                                             </Badge>
@@ -583,13 +579,12 @@ export default function ContentAssistantPage() {
                                         <div className="flex items-center gap-2 mb-2">
                                             <Badge
                                                 variant="outline"
-                                                className={`text-xs ${
-                                                    post.status === "posted"
+                                                className={`text-xs ${post.status === "posted"
                                                         ? "border-green-500/30 bg-green-500/15 text-green-300"
                                                         : post.status === "scheduled"
-                                                          ? "border-blue-500/30 bg-blue-500/15 text-blue-300"
-                                                          : "border-white/10 bg-white/5 text-[var(--text-muted)]"
-                                                }`}
+                                                            ? "border-blue-500/30 bg-blue-500/15 text-blue-300"
+                                                            : "border-white/10 bg-white/5 text-[var(--text-muted)]"
+                                                    }`}
                                             >
                                                 {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
                                             </Badge>

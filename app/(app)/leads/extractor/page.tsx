@@ -131,19 +131,17 @@ export default function LeadExtractorPage() {
                                     <button
                                         key={key}
                                         onClick={() => setSelectedSource(key)}
-                                        className={`rounded-xl border p-3 text-left transition-colors ${
-                                            selectedSource === key
+                                        className={`rounded-xl border p-3 text-left transition-colors ${selectedSource === key
                                                 ? "border-purple-500/40 bg-purple-500/10"
                                                 : "border-white/6 bg-white/3 hover:border-white/10"
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex items-center gap-2">
                                             <Linkedin
-                                                className={`h-4 w-4 ${
-                                                    selectedSource === key
+                                                className={`h-4 w-4 ${selectedSource === key
                                                         ? "text-purple-400"
                                                         : "text-[var(--text-muted)]"
-                                                }`}
+                                                    }`}
                                             />
                                             <span className="text-sm font-medium text-[var(--text-primary)]">
                                                 {cfg.label}
@@ -248,11 +246,10 @@ export default function LeadExtractorPage() {
                             <button
                                 key={job.id}
                                 onClick={() => setSelectedJob(job.id)}
-                                className={`w-full border-b border-white/4 px-4 py-3 text-left transition-colors ${
-                                    selectedJob === job.id
+                                className={`w-full border-b border-white/4 px-4 py-3 text-left transition-colors ${selectedJob === job.id
                                         ? "bg-purple-500/10 border-l-2 border-l-purple-500"
                                         : "hover:bg-white/3"
-                                }`}
+                                    }`}
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1 min-w-0">
@@ -273,11 +270,10 @@ export default function LeadExtractorPage() {
                                     </div>
                                     <div className="flex items-center gap-1.5 ml-2">
                                         <StatusIcon
-                                            className={`h-4 w-4 ${statusCfg.color} ${
-                                                job.status === "running"
+                                            className={`h-4 w-4 ${statusCfg.color} ${job.status === "running"
                                                     ? "animate-spin"
                                                     : ""
-                                            }`}
+                                                }`}
                                         />
                                         <span className={`text-xs ${statusCfg.color}`}>
                                             {statusCfg.label}
@@ -301,15 +297,14 @@ export default function LeadExtractorPage() {
                                                     <div
                                                         className="h-1.5 rounded-full bg-purple-500 transition-all"
                                                         style={{
-                                                            width: `${
-                                                                job.leadsFound > 0
+                                                            width: `${job.leadsFound > 0
                                                                     ? Math.round(
-                                                                          (job.leadsEnriched /
-                                                                              job.leadsFound) *
-                                                                              100
-                                                                      )
+                                                                        (job.leadsEnriched /
+                                                                            job.leadsFound) *
+                                                                        100
+                                                                    )
                                                                     : 0
-                                                            }%`,
+                                                                }%`,
                                                         }}
                                                     />
                                                 </div>
@@ -467,31 +462,28 @@ export default function LeadExtractorPage() {
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center gap-2">
                                                         <Mail
-                                                            className={`h-4 w-4 ${
-                                                                lead.hasEmail
+                                                            className={`h-4 w-4 ${lead.hasEmail
                                                                     ? "text-green-400"
                                                                     : "text-[var(--text-muted)] opacity-40"
-                                                            }`}
+                                                                }`}
                                                         />
                                                         <Phone
-                                                            className={`h-4 w-4 ${
-                                                                lead.hasPhone
+                                                            className={`h-4 w-4 ${lead.hasPhone
                                                                     ? "text-green-400"
                                                                     : "text-[var(--text-muted)] opacity-40"
-                                                            }`}
+                                                                }`}
                                                         />
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <Badge
                                                         variant="outline"
-                                                        className={`text-xs ${
-                                                            lead.qualityScore >= 80
+                                                        className={`text-xs ${lead.qualityScore >= 80
                                                                 ? "border-green-500/30 bg-green-500/15 text-green-300"
                                                                 : lead.qualityScore >= 60
-                                                                  ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
-                                                                  : "border-red-500/30 bg-red-500/15 text-red-300"
-                                                        }`}
+                                                                    ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
+                                                                    : "border-red-500/30 bg-red-500/15 text-red-300"
+                                                            }`}
                                                     >
                                                         {lead.qualityScore}%
                                                     </Badge>
