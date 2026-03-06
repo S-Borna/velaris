@@ -13,28 +13,28 @@ const SIDEBAR_WIDTH = "220px";
  * Redirects unauthenticated users to /login.
  */
 export default async function AppLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions);
 
-  if (!session?.user) {
-    redirect("/login");
-  }
+    if (!session?.user) {
+        redirect("/login");
+    }
 
-  const userName = session.user.name || session.user.email || "User";
+    const userName = session.user.name || session.user.email || "User";
 
-  return (
-    <SessionProvider>
-      <div className="flex min-h-screen bg-[var(--bg-primary)]">
-        <Sidebar userName={userName} />
+    return (
+        <SessionProvider>
+            <div className="flex min-h-screen bg-[var(--bg-primary)]">
+                <Sidebar userName={userName} />
 
-        <div className="flex flex-1 flex-col" style={{ marginLeft: SIDEBAR_WIDTH }}>
-          <TopBar />
-          <main className="flex-1 p-6">{children}</main>
-        </div>
-      </div>
-    </SessionProvider>
-  );
+                <div className="flex flex-1 flex-col" style={{ marginLeft: SIDEBAR_WIDTH }}>
+                    <TopBar />
+                    <main className="flex-1 p-6">{children}</main>
+                </div>
+            </div>
+        </SessionProvider>
+    );
 }

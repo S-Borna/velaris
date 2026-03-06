@@ -3,6 +3,7 @@
 ## Session 2025-03-05 — Phase 0 (Deploy Pipeline)
 
 ### Completed
+
 - Read full CLAUDE.md spec (1240 lines)
 - Initialized Next.js 14 project with TypeScript strict mode (no src/ dir, app/ at root)
 - Configured Tailwind CSS v3 + shadcn/ui (new-york style, dark theme)
@@ -19,31 +20,36 @@
 - `dev` branch created
 
 ### Issues
+
 - Prisma 7 forces "client" engine requiring adapter — downgraded to Prisma 6 for compatibility
 - Tailwind v4 installed by default — had to pin to v3 for shadcn/ui compatibility
 - NextAuth pages config doesn't support `signUp` — removed
 
 ### Design Decisions
+
 - Prisma 6 over Prisma 7: v7 requires driver adapter setup that complicates Phase 0. v6 works out of the box.
 - JWT session strategy: Required for Credentials provider compatibility with NextAuth
 - No src/ directory: Per CLAUDE.md file structure spec, app/ lives at project root
 
 ### Next Steps
+
 - **User must confirm: live URL works** → then Phase 1 begins
 - Set up Cloudflare Pages GitHub integration (auto-deploy on push) via dashboard
 - Delete duplicate Railway Postgres service "Postgres-bK3b" from Railway dashboard
 - Phase 1: Foundation — Layout + Sidebar + Auth pages
 
 ### Git
+
 - Branch: main (+ dev)
 - Commit: e40bb7b — chore: initialize project with Next.js 14, Prisma 6, NextAuth, Tailwind + shadcn/ui
 - Commit: 8b00db4 — docs: add SESSION_LOG.md for Phase 0
 - Commit: e8dbbf3 — chore: add Railway infra + Prisma migration + CF Pages deploy
 
 ### Infrastructure
-- GitHub: https://github.com/S-Borna/pilot (main + dev branches)
+
+- GitHub: <https://github.com/S-Borna/pilot> (main + dev branches)
 - Railway: OutreachPilot project (PostgreSQL + Redis provisioned)
-- Cloudflare Pages: https://outreach-pilot.pages.dev (Hello World live)
+- Cloudflare Pages: <https://outreach-pilot.pages.dev> (Hello World live)
 - Prisma migration "init" applied — 18 tables created on Railway PostgreSQL
 
 ---
@@ -51,6 +57,7 @@
 ## Session 2025-03-05 — Phase 1 (Foundation)
 
 ### Completed
+
 - Auth layout with centered card + OutreachPilot logo branding (app/(auth)/layout.tsx)
 - Login page — client component, email/password form, NextAuth signIn(), error handling (app/(auth)/login/page.tsx)
 - Signup page — client component, full name/email/password form, POST to /api/auth/signup (app/(auth)/signup/page.tsx)
@@ -68,18 +75,50 @@
 - Next.js build passes cleanly (19 routes)
 
 ### Issues
+
 - Zod `.errors` → `.issues` — ZodError uses `issues` property, not `errors`. Fixed.
 
 ### Design Decisions
+
 - Route groups: `(auth)` for login/signup (no sidebar), `(app)` for authenticated pages (with sidebar)
 - Server-side auth guard in (app)/layout.tsx — redirect to /login if no session
 - JWT session strategy continues from Phase 0 (required for Credentials provider)
 - Sidebar width 220px matching CLAUDE.md spec
 
 ### Git
+
 - Commit: 037bab4 — feat: Phase 1 foundation — auth pages, sidebar layout, 14 page stubs
 
 ### Next Steps
+
 - User reviews locally (npm run dev) and takes screenshots
 - Checkpoint D1: await design direction for sidebar animations/hover states
 - Phase 2: Dashboard + LinkedIn Accounts
+
+---
+
+## Session 2026-03-06 — Deploy Stabilization Checkpoint
+
+### Completed
+
+- Stabilized Cloudflare Pages deployment flow for this repo (`pilot` project, Git-connected)
+- Added reliable Cloudflare build pipeline script: `npm run build:cf`
+- Added output preparation script to ensure worker/runtime files are included in Pages output (`scripts/prepare-pages-output.mjs`)
+- Added `_routes.json` generation to bypass worker for `/_next/static/*` so CSS/JS assets are served correctly
+- Verified live route and static assets with HTTP checks (`/login` and referenced CSS returned 200)
+- Synced required secrets for both production and preview environments in Cloudflare Pages
+
+### Issues
+
+- Pages deploys intermittently served 404 due to worker/static routing mismatch
+- Asset requests under `/_next/static/*` were previously routed through worker and returned 404
+
+### Design Decisions
+
+- Keep Cloudflare Pages + Railway architecture and harden deploy pipeline instead of manual one-off fixes
+- Standardize on a single build entrypoint for Cloudflare (`npm run build:cf`) to avoid config drift
+
+### Next Steps
+
+- Keep Cloudflare Pages Build command set to `npm run build:cf`
+- Continue to Phase 2 implementation only after deploy pipeline remains stable on next push
