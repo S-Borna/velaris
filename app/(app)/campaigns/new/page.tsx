@@ -74,10 +74,9 @@ export default function NewCampaignPage() {
                     return (
                         <div key={s.key} className="flex items-center gap-2">
                             <button type="button" onClick={() => { if (i < currentStep) setCurrentStep(i); }}
-                                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition ${
-                                    isActive ? "border-purple-500/50 bg-purple-500/15 text-purple-300" :
-                                    isDone ? "border-green-500/30 bg-green-500/10 text-green-300" :
-                                    "border-white/10 bg-[var(--bg-input)] text-[var(--text-muted)]"}`}>
+                                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition ${isActive ? "border-purple-500/50 bg-purple-500/15 text-purple-300" :
+                                        isDone ? "border-green-500/30 bg-green-500/10 text-green-300" :
+                                            "border-white/10 bg-[var(--bg-input)] text-[var(--text-muted)]"}`}>
                                 {isDone ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
                                 {s.label}
                             </button>
@@ -104,8 +103,7 @@ export default function NewCampaignPage() {
                         <h3 className="text-sm font-medium text-[var(--text-primary)]">Select Lead Source</h3>
                         {LEAD_SOURCES.map((src) => (
                             <button key={src.id} type="button" onClick={() => setSelectedSource(src.id)}
-                                className={`flex w-full items-start gap-4 rounded-lg border p-4 text-left transition ${
-                                    selectedSource === src.id ? "border-purple-500/50 bg-purple-500/10" : "border-white/10 bg-[var(--bg-input)] hover:bg-white/5"}`}>
+                                className={`flex w-full items-start gap-4 rounded-lg border p-4 text-left transition ${selectedSource === src.id ? "border-purple-500/50 bg-purple-500/10" : "border-white/10 bg-[var(--bg-input)] hover:bg-white/5"}`}>
                                 <div>
                                     <p className="text-sm font-medium text-[var(--text-primary)]">{src.label}</p>
                                     <p className="text-xs text-[var(--text-secondary)]">{src.desc}</p>
@@ -120,8 +118,7 @@ export default function NewCampaignPage() {
                         <h3 className="text-sm font-medium text-[var(--text-primary)]">Select LinkedIn Accounts</h3>
                         {MOCK_ACCOUNTS.map((acc) => (
                             <button key={acc.id} type="button" onClick={() => toggleAccount(acc.id)}
-                                className={`flex w-full items-center gap-4 rounded-lg border p-4 text-left transition ${
-                                    selectedAccounts.includes(acc.id) ? "border-purple-500/50 bg-purple-500/10" : "border-white/10 bg-[var(--bg-input)] hover:bg-white/5"}`}>
+                                className={`flex w-full items-center gap-4 rounded-lg border p-4 text-left transition ${selectedAccounts.includes(acc.id) ? "border-purple-500/50 bg-purple-500/10" : "border-white/10 bg-[var(--bg-input)] hover:bg-white/5"}`}>
                                 <div className="h-8 w-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs font-medium text-purple-300">{acc.name.charAt(0)}</div>
                                 <div>
                                     <p className="text-sm font-medium text-[var(--text-primary)]">{acc.name}</p>

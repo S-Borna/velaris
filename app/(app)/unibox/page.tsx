@@ -206,11 +206,10 @@ export default function UniboxPage() {
                         <button
                             key={tab.value}
                             onClick={() => setFilterTab(tab.value)}
-                            className={`flex-1 py-2.5 text-center text-xs font-medium transition-colors ${
-                                filterTab === tab.value
+                            className={`flex-1 py-2.5 text-center text-xs font-medium transition-colors ${filterTab === tab.value
                                     ? "border-b-2 border-purple-500 text-purple-300"
                                     : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                            }`}
+                                }`}
                         >
                             {tab.label}
                             {tab.count > 0 && (
@@ -248,11 +247,10 @@ export default function UniboxPage() {
                             <button
                                 key={convo.id}
                                 onClick={() => setSelectedConversation(convo.id)}
-                                className={`w-full border-b border-white/4 px-4 py-3 text-left transition-colors ${
-                                    selectedConversation === convo.id
+                                className={`w-full border-b border-white/4 px-4 py-3 text-left transition-colors ${selectedConversation === convo.id
                                         ? "bg-purple-500/10 border-l-2 border-l-purple-500"
                                         : "hover:bg-white/3"
-                                } ${convo.unreadCount > 0 ? "bg-white/[0.02]" : ""}`}
+                                    } ${convo.unreadCount > 0 ? "bg-white/[0.02]" : ""}`}
                             >
                                 <div className="flex items-start gap-3">
                                     {/* Avatar */}
@@ -271,11 +269,10 @@ export default function UniboxPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between">
                                             <span
-                                                className={`text-sm truncate ${
-                                                    convo.unreadCount > 0
+                                                className={`text-sm truncate ${convo.unreadCount > 0
                                                         ? "font-semibold text-[var(--text-primary)]"
                                                         : "font-medium text-[var(--text-primary)]"
-                                                }`}
+                                                    }`}
                                             >
                                                 {convo.leadName}
                                             </span>
@@ -287,11 +284,10 @@ export default function UniboxPage() {
                                             {convo.leadTitle} at {convo.leadCompany}
                                         </p>
                                         <p
-                                            className={`mt-1 text-xs truncate ${
-                                                convo.unreadCount > 0
+                                            className={`mt-1 text-xs truncate ${convo.unreadCount > 0
                                                     ? "text-[var(--text-secondary)]"
                                                     : "text-[var(--text-muted)]"
-                                            }`}
+                                                }`}
                                         >
                                             {convo.lastMessageDirection === "sent" && (
                                                 <span className="text-[var(--text-muted)]">
@@ -368,11 +364,10 @@ export default function UniboxPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => toggleStar(activeConvo.id)}
-                                className={`h-8 w-8 p-0 ${
-                                    starredIds.has(activeConvo.id)
+                                className={`h-8 w-8 p-0 ${starredIds.has(activeConvo.id)
                                         ? "text-amber-400"
                                         : "text-[var(--text-muted)] hover:text-amber-400"
-                                }`}
+                                    }`}
                                 title="Star"
                             >
                                 {starredIds.has(activeConvo.id) ? (
@@ -434,18 +429,16 @@ export default function UniboxPage() {
                             {messages.map((msg) => (
                                 <div
                                     key={msg.id}
-                                    className={`flex ${
-                                        msg.direction === "sent"
+                                    className={`flex ${msg.direction === "sent"
                                             ? "justify-end"
                                             : "justify-start"
-                                    }`}
+                                        }`}
                                 >
                                     <div
-                                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                                            msg.direction === "sent"
+                                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${msg.direction === "sent"
                                                 ? "bg-purple-500/20 text-[var(--text-primary)]"
                                                 : "bg-white/5 text-[var(--text-primary)]"
-                                        }`}
+                                            }`}
                                     >
                                         {msg.type === "connection_request" && (
                                             <div className="mb-1.5 flex items-center gap-1">
@@ -459,11 +452,10 @@ export default function UniboxPage() {
                                             {msg.content}
                                         </p>
                                         <p
-                                            className={`mt-1.5 text-[10px] ${
-                                                msg.direction === "sent"
+                                            className={`mt-1.5 text-[10px] ${msg.direction === "sent"
                                                     ? "text-purple-300/60"
                                                     : "text-[var(--text-muted)]"
-                                            }`}
+                                                }`}
                                         >
                                             {msg.timestamp}
                                         </p>
@@ -531,11 +523,10 @@ export default function UniboxPage() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setShowAiSuggestions(!showAiSuggestions)}
-                                        className={`h-7 gap-1 px-2 text-xs ${
-                                            showAiSuggestions
+                                        className={`h-7 gap-1 px-2 text-xs ${showAiSuggestions
                                                 ? "text-purple-400"
                                                 : "text-[var(--text-muted)] hover:text-purple-400"
-                                        }`}
+                                            }`}
                                     >
                                         <Sparkles className="h-3.5 w-3.5" />
                                         AI Suggest
