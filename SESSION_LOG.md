@@ -480,3 +480,84 @@
 - Zero PagePlaceholder imports remain
 - Every route in the sidebar is functional with mock data
 - Full app is browsable end-to-end after login
+
+## Session 2026-03-06 — Phase 10A: Landing Page (Checkpoint 1)
+
+### Completed
+
+- Installed framer-motion for scroll-triggered animations
+- Restructured routes: deleted app/page.tsx redirect, created (marketing) route group
+- Created marketing layout (app/(marketing)/layout.tsx) — navbar + footer, no sidebar, no auth guard
+- Built shared animation utilities (components/marketing/animations.tsx):
+  - fadeInUp, fadeInUpCard, slideInLeft, slideInRight variants
+  - staggerContainer, AnimatedSection, AnimatedGroup wrappers
+  - All using GPU-accelerated transforms + opacity only, respects prefers-reduced-motion
+- Built Navbar (components/marketing/navbar.tsx):
+  - Sticky with backdrop blur on scroll
+  - Logo + nav links (Product ▼, Customers, Resources ▼, Pricing)
+  - Desktop dropdown menus with Framer Motion AnimatePresence
+  - Mobile hamburger with slide-down panel
+  - "Log In" → /login, "Get Started" → /signup
+- Built Hero section (components/marketing/hero.tsx):
+  - Full-viewport dark bg with canvas particle/star effect (60 particles, twinkle animation)
+  - Radial purple glow, subtle grid overlay, corner bracket decorations
+  - "Now in public beta" badge with pulse indicator
+  - Headline + subtext with staggered entrance animations
+  - CTAs: purple gradient "Start for Free" + outline "How it works"
+  - Floating app tab bar (Home | Unibox | Campaigns | Leads | AI Content)
+  - Full dashboard mockup: 5 KPI cards + activity chart + accounts table
+  - Perspective transform (3D tilt) on mockup with bottom fade
+- Built Trust Logos section (components/marketing/trust-logos.tsx):
+  - "Trusted by many heavy lifters" header
+  - 2 rows: 8 + 6 company logos with initials + deterministic colors
+  - Continuous CSS marquee (row 1 left, row 2 right), pauses on hover
+  - Edge fade gradients for seamless loop
+  - Optional "Review" / "Case study" badges
+- Built Features Section (components/marketing/features-section.tsx):
+  - Section header: "Have complete control over your LinkedIn game..."
+  - Sticky sidebar nav (desktop) with 5 tabs: Leads / Qualify / Scale / Contact / Unibox
+  - IntersectionObserver-based active tab highlighting on scroll
+  - Mobile floating bottom tab bar
+  - 5 full subsections with FeatureBlock layout (text + mockup + testimonial badge):
+    - Leads: filter chips, search bar, lead results table, "300M+ Verified" badge
+    - Qualify: ICP description, cutoff slider, test lead scores with High/Low badges
+    - Scale: active accounts panel with status indicators, quick stats grid
+    - Contact: visual sequence flowchart (9 nodes: start → ICP → connect → wait → view → wait → message → wait → like → end)
+    - Unibox: split conversation list + message thread with AI suggestion bubble
+  - All subsections animate with slideInLeft/slideInRight variants
+- Built Footer (components/marketing/footer.tsx):
+  - Logo + tagline, 4 link columns (Home/Features/Contact/Resources)
+  - Copyright line with Terms/Privacy/Cookies links
+- Added CSS marquee keyframe animations to globals.css
+
+### Validation
+
+- `npx tsc --noEmit` — zero errors (after fixing NavLink discriminated union types)
+- `npm run build` — all 19 routes compiled successfully
+- Landing page at / : 9.38kB + 154kB first load JS
+- Dev server verified on localhost:3003
+
+### Files Created
+
+- app/(marketing)/layout.tsx — marketing layout
+- app/(marketing)/page.tsx — landing page
+- components/marketing/animations.tsx — shared animation utilities
+- components/marketing/navbar.tsx — sticky navbar with dropdowns
+- components/marketing/hero.tsx — hero with particles + dashboard mockup
+- components/marketing/trust-logos.tsx — marquee logo rows
+- components/marketing/features-section.tsx — 5 feature subsections with sticky nav
+- components/marketing/footer.tsx — site footer
+
+### Files Modified
+
+- app/globals.css — added marquee keyframe animations
+- package.json — added framer-motion dependency
+
+### Files Deleted
+
+- app/page.tsx — removed redirect to /dashboard (replaced by marketing landing page)
+
+### CHECKPOINT — Awaiting Design Review
+
+Built: Hero + Trust Logos + Features (all 5 subsections)
+Remaining sections (after approval): Content, Integrations, Use Cases, Pricing, Blog, Bottom CTA
