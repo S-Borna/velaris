@@ -251,3 +251,42 @@
 - User connects repo to Vercel dashboard and triggers first deploy
 - Continue Phase 2 visual QA, then Phase 3 per CLAUDE.md build order
 - After local stability is confirmed, run final Phase 2 checkpoint summary for user review
+---
+
+## Session 2026-03-06 — Vercel CLI Deploy + Phase 3 (Campaign Engine)
+
+### Completed
+
+- **Vercel CLI setup & deploy:**
+  - Linked project via `npx vercel link --yes` (said-bornas-projects/pilot)
+  - Set env vars via CLI: DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, NEXT_PUBLIC_APP_URL
+  - Deployed to production: https://pilot-iota-taupe.vercel.app
+  - Verified /login returns 200 on live URL
+
+- **Phase 3 — Campaign Engine (5 files, 898 insertions):**
+  - `app/(app)/campaigns/page.tsx` — Full campaign list with search, 5 status filters, sortable columns (ArrowUpDown on 5 cols), performance badges, pagination (PAGE_SIZE=5), 8 mock campaigns
+  - `app/(app)/campaigns/[id]/page.tsx` — Campaign detail with 5 tabs (Analytics/Leads/Sequences/Schedule/Accounts), KPI cards, bar chart, leads table with ICP scores, schedule config, pause/resume toggle
+  - `app/(app)/campaigns/new/page.tsx` — 5-step creation wizard (Setup→Leads→Accounts→Sequences→Schedule), progress indicator with icons, lead source picker, account multi-select, timezone/hours config
+  - `app/(app)/campaigns/[id]/create/page.tsx` — Campaign editor integrating SequenceBuilder component on Sequences tab, EDITING badge, duplicate/save actions
+  - `components/campaigns/sequence-builder.tsx` — NEW 289-line visual flowchart builder: 7 node types (Connect, Message, Voice Note, View Profile, Like Post, Wait, Condition), recursive tree rendering, ICP branching (Pass/Fail), add/remove nodes, properties panel
+
+- **Validation:**
+  - `npx tsc --noEmit` — zero errors
+  - `rm -rf .next && npm run build` — all 19 routes compiled clean
+
+### Git
+
+- `b006269` — chore: migrate from Cloudflare Pages to Vercel — remove wrangler, opennext, CF scripts
+- `be4d62f` — chore: update gitignore for vercel
+- `375e026` — feat: Phase 3 campaign engine — list, detail, wizard, sequence builder
+
+### Current State
+
+- `main` is ahead of `origin/main` by 4 commits (user pushes manually)
+- Production URL: https://pilot-iota-taupe.vercel.app (will update on next push)
+- All 19 routes build clean, TypeScript strict passes
+
+### Next Steps
+
+- Phase 4: Lead Management — leads/database + leads/extractor pages (currently placeholders)
+- Phase 5+: per CLAUDE.md build order
