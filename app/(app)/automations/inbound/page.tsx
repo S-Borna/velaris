@@ -432,7 +432,7 @@ export default function InboundAutomationsPage() {
                                             <span className="text-sm text-[var(--text-primary)]">{reply}</span>
                                             <button
                                                 onClick={() => setWizardCommentReplies((prev) => prev.filter((_, idx) => idx !== i))}
-                                                className="rounded p-1 text-[var(--text-muted)] hover:bg-white/5 hover:text-red-400"
+                                                className="rounded p-1 text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-red-400"
                                             >
                                                 <X className="h-3.5 w-3.5" />
                                             </button>
@@ -885,28 +885,28 @@ export default function InboundAutomationsPage() {
                                         <div className="flex items-center justify-end gap-1">
                                             <button
                                                 onClick={() => toggleAutomationStatus(auto.id)}
-                                                className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]"
+                                                className="rounded p-1.5 text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--text-primary)]"
                                                 title={auto.status === "active" ? "Pause" : "Activate"}
                                             >
                                                 {auto.status === "active" ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                                             </button>
                                             <button
                                                 onClick={() => duplicateAutomation(auto.id)}
-                                                className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]"
+                                                className="rounded p-1.5 text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--text-primary)]"
                                                 title="Duplicate"
                                             >
                                                 <Copy className="h-3.5 w-3.5" />
                                             </button>
                                             <button
                                                 onClick={() => openDashboard(auto)}
-                                                className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-[var(--text-primary)]"
+                                                className="rounded p-1.5 text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--text-primary)]"
                                                 title="View Dashboard"
                                             >
                                                 <BarChart3 className="h-3.5 w-3.5" />
                                             </button>
                                             <button
                                                 onClick={() => deleteAutomation(auto.id)}
-                                                className="rounded p-1.5 text-[var(--text-muted)] hover:bg-white/5 hover:text-red-400"
+                                                className="rounded p-1.5 text-[var(--text-muted)] transition-colors hover:bg-white/5 hover:text-red-400"
                                                 title="Delete"
                                             >
                                                 <Trash2 className="h-3.5 w-3.5" />

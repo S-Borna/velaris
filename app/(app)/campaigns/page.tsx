@@ -5,7 +5,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Copy, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowUpDown, Copy, MoreHorizontal, Plus, Search, Trash2, Megaphone } from "lucide-react";
+import { EmptyState } from "@/components/common/empty-state";
+import { toast } from "sonner";
 
 type CampaignStatus = "active" | "paused" | "draft" | "completed" | "archived";
 
@@ -119,12 +121,13 @@ export default function CampaignsPage() {
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
                     <input type="text" placeholder="Search campaigns..." value={searchQuery}
                         onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
+                        aria-label="Search campaigns"
                         className="h-10 w-full rounded-lg border border-white/10 bg-[var(--bg-input)] pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500" />
                 </div>
                 <div className="flex gap-2">
                     {STATUS_OPTIONS.map((opt) => (
                         <button key={opt.value} type="button" onClick={() => { setStatusFilter(opt.value); setPage(0); }}
-                            className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${statusFilter === opt.value ? "border-purple-500/50 bg-purple-500/15 text-purple-300" : "border-white/10 bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-white/10"}`}>
+                            className={`rounded-lg border px-3 py-2 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500 ${statusFilter === opt.value ? "border-purple-500/50 bg-purple-500/15 text-purple-300" : "border-white/10 bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-white/10"}`}>
                             {opt.label}
                         </button>
                     ))}
@@ -160,14 +163,14 @@ export default function CampaignsPage() {
                                     <td className="px-3 py-3">{row.opportunities}</td>
                                     <td className="px-3 py-3">
                                         <div className="flex items-center gap-1">
-                                            <button type="button" title="Duplicate" className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><Copy className="h-3.5 w-3.5" /></button>
-                                            <button type="button" title="Delete" className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-red-500/15 hover:text-red-400 transition"><Trash2 className="h-3.5 w-3.5" /></button>
+                                            <button type="button" title="Duplicate" onClick={() => toast.success(`"${row.name}" duplicated`)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><Copy className="h-3.5 w-3.5" /></button>
+                                            <button type="button" title="Delete" onClick={() => toast.success(`"${row.name}" deleted`)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-red-500/15 hover:text-red-400 transition"><Trash2 className="h-3.5 w-3.5" /></button>
                                             <button type="button" title="More" className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><MoreHorizontal className="h-3.5 w-3.5" /></button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
-                            {paged.length === 0 && <tr><td colSpan={9} className="px-3 py-12 text-center text-[var(--text-muted)]">No campaigns found</td></tr>}
+                            {paged.length === 0 && <tr><td colSpan={9}><EmptyState icon={Megaphone} title="No campaigns yet" description="Create your first campaign to start reaching leads on LinkedIn." actionLabel="Create Campaign" actionHref="/campaigns/new" /></td></tr>}
                         </tbody>
                     </table>
                 </div>

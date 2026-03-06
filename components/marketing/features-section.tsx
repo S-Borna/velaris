@@ -139,19 +139,17 @@ export function FeaturesSection() {
                                         key={tab.id}
                                         type="button"
                                         onClick={() => scrollToSection(tab.id)}
-                                        className={`group flex items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-all duration-300 ${
-                                            activeTab === tab.id
+                                        className={`group flex items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-all duration-300 ${activeTab === tab.id
                                                 ? "bg-purple-500/10 text-purple-400 shadow-sm shadow-purple-500/5"
                                                 : "text-[var(--text-muted)] hover:bg-white/[0.03] hover:text-[var(--text-secondary)]"
-                                        }`}
+                                            }`}
                                         aria-current={activeTab === tab.id ? "true" : undefined}
                                     >
                                         <span
-                                            className={`transition-colors ${
-                                                activeTab === tab.id
+                                            className={`transition-colors ${activeTab === tab.id
                                                     ? "text-purple-400"
                                                     : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
-                                            }`}
+                                                }`}
                                         >
                                             {tab.icon}
                                         </span>
@@ -170,11 +168,10 @@ export function FeaturesSection() {
                                     key={tab.id}
                                     type="button"
                                     onClick={() => scrollToSection(tab.id)}
-                                    className={`rounded-full px-3 py-2 text-xs font-medium transition-all ${
-                                        activeTab === tab.id
+                                    className={`rounded-full px-3 py-2 text-xs font-medium transition-all ${activeTab === tab.id
                                             ? "bg-purple-500/20 text-purple-300"
                                             : "text-[var(--text-muted)]"
-                                    }`}
+                                        }`}
                                 >
                                     {tab.label}
                                 </button>
@@ -255,9 +252,8 @@ function FeatureBlock({
     const mockupVariants = mockupSide === "right" ? slideInRight : slideInLeft;
 
     return (
-        <div className={`flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16 ${
-            mockupSide === "left" ? "lg:flex-row-reverse" : ""
-        }`}>
+        <div className={`flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16 ${mockupSide === "left" ? "lg:flex-row-reverse" : ""
+            }`}>
             {/* Text side */}
             <AnimatedSection className="flex-1" variants={textVariants}>
                 <div className="inline-flex items-center gap-2 rounded-full bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-300">
@@ -463,16 +459,14 @@ function QualifyFeature() {
                                 <span className="text-xs text-white">{lead.name}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className={`text-sm font-bold ${
-                                    lead.score >= 70 ? "text-green-400" : "text-red-400"
-                                }`}>
+                                <span className={`text-sm font-bold ${lead.score >= 70 ? "text-green-400" : "text-red-400"
+                                    }`}>
                                     {lead.score}
                                 </span>
-                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                    lead.level === "High"
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${lead.level === "High"
                                         ? "bg-green-500/15 text-green-300"
                                         : "bg-red-500/15 text-red-300"
-                                }`}>
+                                    }`}>
                                     {lead.level}
                                 </span>
                             </div>
@@ -537,9 +531,8 @@ function ScaleFeature() {
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60 text-[10px] font-bold text-white">
                                         {sender.name.split(" ").map((n) => n[0]).join("")}
                                     </div>
-                                    <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--bg-card)] ${
-                                        sender.status === "active" ? "bg-green-400" : "bg-yellow-400"
-                                    }`} />
+                                    <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--bg-card)] ${sender.status === "active" ? "bg-green-400" : "bg-yellow-400"
+                                        }`} />
                                 </div>
                                 <div>
                                     <span className="text-xs font-medium text-white">
@@ -550,9 +543,8 @@ function ScaleFeature() {
                                     </p>
                                 </div>
                             </div>
-                            <span className={`text-[10px] font-medium ${
-                                sender.status === "active" ? "text-green-400" : "text-yellow-400"
-                            }`}>
+                            <span className={`text-[10px] font-medium ${sender.status === "active" ? "text-green-400" : "text-yellow-400"
+                                }`}>
                                 {sender.status === "active" ? "Active" : "Paused"}
                             </span>
                         </div>
@@ -653,8 +645,8 @@ function FlowNodeCard({ node }: { node: FlowNode }) {
             <div className="flex items-center gap-2 text-xs font-medium">
                 {node.icon ?? (
                     node.type === "start" ? <Zap className="h-3 w-3" /> :
-                    node.type === "wait" ? <Clock className="h-3 w-3" /> :
-                    null
+                        node.type === "wait" ? <Clock className="h-3 w-3" /> :
+                            null
                 )}
                 {node.label}
             </div>
@@ -707,11 +699,10 @@ function UniboxFeature() {
                         {MOCK_CONVERSATIONS.map((conv, i) => (
                             <div
                                 key={conv.name}
-                                className={`cursor-pointer rounded-lg px-2.5 py-2 transition-colors ${
-                                    i === 0
+                                className={`cursor-pointer rounded-lg px-2.5 py-2 transition-colors ${i === 0
                                         ? "bg-purple-500/10 border border-purple-500/20"
                                         : "hover:bg-white/[0.03]"
-                                }`}
+                                    }`}
                             >
                                 <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-medium text-white sm:text-xs">

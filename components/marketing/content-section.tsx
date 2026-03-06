@@ -63,11 +63,10 @@ export function ContentSection() {
                             key={tab.id}
                             type="button"
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-                                activeTab === tab.id
+                            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all ${activeTab === tab.id
                                     ? "bg-purple-500/15 text-purple-300 shadow-sm"
                                     : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                            }`}
+                                }`}
                         >
                             {tab.icon}
                             {tab.label}
@@ -152,11 +151,10 @@ function CreateTab() {
                             {CATEGORIES.map((c, i) => (
                                 <span
                                     key={c}
-                                    className={`rounded-md px-3 py-1.5 text-[10px] font-medium sm:text-xs ${
-                                        i === 0
+                                    className={`rounded-md px-3 py-1.5 text-[10px] font-medium sm:text-xs ${i === 0
                                             ? "bg-purple-500/15 text-purple-300 border border-purple-500/30"
                                             : "bg-white/[0.03] text-[var(--text-muted)] border border-white/[0.06]"
-                                    }`}
+                                        }`}
                                 >
                                     {c}
                                 </span>
@@ -185,11 +183,10 @@ function CreateTab() {
                             {TONES.map((t, i) => (
                                 <span
                                     key={t}
-                                    className={`rounded-md px-3 py-1.5 text-[10px] font-medium sm:text-xs ${
-                                        i === 0
+                                    className={`rounded-md px-3 py-1.5 text-[10px] font-medium sm:text-xs ${i === 0
                                             ? "bg-purple-500/15 text-purple-300 border border-purple-500/30"
                                             : "bg-white/[0.03] text-[var(--text-muted)] border border-white/[0.06]"
-                                    }`}
+                                        }`}
                                 >
                                     {t}
                                 </span>
@@ -385,13 +382,12 @@ function AutomateTab() {
                         {WIZARD_STEPS.map((step, i) => (
                             <div key={step.number} className="flex items-center">
                                 <div className="flex flex-col items-center">
-                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                                        i === 0
+                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${i === 0
                                             ? "bg-purple-500 text-white"
                                             : i < 3
                                                 ? "bg-purple-500/20 text-purple-300"
                                                 : "bg-white/[0.06] text-[var(--text-muted)]"
-                                    }`}>
+                                        }`}>
                                         {i < 3 ? <CheckCircle2 className="h-4 w-4" /> : step.number}
                                     </div>
                                     <span className="mt-1.5 text-[10px] font-medium text-[var(--text-secondary)]">
@@ -399,9 +395,8 @@ function AutomateTab() {
                                     </span>
                                 </div>
                                 {i < WIZARD_STEPS.length - 1 && (
-                                    <div className={`mx-2 h-px w-8 sm:w-12 ${
-                                        i < 2 ? "bg-purple-500/40" : "bg-white/[0.06]"
-                                    }`} />
+                                    <div className={`mx-2 h-px w-8 sm:w-12 ${i < 2 ? "bg-purple-500/40" : "bg-white/[0.06]"
+                                        }`} />
                                 )}
                             </div>
                         ))}

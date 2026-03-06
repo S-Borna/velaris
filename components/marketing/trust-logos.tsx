@@ -110,11 +110,10 @@ function LogoCard({ item }: LogoCardProps) {
 
             {item.badge && (
                 <span
-                    className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        item.badge === "Case study"
+                    className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${item.badge === "Case study"
                             ? "bg-purple-500/15 text-purple-300"
                             : "bg-green-500/15 text-green-300"
-                    }`}
+                        }`}
                 >
                     {item.badge}
                 </span>

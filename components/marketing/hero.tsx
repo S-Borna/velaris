@@ -206,11 +206,10 @@ export function Hero() {
                         <button
                             key={tab.label}
                             type="button"
-                            className={`rounded-full px-4 py-2 text-xs font-medium transition-all sm:px-5 sm:text-sm ${
-                                tab.active
+                            className={`rounded-full px-4 py-2 text-xs font-medium transition-all sm:px-5 sm:text-sm ${tab.active
                                     ? "bg-white/[0.1] text-white shadow-sm"
                                     : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                            }`}
+                                }`}
                         >
                             {tab.label}
                         </button>

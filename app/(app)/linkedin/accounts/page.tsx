@@ -140,19 +140,19 @@ export default function LinkedInAccountsPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4 transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5">
                     <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Connected Accounts</p>
                     <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{summary.connectedCount}</p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4 transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5">
                     <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Avg Health Score</p>
                     <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{summary.healthAverage}</p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4 transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5">
                     <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Warmup Enabled</p>
                     <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{summary.warmupCount}</p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4 transition-all duration-200 hover:border-white/20 hover:-translate-y-0.5">
                     <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Proxy Configured</p>
                     <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{summary.proxyCount}</p>
                 </div>
@@ -185,7 +185,7 @@ export default function LinkedInAccountsPage() {
                                 const usagePercent = Math.round((row.dailyMessagesUsed / row.dailyMessagesLimit) * 100);
 
                                 return (
-                                    <tr key={row.id} className="border-b border-white/6 text-[var(--text-primary)]">
+                                    <tr key={row.id} className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]">
                                         <td className="px-3 py-3">{row.account}</td>
                                         <td className="px-3 py-3"><StatusBadge status={row.status} /></td>
                                         <td className="px-3 py-3 text-[var(--text-secondary)]">{row.type}</td>

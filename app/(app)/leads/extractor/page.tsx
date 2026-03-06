@@ -21,6 +21,7 @@ import {
     Users,
     X,
 } from "lucide-react";
+import { EmptyState } from "@/components/common/empty-state";
 
 /* ─── Types ─────────────────────────────────────────── */
 
@@ -132,15 +133,15 @@ export default function LeadExtractorPage() {
                                         key={key}
                                         onClick={() => setSelectedSource(key)}
                                         className={`rounded-xl border p-3 text-left transition-colors ${selectedSource === key
-                                                ? "border-purple-500/40 bg-purple-500/10"
-                                                : "border-white/6 bg-white/3 hover:border-white/10"
+                                            ? "border-purple-500/40 bg-purple-500/10"
+                                            : "border-white/6 bg-white/3 hover:border-white/10"
                                             }`}
                                     >
                                         <div className="flex items-center gap-2">
                                             <Linkedin
                                                 className={`h-4 w-4 ${selectedSource === key
-                                                        ? "text-purple-400"
-                                                        : "text-[var(--text-muted)]"
+                                                    ? "text-purple-400"
+                                                    : "text-[var(--text-muted)]"
                                                     }`}
                                             />
                                             <span className="text-sm font-medium text-[var(--text-primary)]">
@@ -239,7 +240,9 @@ export default function LeadExtractorPage() {
                             Extraction History
                         </h3>
                     </div>
-                    {MOCK_JOBS.map((job) => {
+                    {MOCK_JOBS.length === 0 ? (
+                        <EmptyState icon={Search} title="No extractions yet" description="Start by extracting leads from LinkedIn searches or posts." />
+                    ) : MOCK_JOBS.map((job) => {
                         const statusCfg = STATUS_STYLES[job.status];
                         const StatusIcon = statusCfg.icon;
                         return (
@@ -247,8 +250,8 @@ export default function LeadExtractorPage() {
                                 key={job.id}
                                 onClick={() => setSelectedJob(job.id)}
                                 className={`w-full border-b border-white/4 px-4 py-3 text-left transition-colors ${selectedJob === job.id
-                                        ? "bg-purple-500/10 border-l-2 border-l-purple-500"
-                                        : "hover:bg-white/3"
+                                    ? "bg-purple-500/10 border-l-2 border-l-purple-500"
+                                    : "hover:bg-white/3"
                                     }`}
                             >
                                 <div className="flex items-start justify-between">
@@ -271,8 +274,8 @@ export default function LeadExtractorPage() {
                                     <div className="flex items-center gap-1.5 ml-2">
                                         <StatusIcon
                                             className={`h-4 w-4 ${statusCfg.color} ${job.status === "running"
-                                                    ? "animate-spin"
-                                                    : ""
+                                                ? "animate-spin"
+                                                : ""
                                                 }`}
                                         />
                                         <span className={`text-xs ${statusCfg.color}`}>
@@ -298,12 +301,12 @@ export default function LeadExtractorPage() {
                                                         className="h-1.5 rounded-full bg-purple-500 transition-all"
                                                         style={{
                                                             width: `${job.leadsFound > 0
-                                                                    ? Math.round(
-                                                                        (job.leadsEnriched /
-                                                                            job.leadsFound) *
-                                                                        100
-                                                                    )
-                                                                    : 0
+                                                                ? Math.round(
+                                                                    (job.leadsEnriched /
+                                                                        job.leadsFound) *
+                                                                    100
+                                                                )
+                                                                : 0
                                                                 }%`,
                                                         }}
                                                     />
@@ -463,14 +466,14 @@ export default function LeadExtractorPage() {
                                                     <div className="flex items-center gap-2">
                                                         <Mail
                                                             className={`h-4 w-4 ${lead.hasEmail
-                                                                    ? "text-green-400"
-                                                                    : "text-[var(--text-muted)] opacity-40"
+                                                                ? "text-green-400"
+                                                                : "text-[var(--text-muted)] opacity-40"
                                                                 }`}
                                                         />
                                                         <Phone
                                                             className={`h-4 w-4 ${lead.hasPhone
-                                                                    ? "text-green-400"
-                                                                    : "text-[var(--text-muted)] opacity-40"
+                                                                ? "text-green-400"
+                                                                : "text-[var(--text-muted)] opacity-40"
                                                                 }`}
                                                         />
                                                     </div>
@@ -479,10 +482,10 @@ export default function LeadExtractorPage() {
                                                     <Badge
                                                         variant="outline"
                                                         className={`text-xs ${lead.qualityScore >= 80
-                                                                ? "border-green-500/30 bg-green-500/15 text-green-300"
-                                                                : lead.qualityScore >= 60
-                                                                    ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
-                                                                    : "border-red-500/30 bg-red-500/15 text-red-300"
+                                                            ? "border-green-500/30 bg-green-500/15 text-green-300"
+                                                            : lead.qualityScore >= 60
+                                                                ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
+                                                                : "border-red-500/30 bg-red-500/15 text-red-300"
                                                             }`}
                                                     >
                                                         {lead.qualityScore}%

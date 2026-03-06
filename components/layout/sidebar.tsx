@@ -1,6 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -9,12 +10,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
     TOP_NAV_ITEMS,
     NAV_GROUPS,
     Plus,
     type NavItem,
 } from "@/lib/constants/navigation";
+import { Menu } from "lucide-react";
 
 const APP_NAME = "OutreachPilot";
 const SIDEBAR_WIDTH = "220px";
@@ -37,17 +40,26 @@ function getInitials(name: string): string {
 /**
  * Renders a single sidebar navigation link.
  */
-function SidebarNavItem({ item, isActive }: { item: NavItem; isActive: boolean }) {
+function SidebarNavItem({
+    item,
+    isActive,
+    onClick,
+}: {
+    item: NavItem;
+    isActive: boolean;
+    onClick?: () => void;
+}) {
     const Icon = item.icon;
 
     return (
         <Link
             href={item.href}
+            onClick={onClick}
             className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150",
                 isActive
                     ? "bg-[var(--bg-hover)] text-[var(--text-primary)]"
-                    : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]",
+                    : "text-[var(--text-secondary)] hover:bg-white/[0.05] hover:text-[var(--text-primary)]",
             )}
             aria-current={isActive ? "page" : undefined}
         >
@@ -57,23 +69,20 @@ function SidebarNavItem({ item, isActive }: { item: NavItem; isActive: boolean }
     );
 }
 
-interface SidebarProps {
-    userName: string;
-}
-
 /**
- * Main sidebar navigation — fixed left panel with grouped navigation items.
- * Matches Velaris's exact sidebar hierarchy.
+ * Inner sidebar content — shared between desktop fixed sidebar and mobile sheet.
  */
-export function Sidebar({ userName }: SidebarProps) {
-    const pathname = usePathname();
-
+function SidebarContent({
+    userName,
+    pathname,
+    onNavClick,
+}: {
+    userName: string;
+    pathname: string;
+    onNavClick?: () => void;
+}) {
     return (
-        <aside
-            className="fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-white/6 bg-[var(--bg-secondary)]"
-            style={{ width: SIDEBAR_WIDTH }}
-            aria-label="Main navigation"
-        >
+        <>
             {/* Logo */}
             <div className="flex h-14 items-center gap-2.5 px-4">
                 <div
@@ -92,10 +101,10 @@ export function Sidebar({ userName }: SidebarProps) {
             <div className="px-3 pb-2">
                 <Button
                     asChild
-                    className="w-full justify-start gap-2 bg-gradient-to-r from-[var(--purple-500)] to-[#A855F7] text-sm font-medium text-white hover:from-[var(--purple-600)] hover:to-[var(--purple-500)]"
+                    className="w-full justify-start gap-2 bg-gradient-to-r from-[var(--purple-500)] to-[#A855F7] text-sm font-medium text-white transition-all duration-200 hover:from-[var(--purple-600)] hover:to-[var(--purple-500)] hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-[1px]"
                     size="sm"
                 >
-                    <Link href="/campaigns/new">
+                    <Link href="/campaigns/new" onClick={onNavClick}>
                         <Plus className="h-4 w-4" />
                         {CREATE_CAMPAIGN_LABEL}
                     </Link>
@@ -113,6 +122,7 @@ export function Sidebar({ userName }: SidebarProps) {
                             key={item.href}
                             item={item}
                             isActive={pathname === item.href}
+                            onClick={onNavClick}
                         />
                     ))}
 
@@ -128,6 +138,7 @@ export function Sidebar({ userName }: SidebarProps) {
                                         key={item.href}
                                         item={item}
                                         isActive={pathname.startsWith(item.href)}
+                                        onClick={onNavClick}
                                     />
                                 ))}
                             </div>
@@ -157,6 +168,61 @@ export function Sidebar({ userName }: SidebarProps) {
                     </Badge>
                 </div>
             </div>
-        </aside>
+        </>
     );
 }
+
+interface SidebarProps {
+    userName: string;
+}
+
+/**
+ * Main sidebar navigation — fixed on desktop, slide-out sheet on mobile.
+ */
+export function Sidebar({ userName }: SidebarProps) {
+    const pathname = usePathname();
+    const [mobileOpen, setMobileOpen] = useState(false);
+
+    return (
+        <>
+            {/* Desktop sidebar — hidden on mobile */}
+            <aside
+                className="fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/6 bg-[var(--bg-secondary)] md:flex"
+                style={{ width: SIDEBAR_WIDTH }}
+                aria-label="Main navigation"
+            >
+                <SidebarContent userName={userName} pathname={pathname} />
+            </aside>
+
+            {/* Mobile sidebar — sheet overlay */}
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                <SheetTrigger asChild>
+                    <button
+                        type="button"
+                        className="fixed left-4 top-3.5 z-50 rounded-lg p-2 text-[var(--text-secondary)] transition-colors hover:bg-white/[0.05] hover:text-white md:hidden"
+                        aria-label="Open navigation menu"
+                    >
+                        <Menu className="h-5 w-5" />
+                    </button>
+                </SheetTrigger>
+                <SheetContent
+                    side="left"
+                    className="w-[260px] border-r border-white/6 bg-[var(--bg-secondary)] p-0"
+                >
+                    <div className="flex h-full flex-col">
+                        <SidebarContent
+                            userName={userName}
+                            pathname={pathname}
+                            onNavClick={() => setMobileOpen(false)}
+                        />
+                    </div>
+                </SheetContent>
+            </Sheet>
+        </>
+    );
+}
+
+/**
+ * Exported sidebar width constant for layout margin calculations.
+ */
+export { SIDEBAR_WIDTH };

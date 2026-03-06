@@ -12,11 +12,13 @@ import {
     LayoutList,
     Search,
     Sparkles,
+    Users,
 } from "lucide-react";
 import { LeadFilterPanel, EMPTY_FILTERS } from "@/components/leads/lead-filters";
 import type { LeadFilters } from "@/components/leads/lead-filters";
 import { LeadTable } from "@/components/leads/lead-table";
 import type { LeadRow, SortKey } from "@/components/leads/lead-table";
+import { EmptyState } from "@/components/common/empty-state";
 
 /* ─── Mock data ─────────────────────────────────────── */
 
@@ -169,8 +171,8 @@ export default function LeadDatabasePage() {
                                 size="sm"
                                 onClick={() => setView(VIEW_TABLE)}
                                 className={`h-8 rounded-r-none px-2.5 ${view === VIEW_TABLE
-                                        ? "bg-purple-500/20 text-purple-300"
-                                        : "text-[var(--text-muted)]"
+                                    ? "bg-purple-500/20 text-purple-300"
+                                    : "text-[var(--text-muted)]"
                                     }`}
                             >
                                 <LayoutList className="h-4 w-4" />
@@ -180,8 +182,8 @@ export default function LeadDatabasePage() {
                                 size="sm"
                                 onClick={() => setView(VIEW_GRID)}
                                 className={`h-8 rounded-l-none px-2.5 ${view === VIEW_GRID
-                                        ? "bg-purple-500/20 text-purple-300"
-                                        : "text-[var(--text-muted)]"
+                                    ? "bg-purple-500/20 text-purple-300"
+                                    : "text-[var(--text-muted)]"
                                     }`}
                             >
                                 <LayoutGrid className="h-4 w-4" />
@@ -232,7 +234,11 @@ export default function LeadDatabasePage() {
                 </div>
 
                 {/* Grid view */}
-                {view === VIEW_GRID ? (
+                {paged.length === 0 ? (
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <EmptyState icon={Users} title="No leads found" description="No leads found matching your filters. Try adjusting your search criteria." />
+                    </div>
+                ) : view === VIEW_GRID ? (
                     <div className="flex-1 overflow-y-auto p-6">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {paged.map((lead) => (
@@ -257,10 +263,10 @@ export default function LeadDatabasePage() {
                                             <Badge
                                                 variant="outline"
                                                 className={`text-xs ${lead.icpScore >= 80
-                                                        ? "border-green-500/30 bg-green-500/15 text-green-300"
-                                                        : lead.icpScore >= 50
-                                                            ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
-                                                            : "border-red-500/30 bg-red-500/15 text-red-300"
+                                                    ? "border-green-500/30 bg-green-500/15 text-green-300"
+                                                    : lead.icpScore >= 50
+                                                        ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
+                                                        : "border-red-500/30 bg-red-500/15 text-red-300"
                                                     }`}
                                             >
                                                 {lead.icpScore}
