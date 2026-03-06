@@ -1,44 +1,83 @@
 // Copyright (c) Said Borna. All rights reserved.
+"use client";
+
+import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Linkedin, MoreHorizontal, Plus } from "lucide-react";
+import { Linkedin, Plus } from "lucide-react";
 
-const LINKEDIN_ACCOUNTS = [
+type AccountStatus = "connected" | "syncing" | "error";
+
+interface LinkedInAccountRow {
+    id: string;
+    account: string;
+    status: AccountStatus;
+    type: string;
+    connections: number;
+    dailyMessagesUsed: number;
+    dailyMessagesLimit: number;
+    healthScore: number;
+    lastSync: string;
+    warmupEnabled: boolean;
+    proxyConfigured: boolean;
+}
+
+const INITIAL_ACCOUNTS: LinkedInAccountRow[] = [
     {
+        id: "acc-1",
         account: "Mathias Warg",
         status: "connected",
         type: "Sales Navigator",
-        connections: "8,240",
-        usage: "31 / 50",
+        connections: 8240,
+        dailyMessagesUsed: 31,
+        dailyMessagesLimit: 50,
+        healthScore: 93,
         lastSync: "2 min ago",
+        warmupEnabled: true,
+        proxyConfigured: true,
     },
     {
+        id: "acc-2",
         account: "[redacted]",
         status: "connected",
         type: "Premium",
-        connections: "5,912",
-        usage: "22 / 50",
+        connections: 5912,
+        dailyMessagesUsed: 22,
+        dailyMessagesLimit: 50,
+        healthScore: 89,
         lastSync: "5 min ago",
+        warmupEnabled: false,
+        proxyConfigured: true,
     },
     {
+        id: "acc-3",
         account: "[redacted]",
         status: "syncing",
         type: "Premium",
-        connections: "4,508",
-        usage: "18 / 50",
+        connections: 4508,
+        dailyMessagesUsed: 18,
+        dailyMessagesLimit: 50,
+        healthScore: 78,
         lastSync: "Syncing now",
+        warmupEnabled: true,
+        proxyConfigured: false,
     },
     {
+        id: "acc-4",
         account: "Martin Smith",
         status: "error",
         type: "Basic",
-        connections: "3,192",
-        usage: "0 / 50",
+        connections: 3192,
+        dailyMessagesUsed: 0,
+        dailyMessagesLimit: 50,
+        healthScore: 52,
         lastSync: "1h ago",
+        warmupEnabled: false,
+        proxyConfigured: false,
     },
 ];
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status: AccountStatus }) {
     if (status === "connected") {
         return <Badge className="border border-green-500/30 bg-green-500/15 text-green-300">Connected</Badge>;
     }
@@ -50,7 +89,42 @@ function StatusBadge({ status }: { status: string }) {
     return <Badge className="border border-red-500/30 bg-red-500/15 text-red-300">Error</Badge>;
 }
 
+function HealthBadge({ score }: { score: number }) {
+    if (score >= 85) {
+        return <Badge className="border border-green-500/30 bg-green-500/15 text-green-300">{score} Excellent</Badge>;
+    }
+
+    if (score >= 70) {
+        return <Badge className="border border-amber-500/30 bg-amber-500/15 text-amber-300">{score} Stable</Badge>;
+    }
+
+    return <Badge className="border border-red-500/30 bg-red-500/15 text-red-300">{score} Risk</Badge>;
+}
+
 export default function LinkedInAccountsPage() {
+    const [accounts, setAccounts] = useState<LinkedInAccountRow[]>(INITIAL_ACCOUNTS);
+
+    const summary = useMemo(() => {
+        const healthAverage = Math.round(accounts.reduce((sum, row) => sum + row.healthScore, 0) / accounts.length);
+        const connectedCount = accounts.filter((row) => row.status === "connected").length;
+        const warmupCount = accounts.filter((row) => row.warmupEnabled).length;
+        const proxyCount = accounts.filter((row) => row.proxyConfigured).length;
+
+        return { healthAverage, connectedCount, warmupCount, proxyCount };
+    }, [accounts]);
+
+    function toggleWarmup(id: string): void {
+        setAccounts((current) =>
+            current.map((row) => {
+                if (row.id !== id) {
+                    return row;
+                }
+
+                return { ...row, warmupEnabled: !row.warmupEnabled };
+            }),
+        );
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -65,10 +139,29 @@ export default function LinkedInAccountsPage() {
                 </Button>
             </div>
 
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                    <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Connected Accounts</p>
+                    <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{summary.connectedCount}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                    <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Avg Health Score</p>
+                    <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{summary.healthAverage}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                    <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Warmup Enabled</p>
+                    <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{summary.warmupCount}</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                    <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Proxy Configured</p>
+                    <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{summary.proxyCount}</p>
+                </div>
+            </div>
+
             <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-5">
                 <div className="mb-4 flex items-center gap-2 text-[var(--text-secondary)]">
                     <Linkedin className="h-4 w-4" />
-                    <span className="text-sm">4 accounts connected</span>
+                    <span className="text-sm">{accounts.length} accounts connected</span>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -80,28 +173,57 @@ export default function LinkedInAccountsPage() {
                                 <th className="px-3 py-3 font-medium">Type</th>
                                 <th className="px-3 py-3 font-medium">Connections</th>
                                 <th className="px-3 py-3 font-medium">Daily Messages Usage</th>
+                                <th className="px-3 py-3 font-medium">Health</th>
+                                <th className="px-3 py-3 font-medium">Warmup</th>
+                                <th className="px-3 py-3 font-medium">Proxy</th>
                                 <th className="px-3 py-3 font-medium">Last Sync</th>
                                 <th className="px-3 py-3 font-medium">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {LINKEDIN_ACCOUNTS.map((row) => (
-                                <tr key={row.account} className="border-b border-white/6 text-[var(--text-primary)]">
-                                    <td className="px-3 py-3">{row.account}</td>
-                                    <td className="px-3 py-3">
-                                        <StatusBadge status={row.status} />
-                                    </td>
-                                    <td className="px-3 py-3 text-[var(--text-secondary)]">{row.type}</td>
-                                    <td className="px-3 py-3">{row.connections}</td>
-                                    <td className="px-3 py-3">{row.usage}</td>
-                                    <td className="px-3 py-3 text-[var(--text-secondary)]">{row.lastSync}</td>
-                                    <td className="px-3 py-3">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {accounts.map((row) => {
+                                const usagePercent = Math.round((row.dailyMessagesUsed / row.dailyMessagesLimit) * 100);
+
+                                return (
+                                    <tr key={row.id} className="border-b border-white/6 text-[var(--text-primary)]">
+                                        <td className="px-3 py-3">{row.account}</td>
+                                        <td className="px-3 py-3"><StatusBadge status={row.status} /></td>
+                                        <td className="px-3 py-3 text-[var(--text-secondary)]">{row.type}</td>
+                                        <td className="px-3 py-3">{row.connections.toLocaleString()}</td>
+                                        <td className="px-3 py-3">
+                                            <div className="w-36">
+                                                <p className="mb-1 text-xs text-[var(--text-secondary)]">{row.dailyMessagesUsed} / {row.dailyMessagesLimit}</p>
+                                                <div className="h-1.5 rounded-full bg-white/10">
+                                                    <div className="h-1.5 rounded-full bg-purple-500" style={{ width: `${usagePercent}%` }} />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-3"><HealthBadge score={row.healthScore} /></td>
+                                        <td className="px-3 py-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleWarmup(row.id)}
+                                                className={`rounded-md border px-2 py-1 text-xs font-medium transition ${row.warmupEnabled ? "border-green-500/30 bg-green-500/15 text-green-300" : "border-white/15 bg-white/5 text-[var(--text-secondary)] hover:bg-white/10"}`}
+                                            >
+                                                {row.warmupEnabled ? "Enabled" : "Disabled"}
+                                            </button>
+                                        </td>
+                                        <td className="px-3 py-3">
+                                            {row.proxyConfigured ? (
+                                                <Badge className="border border-cyan-500/30 bg-cyan-500/15 text-cyan-300">Configured</Badge>
+                                            ) : (
+                                                <Badge className="border border-white/15 bg-white/5 text-[var(--text-secondary)]">Not Set</Badge>
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-3 text-[var(--text-secondary)]">{row.lastSync}</td>
+                                        <td className="px-3 py-3">
+                                            <Button variant="ghost" size="sm" className="h-8 border border-white/10 bg-[var(--bg-input)] px-3 text-xs text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
+                                                Manage
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
