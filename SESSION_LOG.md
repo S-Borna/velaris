@@ -279,6 +279,7 @@
 - `b006269` — chore: migrate from Cloudflare Pages to Vercel — remove wrangler, opennext, CF scripts
 - `be4d62f` — chore: update gitignore for vercel
 - `375e026` — feat: Phase 3 campaign engine — list, detail, wizard, sequence builder
+- `f0d69fe` — docs: checkpoint Phase 3 campaign engine in SESSION_LOG
 
 ### Current State
 
@@ -290,3 +291,52 @@
 
 - Phase 4: Lead Management — leads/database + leads/extractor pages (currently placeholders)
 - Phase 5+: per CLAUDE.md build order
+
+---
+
+## Session 2026-03-06 — Phase 4 (Lead Management)
+
+### Completed
+
+- **Lead Database page** (`app/(app)/leads/database/page.tsx`):
+  - 25 mock leads with realistic names, titles, companies, ICP scores
+  - 11-category filter panel (General, Company, Financials, Experience, Education, Certifications, Recommendations, Web Insights, Reviews, Company Insights, Technologies) — 83 total filters per CLAUDE.md spec
+  - Expandable filter sections with checkbox groups (Seniority, Departments, Location, Industry, Company Size)
+  - Active filter tags with remove buttons + reset all
+  - Full-text search across name, title, company, location
+  - Sortable columns: Name, Title, Company, Location, ICP Score
+  - Table/Grid view toggle
+  - Grid view: responsive card layout (1-4 cols) with ICP badges, contact indicators, tags
+  - Table view: avatar initials, contact icons (email/phone available indicators), company logos, ICP score badges (High/Medium/Low)
+  - Pagination: "Showing page X of Y (Z leads on this page, 500 total)"
+  - AI Search button, Export Data button
+  - "300M+ Verified Contacts" badge, "Real-time data enrichment included" subtext
+  - "Set Filters → Search Leads → Export Data" workflow indicator
+
+- **Lead Extractor page** (`app/(app)/leads/extractor/page.tsx`):
+  - 3 source types: LinkedIn Search, LinkedIn Post, Sales Navigator — selectable cards
+  - Extraction wizard: URL/query input, max leads input, auto-enrich + skip duplicates checkboxes
+  - Split-view layout: extraction history (left) + results panel (right)
+  - 5 mock extraction jobs with statuses: Completed, Running, Queued, Failed
+  - Real-time progress bar for running extractions
+  - Per-job enrichment stats: Leads Found, Enriched, With Email, With Phone
+  - Results table: name with avatar, title, company, location, contact indicators, quality score badges
+  - Job actions: Export, Add to Campaign
+  - Duplicate skip counter per job
+
+- **Reusable components:**
+  - `components/leads/lead-filters.tsx` — LeadFilterPanel with 11 categories, checkbox groups, active tags, reset
+  - `components/leads/lead-table.tsx` — LeadTable with sortable headers, ICP badges, contact icons, pagination
+
+### Validation
+
+- `npx tsc --noEmit` — zero errors
+- `npm run build` — all 19 routes compiled (leads/database 8.8kB, leads/extractor 5.81kB)
+
+### Git
+
+- Commit hash will be added after commit
+
+### Next Steps
+
+- Phase 5: Unibox — conversation list + message thread
