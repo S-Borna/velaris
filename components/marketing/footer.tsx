@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 import Link from "next/link";
 
-const APP_NAME = "OutreachPilot";
+const APP_NAME = "Velaris";
 
 const FOOTER_COLUMNS = [
     {

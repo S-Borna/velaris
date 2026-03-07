@@ -41,7 +41,7 @@ const KPI_DELTAS = ["+8.2%", "+5.4%", "+4.1%", "+2.7%", "+11.0%"];
 
 const ACCOUNT_ANALYTICS: AccountAnalyticsRow[] = [
     {
-        account: "Mathias Warg",
+        account: "Said Borna",
         campaign: "Agency Owners",
         sent: 412,
         accepted: 227,
@@ -50,7 +50,7 @@ const ACCOUNT_ANALYTICS: AccountAnalyticsRow[] = [
         opportunitiesValue: 18200,
     },
     {
-        account: "[redacted]",
+        account: "Amir Kessler",
         campaign: "SaaS Founders",
         sent: 395,
         accepted: 206,
@@ -59,7 +59,7 @@ const ACCOUNT_ANALYTICS: AccountAnalyticsRow[] = [
         opportunitiesValue: 15600,
     },
     {
-        account: "[redacted]",
+        account: "Lina Bergström",
         campaign: "Inbound Campaign",
         sent: 338,
         accepted: 182,
@@ -68,7 +68,7 @@ const ACCOUNT_ANALYTICS: AccountAnalyticsRow[] = [
         opportunitiesValue: 12400,
     },
     {
-        account: "Martin Smith",
+        account: "Dario Voss",
         campaign: "Agency Owners",
         sent: 485,
         accepted: 233,
@@ -79,16 +79,16 @@ const ACCOUNT_ANALYTICS: AccountAnalyticsRow[] = [
 ];
 
 const REALTIME_FEED: ActivityEvent[] = [
-    { id: "a1", actor: "Mathias Warg", action: "sent 12 new connection requests", when: "2 min ago" },
-    { id: "a2", actor: "[redacted]", action: "received 4 replies", when: "9 min ago" },
-    { id: "a3", actor: "[redacted]", action: "moved 2 leads to opportunities", when: "14 min ago" },
-    { id: "a4", actor: "Martin Smith", action: "accepted 7 new connections", when: "26 min ago" },
+    { id: "a1", actor: "Said Borna", action: "sent 12 new connection requests", when: "2 min ago" },
+    { id: "a2", actor: "Amir Kessler", action: "received 4 replies", when: "9 min ago" },
+    { id: "a3", actor: "Lina Bergström", action: "moved 2 leads to opportunities", when: "14 min ago" },
+    { id: "a4", actor: "Dario Voss", action: "accepted 7 new connections", when: "26 min ago" },
 ];
 
 const AI_INSIGHTS = [
     { text: "Your acceptance rate from Agency Owners campaign (51%) is 2x higher than SaaS Founders (52%). Consider allocating more daily sends to Agency Owners.", type: "optimization" as const },
     { text: "Reply rates peak on Tuesday-Thursday between 9-11 AM CET. Adjust your campaign schedules to maximize engagement in this window.", type: "timing" as const },
-    { text: "Martin Smith has the highest opportunity value ($23.8K) but lowest reply rate (25/322 = 7.8%). Consider revising his message templates.", type: "alert" as const },
+    { text: "Dario Voss has the highest opportunity value ($23.8K) but lowest reply rate (25/322 = 7.8%). Consider revising his message templates.", type: "alert" as const },
     { text: "Based on current trends, you're on track to hit 120 opportunities this quarter — 18% above target.", type: "forecast" as const },
 ];
 

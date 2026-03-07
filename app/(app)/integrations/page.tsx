@@ -217,7 +217,7 @@ export default function IntegrationsPage() {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <p className="text-sm text-[var(--text-secondary)]">
-                            Manage API keys for programmatic access to your OutreachPilot data.
+                            Manage API keys for programmatic access to your Velaris data.
                         </p>
                         <Button
                             variant="outline"
@@ -278,7 +278,7 @@ export default function IntegrationsPage() {
                     <div className="rounded-lg border border-white/6 bg-white/[0.02] p-4">
                         <p className="text-xs text-[var(--text-muted)]">
                             <strong className="text-[var(--text-secondary)]">Documentation:</strong> Full API reference at{" "}
-                            <span className="text-purple-400">docs.outreachpilot.com/api</span>
+                            <span className="text-purple-400">docs.velaris.dev/api</span>
                         </p>
                     </div>
                 </div>

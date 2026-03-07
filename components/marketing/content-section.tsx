@@ -213,7 +213,7 @@ function CreateTab() {
                     <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60" />
                         <div>
-                            <p className="text-sm font-semibold text-white">Martin Smith</p>
+                            <p className="text-sm font-semibold text-white">Dario Voss</p>
                             <p className="text-[10px] text-[var(--text-muted)]">CEO & Founder @ Stealth AI</p>
                         </div>
                     </div>
@@ -256,13 +256,13 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
 /* ---------- Schedule Tab ---------- */
 
 const SCHEDULED_POSTS = [
-    { author: "Elliot N.", time: "Tomorrow, 9:00 AM", preview: "3 mistakes founders make with LinkedIn outreach...", status: "scheduled" as const },
+    { author: "Amir K.", time: "Tomorrow, 9:00 AM", preview: "3 mistakes founders make with LinkedIn outreach...", status: "scheduled" as const },
     { author: "Sarah K.", time: "Mar 8, 11:30 AM", preview: "Why cold DMs still work in 2026 (when done right)...", status: "scheduled" as const },
-    { author: "Marcus W.", time: "Mar 9, 2:00 PM", preview: "Our team grew 40% YoY — here's what I learned...", status: "scheduled" as const },
+    { author: "Tomas R.", time: "Mar 9, 2:00 PM", preview: "Our team grew 40% YoY — here’s what I learned...", status: "scheduled" as const },
 ] as const;
 
 const POSTED = [
-    { author: "Elliot N.", time: "2 hours ago", preview: "Just crossed 1,000 connections this month 🎯", likes: 142, comments: 23 },
+    { author: "Amir K.", time: "2 hours ago", preview: "Just crossed 1,000 connections this month 🎯", likes: 142, comments: 23 },
     { author: "Sarah K.", time: "Yesterday", preview: "The #1 reason your outreach messages get ignored...", likes: 289, comments: 41 },
 ] as const;
 

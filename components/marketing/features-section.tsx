@@ -75,7 +75,7 @@ const TESTIMONIALS: Record<string, Testimonial> = {
     },
     unibox: {
         metric: "4.28",
-        company: "OutreachPilot",
+        company: "Velaris",
         description: "Calls booked per day on autopilot",
     },
 };
@@ -494,10 +494,10 @@ function QualifyFeature() {
 /* ---------- Scale Feature ---------- */
 
 const MOCK_SENDERS = [
-    { name: "[redacted]", status: "active" as const },
+    { name: "Amir Kessler", status: "active" as const },
     { name: "Sarah Karlsson", status: "active" as const },
-    { name: "Marcus Lindgren", status: "active" as const },
-    { name: "[redacted]", status: "active" as const },
+    { name: "Tomas Richter", status: "active" as const },
+    { name: "Lina Bergström", status: "active" as const },
     { name: "Alex Carter", status: "paused" as const },
 ] as const;
 

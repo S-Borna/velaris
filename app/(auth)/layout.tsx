@@ -2,7 +2,7 @@
 
 import { Playfair_Display } from "next/font/google";
 
-const APP_NAME = "OutreachPilot";
+const APP_NAME = "Velaris";
 
 const playfairDisplay = Playfair_Display({
     subsets: ["latin"],

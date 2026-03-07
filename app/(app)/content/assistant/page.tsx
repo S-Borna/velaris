@@ -429,7 +429,7 @@ export default function ContentAssistantPage() {
                                                         Said Borna
                                                     </p>
                                                     <p className="text-xs text-[var(--text-muted)]">
-                                                        Building OutreachPilot · AI-powered LinkedIn automation
+                                                        Building Velaris · AI-powered LinkedIn automation
                                                     </p>
                                                     <p className="text-[10px] text-[var(--text-muted)]">
                                                         Just now · 🌐

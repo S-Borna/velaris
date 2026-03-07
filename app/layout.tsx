@@ -11,7 +11,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-    title: "OutreachPilot — LinkedIn Automation & AI Content",
+    title: "Velaris — LinkedIn Automation & AI Content",
     description:
         "Find, message, and close ideal leads on LinkedIn with AI-powered outreach automation.",
 };

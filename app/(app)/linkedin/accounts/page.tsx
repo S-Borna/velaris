@@ -25,7 +25,7 @@ interface LinkedInAccountRow {
 const INITIAL_ACCOUNTS: LinkedInAccountRow[] = [
     {
         id: "acc-1",
-        account: "Mathias Warg",
+        account: "Said Borna",
         status: "connected",
         type: "Sales Navigator",
         connections: 8240,
@@ -38,7 +38,7 @@ const INITIAL_ACCOUNTS: LinkedInAccountRow[] = [
     },
     {
         id: "acc-2",
-        account: "[redacted]",
+        account: "Amir Kessler",
         status: "connected",
         type: "Premium",
         connections: 5912,
@@ -51,7 +51,7 @@ const INITIAL_ACCOUNTS: LinkedInAccountRow[] = [
     },
     {
         id: "acc-3",
-        account: "[redacted]",
+        account: "Lina Bergström",
         status: "syncing",
         type: "Premium",
         connections: 4508,
@@ -64,7 +64,7 @@ const INITIAL_ACCOUNTS: LinkedInAccountRow[] = [
     },
     {
         id: "acc-4",
-        account: "Martin Smith",
+        account: "Dario Voss",
         status: "error",
         type: "Basic",
         connections: 3192,

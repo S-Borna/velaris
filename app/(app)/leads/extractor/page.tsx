@@ -56,7 +56,7 @@ interface ExtractedLead {
 
 const MOCK_JOBS: ExtractionJob[] = [
     { id: "e1", source: "search", query: "SaaS CEO Stockholm 2-15 employees", status: "completed", leadsFound: 342, leadsEnriched: 342, startedAt: "2026-03-05 14:30", completedAt: "2026-03-05 14:45", duplicatesSkipped: 18 },
-    { id: "e2", source: "post", query: "https://linkedin.com/posts/elliot-nestenborg_...", status: "completed", leadsFound: 127, leadsEnriched: 127, startedAt: "2026-03-04 09:15", completedAt: "2026-03-04 09:22", duplicatesSkipped: 5 },
+    { id: "e2", source: "post", query: "https://linkedin.com/posts/amir-kessler_...", status: "completed", leadsFound: 127, leadsEnriched: 127, startedAt: "2026-03-04 09:15", completedAt: "2026-03-04 09:22", duplicatesSkipped: 5 },
     { id: "e3", source: "sales_navigator", query: "Marketing Director DACH region B2B SaaS", status: "running", leadsFound: 89, leadsEnriched: 56, startedAt: "2026-03-06 10:00", completedAt: null, duplicatesSkipped: 3 },
     { id: "e4", source: "search", query: "VP Sales Fintech Europe", status: "queued", leadsFound: 0, leadsEnriched: 0, startedAt: "2026-03-06 10:05", completedAt: null, duplicatesSkipped: 0 },
     { id: "e5", source: "search", query: "Agency Owner Digital Marketing US", status: "failed", leadsFound: 0, leadsEnriched: 0, startedAt: "2026-03-03 16:00", completedAt: "2026-03-03 16:01", duplicatesSkipped: 0 },

@@ -345,7 +345,7 @@ export default function AcademyPage() {
             {/* Contextual tips */}
             <div className="rounded-lg border border-white/6 bg-white/[0.02] p-4 text-center">
                 <p className="text-xs text-[var(--text-muted)]">
-                    <strong className="text-[var(--text-secondary)]">Pro tip:</strong> Complete all courses to unlock the &quot;OutreachPilot Master&quot; achievement badge on your profile.
+                    <strong className="text-[var(--text-secondary)]">Pro tip:</strong> Complete all courses to unlock the &quot;Velaris Master&quot; achievement badge on your profile.
                 </p>
             </div>
         </div>

@@ -1,5 +1,5 @@
 // Copyright (c) Said Borna. All rights reserved.
-// OutreachPilot — Prisma Schema (matches CLAUDE.md database spec)
+// Velaris — Prisma Schema
 
 generator client {
   provider = "prisma-client-js"
