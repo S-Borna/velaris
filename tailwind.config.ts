@@ -65,9 +65,19 @@ const config: Config = {
                     "0%": { opacity: "0", transform: "translateY(8px)" },
                     "100%": { opacity: "1", transform: "translateY(0)" },
                 },
+                "dropdown-enter": {
+                    "0%": { opacity: "0", transform: "translateY(-4px) scale(0.97)" },
+                    "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+                },
+                "dropdown-exit": {
+                    "0%": { opacity: "1", transform: "translateY(0) scale(1)" },
+                    "100%": { opacity: "0", transform: "translateY(-4px) scale(0.97)" },
+                },
             },
             animation: {
                 "fade-in": "fade-in 0.25s ease-out",
+                "dropdown-enter": "dropdown-enter 0.18s cubic-bezier(0.16,1,0.3,1)",
+                "dropdown-exit": "dropdown-exit 0.18s cubic-bezier(0.4,0,0.2,1)",
             },
         },
     },

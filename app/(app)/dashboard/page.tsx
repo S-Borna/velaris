@@ -4,6 +4,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { ArrowUpRight, ChevronUp, Lightbulb, Share2, Sparkles } from "lucide-react";
 
 type TimeFilter = "1 day" | "1 week" | "1 month";
@@ -212,18 +213,13 @@ export default function DashboardPage() {
                         ))}
                     </div>
 
-                    <select
+                    <CustomSelect
                         aria-label="Filter by campaign"
                         value={campaignFilter}
-                        onChange={(event) => setCampaignFilter(event.target.value as CampaignFilter)}
-                        className="h-9 rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 text-sm text-[var(--text-primary)] focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    >
-                        {campaigns.map((campaign) => (
-                            <option key={campaign} value={campaign}>
-                                {campaign}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={(val) => setCampaignFilter(val as CampaignFilter)}
+                        options={campaigns.map((c) => ({ label: c, value: c }))}
+                        triggerClassName="h-9 w-[180px]"
+                    />
 
                     <Button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
                         <Share2 className="mr-2 h-4 w-4" /> Share
@@ -283,7 +279,7 @@ export default function DashboardPage() {
                     <TimelineChart />
                 </div>
 
-                <div className="space-y-4">
+                <div>
                     <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-5">
                         <h3 className="mb-3 text-base font-semibold text-[var(--text-primary)]">Conversion Funnel</h3>
                         <div className="space-y-1 text-sm">
@@ -320,8 +316,12 @@ export default function DashboardPage() {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-5">
+            {/* Activity Feed + AI Insights — side by side, full width */}
+            <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-5">
                         <div className="mb-3 flex items-center justify-between">
                             <h3 className="text-base font-semibold text-[var(--text-primary)]">Real-time Activity Feed</h3>
                             <Badge className="border border-green-500/30 bg-green-500/10 text-green-300">Live</Badge>
@@ -334,10 +334,10 @@ export default function DashboardPage() {
                                 </li>
                             ))}
                         </ul>
-                    </div>
+                </div>
 
-                    {/* AI Insights */}
-                    <div className="rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent p-5">
+                {/* AI Insights */}
+                <div className="rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent p-5">
                         <div className="mb-3 flex items-center justify-between">
                             <h3 className="flex items-center gap-2 text-base font-semibold text-[var(--text-primary)]">
                                 <Sparkles className="h-4 w-4 text-purple-400" />
@@ -353,7 +353,6 @@ export default function DashboardPage() {
                                 </li>
                             ))}
                         </ul>
-                    </div>
                 </div>
             </div>
 
