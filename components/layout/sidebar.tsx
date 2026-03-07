@@ -17,7 +17,8 @@ import {
     Plus,
     type NavItem,
 } from "@/lib/constants/navigation";
-import { Menu, ChevronDown, Check } from "lucide-react";
+import { Menu, ChevronDown, Check, LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 const APP_NAME = "Velaris";
 const SIDEBAR_WIDTH = "220px";
@@ -258,7 +259,7 @@ function SidebarContent({
                         {getInitials(userName || "User")}
                     </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col overflow-hidden">
+                <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                     <span className="truncate text-sm font-medium text-[var(--text-primary)]">
                         {userName || "User"}
                     </span>
@@ -269,6 +270,15 @@ function SidebarContent({
                         {SENDER_COUNT} Sender
                     </Badge>
                 </div>
+                <button
+                    type="button"
+                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    className="shrink-0 rounded-lg p-1.5 text-[var(--text-muted)] transition-colors duration-150 hover:bg-red-500/10 hover:text-red-400"
+                    aria-label="Log out"
+                    title="Log out"
+                >
+                    <LogOut className="h-4 w-4" />
+                </button>
             </div>
         </>
     );
