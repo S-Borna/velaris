@@ -174,12 +174,12 @@ export default function CampaignDetailPage() {
                             </thead>
                             <tbody>
                                 <tr className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]">
-                                    <td className="px-3 py-3">Mathias Warg</td>
+                                    <td className="px-3 py-3">Said Borna</td>
                                     <td className="px-3 py-3"><Badge className="border border-green-500/30 bg-green-500/15 text-green-300">Connected</Badge></td>
                                     <td className="px-3 py-3">312</td>
                                 </tr>
                                 <tr className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]">
-                                    <td className="px-3 py-3">[redacted]</td>
+                                    <td className="px-3 py-3">Amir Kessler</td>
                                     <td className="px-3 py-3"><Badge className="border border-green-500/30 bg-green-500/15 text-green-300">Connected</Badge></td>
                                     <td className="px-3 py-3">288</td>
                                 </tr>

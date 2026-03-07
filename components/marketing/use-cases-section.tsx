@@ -55,7 +55,7 @@ export function UseCasesSection() {
                     All-bound marketing not only for agencies, but for all entrepreneurs
                 </h2>
                 <p className="mt-4 text-base text-[var(--text-secondary)]">
-                    See how teams of all sizes use OutreachPilot to generate pipeline, build authority, and close deals.
+                    See how teams of all sizes use Velaris to generate pipeline, build authority, and close deals.
                 </p>
             </AnimatedSection>
 

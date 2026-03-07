@@ -10,7 +10,7 @@ import {
     X,
 } from "lucide-react";
 
-const APP_NAME = "OutreachPilot";
+const APP_NAME = "Velaris";
 
 interface NavLinkSimple {
     label: string;

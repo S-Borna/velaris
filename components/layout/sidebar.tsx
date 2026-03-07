@@ -19,7 +19,7 @@ import {
 } from "@/lib/constants/navigation";
 import { Menu, ChevronDown, Check } from "lucide-react";
 
-const APP_NAME = "OutreachPilot";
+const APP_NAME = "Velaris";
 const SIDEBAR_WIDTH = "220px";
 const CREATE_CAMPAIGN_LABEL = "+ Create Campaign";
 const SENDER_COUNT = 1;

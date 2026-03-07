@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const PAGE_TITLE = "Welcome back";
-const PAGE_SUBTITLE = "Sign in to your OutreachPilot account";
+const PAGE_SUBTITLE = "Sign in to your Velaris account";
 const ERROR_INVALID_CREDENTIALS = "Invalid email or password.";
 
 /**

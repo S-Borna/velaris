@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { AnimatedSection, fadeInUp } from "./animations";
 
 /**
- * Bottom CTA section — "Try OutreachPilot for free!" with floating app screenshots.
+ * Bottom CTA section — "Try Velaris for free!" with floating app screenshots.
  */
 export function CtaSection() {
     return (
@@ -19,7 +19,7 @@ export function CtaSection() {
 
             <AnimatedSection className="relative z-10 mx-auto max-w-3xl px-6 text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                    Try OutreachPilot for free!
+                    Try Velaris for free!
                 </h2>
                 <p className="mt-4 text-base text-[var(--text-secondary)]">
                     Join thousands of founders, agencies, and growth teams automating

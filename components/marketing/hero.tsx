@@ -8,7 +8,7 @@ import { ArrowRight, Play } from "lucide-react";
 
 const HEADLINE = "Find, Message & Close Ideal Leads on LinkedIn";
 const SUBTEXT =
-    "OutreachPilot helps you find the right contacts, score them for ICP fit, and automate outreach across unlimited LinkedIn accounts";
+    "Velaris helps you find the right contacts, score them for ICP fit, and automate outreach across unlimited LinkedIn accounts";
 
 const APP_TABS = [
     { label: "Home", active: true },
@@ -243,9 +243,9 @@ export function Hero() {
 /* ---------- Dashboard Mockup (static illustration) ---------- */
 
 const MOCK_ACCOUNTS = [
-    { name: "Elliot N.", connections: 847, messages: 203, replies: 142 },
+    { name: "Amir K.", connections: 847, messages: 203, replies: 142 },
     { name: "Sarah K.", connections: 632, messages: 178, replies: 98 },
-    { name: "Marcus W.", connections: 1204, messages: 412, replies: 287 },
+    { name: "Tomas R.", connections: 1204, messages: 412, replies: 287 },
 ] as const;
 
 const KPI_DATA = [
