@@ -705,3 +705,61 @@ Phase 10A landing page complete — all 12 sections built (Hero, Trust Logos, Fe
 - User pushes to main for Vercel deploy
 - Review live at https://pilot-iota-taupe.vercel.app
 - Phase 10 complete — all enhancements shipped
+
+---
+
+## Session 2026-03-06 — Rebrand + Identity
+
+### Completed
+
+- **Full rebrand:** OutreachPilot → Velaris (all components, layouts, marketing pages, metadata)
+- **Dashboard layout overhaul:** Premium custom dropdowns with animations
+- Commit: `4751a67` — rebrand to Velaris
+- Commit: `f6eec8c` — dashboard layout + premium custom dropdowns
+
+---
+
+## Session 2026-03-07 — Integrity Audit + Backend Roadmap
+
+### Completed
+
+1. **Logout button** — Added `signOut()` to sidebar user section (LogOut icon, red hover, redirects to `/login`). Commit: `cb2caa0`
+2. **Mock data replacement** — All person names across entire codebase replaced with real tech leaders (Marcus Reyes, Devansh Rao, Nolan Vance, Wei Tanaka, Elian Cross, etc.). Said Borna positioned as #1 with boosted stats everywhere. Commit: `5591fe9`
+3. **Integrity audit & fixes** — Removed all fabricated testimonials, fake company names, inflated claims:
+   - Removed: "SeaOfLeads", "A-Leads", "BecGrowth", "Meed", "Staffer" (all copied from Velaris)
+   - Removed: "300M+ Verified Contacts" badge (replaced with "Advanced Lead Search")
+   - Removed: Fake Julian Marsh @ Airbnb quote
+   - Removed: "Join thousands" CTA claim
+   - Fixed: All navbar/footer `#` broken links → proper `/#section` anchors
+   - Replaced: Trust logos from fake companies → real tech stack tools (Vercel, Stripe, Anthropic, Prisma, etc.)
+   - Replaced: Case studies from fake revenue claims → capability descriptions
+   - Added: `DemoDisclaimer` component — yellow warning banner on landing page + app, dismissable per session
+   - Commit: `f8724a9`
+
+### Files Changed (13 files)
+
+- components/marketing/demo-disclaimer.tsx — NEW (disclaimer banner)
+- components/marketing/features-section.tsx — testimonials, mock leads, 300M badge
+- components/marketing/trust-logos.tsx — fake logos → real tech stack
+- components/marketing/use-cases-section.tsx — fake case studies → capabilities
+- components/marketing/content-section.tsx — fake testimonials → feature descriptions
+- components/marketing/cta-section.tsx — "Join thousands" → product description
+- components/marketing/navbar.tsx — broken `#` links → proper anchors
+- components/marketing/footer.tsx — broken links + fake contact → real links
+- components/layout/sidebar.tsx — logout button
+- app/(marketing)/layout.tsx — DemoDisclaimer added
+- app/(app)/layout.tsx — DemoDisclaimer added
+- app/(app)/campaigns/new/page.tsx — removed 300M claim
+- app/(app)/leads/database/page.tsx — removed 300M badge
+- app/(app)/unibox/page.tsx — removed 300M mention in messages
+
+### Git
+
+- HEAD: `f8724a9` on main
+- Build: PASS (19/19 routes, tsc clean)
+- Status: All work committed, working tree clean
+
+### Next Steps
+
+- Backend implementation roadmap created (see ROADMAP.md)
+- 5 major features to implement — awaiting gameplan approval before starting
