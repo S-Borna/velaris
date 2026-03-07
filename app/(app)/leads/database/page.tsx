@@ -57,7 +57,7 @@ const VIEW_TABLE = "table" as const;
 const VIEW_GRID = "grid" as const;
 
 /**
- * Lead Database page — 300M+ verified contacts with advanced filters.
+ * Lead Database page — verified contacts with advanced filters.
  * Matches CLAUDE.md spec: search bar, 11 filter categories (83 total filters),
  * sortable table, pagination, table/grid toggle.
  */
@@ -156,7 +156,7 @@ export default function LeadDatabasePage() {
                                 className="border-purple-500/30 bg-purple-500/15 text-purple-300 text-xs gap-1"
                             >
                                 <Database className="h-3 w-3" />
-                                300M+ Verified Contacts
+                                Advanced Lead Search
                             </Badge>
                         </div>
                         <p className="mt-1 text-sm text-[var(--text-secondary)]">

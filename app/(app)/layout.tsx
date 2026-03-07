@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth/options";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
+import { DemoDisclaimer } from "@/components/marketing/demo-disclaimer";
 
 /**
  * Authenticated app layout — sidebar + top bar + main content.
@@ -35,6 +36,7 @@ export default async function AppLayout({
                     <TopBar />
                     <main className="flex-1 animate-fade-in p-4 pt-14 md:p-6 md:pt-6">{children}</main>
                 </div>
+                <DemoDisclaimer />
             </div>
         </SessionProvider>
     );

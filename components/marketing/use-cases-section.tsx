@@ -16,26 +16,26 @@ interface CaseStudy {
 
 const CASE_STUDIES: CaseStudy[] = [
     {
-        title: "BecGrowth scales outbound pipeline",
-        metric: "$70K",
-        metricLabel: "in sales generated",
-        description: "Automated LinkedIn outreach across 5 sender accounts, generating qualified pipeline in under 40 days.",
+        title: "Scale outbound with multi-sender campaigns",
+        metric: "5x",
+        metricLabel: "more pipeline coverage",
+        description: "Run parallel outreach across multiple LinkedIn accounts with smart daily limits and automated sequence execution.",
         icon: <TrendingUp className="h-5 w-5" />,
         accentColor: "from-green-500 to-emerald-400",
     },
     {
-        title: "Staffer builds organic authority",
-        metric: "500K",
-        metricLabel: "organic impressions",
-        description: "Used AI content generation and smart scheduling to build a massive LinkedIn presence from scratch.",
+        title: "Build authority with AI-generated content",
+        metric: "10x",
+        metricLabel: "faster content creation",
+        description: "Generate on-brand LinkedIn posts, carousels, and lead magnets with AI — then schedule across all your profiles.",
         icon: <Eye className="h-5 w-5" />,
         accentColor: "from-blue-500 to-cyan-400",
     },
     {
-        title: "A-Leads closes with inbound automation",
-        metric: "+4,190",
-        metricLabel: "new connections",
-        description: "Automated inbound workflows turned viral posts into qualified demo calls on autopilot.",
+        title: "Convert inbound engagement automatically",
+        metric: "24/7",
+        metricLabel: "automated workflows",
+        description: "Monitor posts for trigger keywords, auto-reply to comments, and DM engaged prospects — all on autopilot.",
         icon: <Users className="h-5 w-5" />,
         accentColor: "from-purple-500 to-pink-400",
     },
@@ -52,10 +52,10 @@ export function UseCasesSection() {
                     Use Cases
                 </p>
                 <h2 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    All-bound marketing not only for agencies, but for all entrepreneurs
+                    Outbound + inbound + content — all in one platform
                 </h2>
                 <p className="mt-4 text-base text-[var(--text-secondary)]">
-                    See how teams of all sizes use Velaris to generate pipeline, build authority, and close deals.
+                    Everything you need to generate pipeline, build authority, and close deals on LinkedIn.
                 </p>
             </AnimatedSection>
 

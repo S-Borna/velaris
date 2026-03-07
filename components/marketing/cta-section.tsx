@@ -22,8 +22,8 @@ export function CtaSection() {
                     Try Velaris for free!
                 </h2>
                 <p className="mt-4 text-base text-[var(--text-secondary)]">
-                    Join thousands of founders, agencies, and growth teams automating
-                    their LinkedIn outreach. No credit card required.
+                    Start automating your LinkedIn outreach with AI-powered
+                    sequences, content, and lead management. No credit card required.
                 </p>
 
                 <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
