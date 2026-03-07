@@ -1,217 +1,519 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Copy, MoreHorizontal, Plus, Search, Trash2, TrendingUp, Megaphone } from "lucide-react";
 import { EmptyState } from "@/components/common/empty-state";
-import { toast } from "sonner";
+import {
+    ArrowUpDown,
+    Copy,
+    Megaphone,
+    Plus,
+    Search,
+    Trash2,
+    TrendingUp,
+} from "lucide-react";
 
-type CampaignStatus = "active" | "paused" | "draft" | "completed" | "archived";
+// ─── Types ──────────────────────────────────────────────
+
+type StatusFilter = "all" | "draft" | "active" | "paused" | "completed" | "archived";
+type SortKey =
+    | "name"
+    | "createdAt"
+    | "connectionsSent"
+    | "connectionsAccepted"
+    | "messagesSent"
+    | "replyRate"
+    | "opportunitiesValue";
+type SortOrder = "asc" | "desc";
 
 interface CampaignRow {
     id: string;
     name: string;
-    status: CampaignStatus;
-    created: string;
+    status: string;
+    createdAt: string;
     connectionsSent: number;
     connectionsAccepted: number;
     messagesSent: number;
-    replyRate: number;
-    opportunities: number;
+    repliesReceived: number;
+    opportunitiesValue: number;
+    totalLeads: number;
 }
 
-interface CampaignGrade {
-    letter: string;
+// ─── Constants ──────────────────────────────────────────
+
+const STATUS_OPTIONS: Array<{ label: string; value: StatusFilter }> = [
+    { label: "All", value: "all" },
+    { label: "Active", value: "active" },
+    { label: "Paused", value: "paused" },
+    { label: "Draft", value: "draft" },
+    { label: "Completed", value: "completed" },
+];
+
+const PAGE_SIZE = 10;
+
+const STATUS_BADGE_COLORS: Record<string, string> = {
+    active: "border-green-500/30 bg-green-500/10 text-green-300",
+    paused: "border-yellow-500/30 bg-yellow-500/10 text-yellow-300",
+    draft: "border-white/10 bg-white/5 text-[var(--text-secondary)]",
+    completed: "border-blue-500/30 bg-blue-500/10 text-blue-300",
+    archived: "border-white/10 bg-white/5 text-[var(--text-muted)]",
+};
+
+// ─── Helpers ────────────────────────────────────────────
+
+function getReplyRate(row: CampaignRow): number {
+    if (row.messagesSent === 0) return 0;
+    return Math.round((row.repliesReceived / row.messagesSent) * 100);
+}
+
+function getCampaignGrade(row: CampaignRow): {
+    grade: string;
     color: string;
-    bg: string;
-    trend: "up" | "down" | "stable";
+} {
+    const rate = getReplyRate(row);
+    if (rate >= 25) {
+        return { grade: "A", color: "text-green-400 bg-green-500/10 border-green-500/30" };
+    }
+    if (rate >= 15) {
+        return { grade: "B", color: "text-blue-400 bg-blue-500/10 border-blue-500/30" };
+    }
+    if (rate >= 8) {
+        return { grade: "C", color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/30" };
+    }
+    return { grade: "D", color: "text-red-400 bg-red-500/10 border-red-500/30" };
 }
 
-const MOCK_CAMPAIGNS: CampaignRow[] = [
-    { id: "c1", name: "Outreach to Agency Owners", status: "active", created: "2026-02-14", connectionsSent: 1240, connectionsAccepted: 632, messagesSent: 1162, replyRate: 24, opportunities: 12 },
-    { id: "c2", name: "SaaS Founders Europe", status: "active", created: "2026-02-20", connectionsSent: 890, connectionsAccepted: 445, messagesSent: 712, replyRate: 18, opportunities: 8 },
-    { id: "c3", name: "B2B Decision Makers", status: "paused", created: "2026-02-28", connectionsSent: 320, connectionsAccepted: 160, messagesSent: 280, replyRate: 22, opportunities: 5 },
-    { id: "c4", name: "Marketing Directors DACH", status: "draft", created: "2026-03-01", connectionsSent: 0, connectionsAccepted: 0, messagesSent: 0, replyRate: 0, opportunities: 0 },
-    { id: "c5", name: "Series A Startups", status: "completed", created: "2026-01-15", connectionsSent: 2100, connectionsAccepted: 1050, messagesSent: 1890, replyRate: 28, opportunities: 22 },
-    { id: "c6", name: "HR Tech Buyers", status: "active", created: "2026-03-03", connectionsSent: 180, connectionsAccepted: 90, messagesSent: 140, replyRate: 15, opportunities: 2 },
-    { id: "c7", name: "E-commerce Heads Nordics", status: "paused", created: "2026-02-10", connectionsSent: 560, connectionsAccepted: 280, messagesSent: 450, replyRate: 20, opportunities: 7 },
-    { id: "c8", name: "VP Sales US Tech", status: "draft", created: "2026-03-05", connectionsSent: 0, connectionsAccepted: 0, messagesSent: 0, replyRate: 0, opportunities: 0 },
-];
-
-const STATUS_OPTIONS: { value: CampaignStatus | "all"; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "active", label: "Active" },
-    { value: "paused", label: "Paused" },
-    { value: "draft", label: "Draft" },
-    { value: "completed", label: "Completed" },
-];
-
-const PAGE_SIZE = 5;
-
-type SortKey = "name" | "connectionsSent" | "connectionsAccepted" | "messagesSent" | "replyRate" | "opportunities";
-
-function StatusBadge({ status }: { status: CampaignStatus }) {
-    const styles: Record<CampaignStatus, string> = {
-        active: "border-green-500/30 bg-green-500/15 text-green-300",
-        paused: "border-amber-500/30 bg-amber-500/15 text-amber-300",
-        draft: "border-white/15 bg-white/5 text-[var(--text-secondary)]",
-        completed: "border-blue-500/30 bg-blue-500/15 text-blue-300",
-        archived: "border-white/10 bg-white/5 text-[var(--text-muted)]",
-    };
-    return <Badge className={`border ${styles[status]}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+function formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
 }
 
-function PerformanceBadge({ rate }: { rate: number }) {
-    if (rate >= 25) return <span className="text-green-400 font-medium">{rate}%</span>;
-    if (rate >= 15) return <span className="text-amber-400 font-medium">{rate}%</span>;
-    return <span className="text-[var(--text-secondary)]">{rate}%</span>;
-}
+// ─── Sub-Components ─────────────────────────────────────
 
-/** Returns a letter grade, colors, and trend direction for campaign performance. */
-function getCampaignGrade(row: CampaignRow): CampaignGrade {
-    if (row.status === "draft") return { letter: "—", color: "text-[var(--text-muted)]", bg: "bg-white/5 border-white/10", trend: "stable" };
-    const acceptRate = row.connectionsSent > 0 ? row.connectionsAccepted / row.connectionsSent : 0;
-    const score = row.replyRate * 0.5 + acceptRate * 100 * 0.3 + Math.min(row.opportunities, 20) * 1;
-    if (score >= 25) return { letter: "A", color: "text-green-300", bg: "bg-green-500/15 border-green-500/30", trend: "up" };
-    if (score >= 18) return { letter: "B", color: "text-blue-300", bg: "bg-blue-500/15 border-blue-500/30", trend: "up" };
-    if (score >= 10) return { letter: "C", color: "text-amber-300", bg: "bg-amber-500/15 border-amber-500/30", trend: "stable" };
-    return { letter: "D", color: "text-red-300", bg: "bg-red-500/15 border-red-500/30", trend: "down" };
-}
-
-function SortHeader({ label, sortKey: key, current, asc, onSort }: { label: string; sortKey: SortKey; current: SortKey; asc: boolean; onSort: (k: SortKey) => void }) {
-    const isActive = current === key;
+function StatusBadge({ status }: { status: string }) {
+    const colors = STATUS_BADGE_COLORS[status] ?? STATUS_BADGE_COLORS.draft;
     return (
-        <th className="px-3 py-3 font-medium">
-            <button type="button" onClick={() => onSort(key)} className="flex items-center gap-1 hover:text-[var(--text-primary)] transition">
-                {label}
-                <ArrowUpDown className={`h-3 w-3 ${isActive ? "text-purple-400" : ""}`} />
-                {isActive && <span className="text-[10px] text-purple-400">{asc ? "↑" : "↓"}</span>}
-            </button>
-        </th>
+        <Badge className={`text-[10px] ${colors}`}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+        </Badge>
     );
 }
 
-export default function CampaignsPage() {
-    const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState<CampaignStatus | "all">("all");
-    const [sortKey, setSortKey] = useState<SortKey>("connectionsSent");
-    const [sortAsc, setSortAsc] = useState(false);
-    const [page, setPage] = useState(0);
+function PerformanceBadge({ row }: { row: CampaignRow }) {
+    const { grade, color } = getCampaignGrade(row);
+    return (
+        <span
+            className={`inline-flex h-6 w-6 items-center justify-center rounded border text-xs font-bold ${color}`}
+        >
+            {grade}
+        </span>
+    );
+}
 
-    function handleSort(key: SortKey): void {
-        if (sortKey === key) { setSortAsc((p) => !p); } else { setSortKey(key); setSortAsc(false); }
+function SortHeader({
+    label,
+    sortKey: key,
+    currentKey,
+    onSort,
+}: {
+    label: string;
+    sortKey: SortKey;
+    currentKey: SortKey;
+    currentOrder: SortOrder;
+    onSort: (key: SortKey) => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={() => onSort(key)}
+            className="inline-flex items-center gap-1 transition-colors hover:text-white"
+        >
+            {label}
+            <ArrowUpDown
+                className={`h-3 w-3 ${currentKey === key ? "text-purple-400" : ""}`}
+            />
+        </button>
+    );
+}
+
+// ─── Main Component ─────────────────────────────────────
+
+export default function CampaignsPage() {
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+    const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+    const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+    const [page, setPage] = useState(1);
+
+    const [rows, setRows] = useState<CampaignRow[]>([]);
+    const [total, setTotal] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(true);
+
+    const fetchCampaigns = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({
+                page: String(page),
+                pageSize: String(PAGE_SIZE),
+            });
+            if (search) params.set("search", search);
+            if (statusFilter !== "all") params.set("status", statusFilter);
+
+            const res = await fetch(`/api/campaigns?${params.toString()}`);
+            if (!res.ok) throw new Error("Failed to fetch");
+            const json = await res.json();
+            const result = json.data;
+
+            setRows(
+                result.data.map(
+                    (c: {
+                        id: string;
+                        name: string;
+                        status: string;
+                        createdAt: string;
+                        connectionsSent: number;
+                        connectionsAccepted: number;
+                        messagesSent: number;
+                        repliesReceived: number;
+                        opportunitiesValue: number | string;
+                        totalLeads: number;
+                    }) => ({
+                        id: c.id,
+                        name: c.name,
+                        status: c.status,
+                        createdAt: c.createdAt,
+                        connectionsSent: c.connectionsSent ?? 0,
+                        connectionsAccepted: c.connectionsAccepted ?? 0,
+                        messagesSent: c.messagesSent ?? 0,
+                        repliesReceived: c.repliesReceived ?? 0,
+                        opportunitiesValue: Number(c.opportunitiesValue ?? 0),
+                        totalLeads: c.totalLeads ?? 0,
+                    }),
+                ),
+            );
+            setTotal(result.total);
+            setTotalPages(result.totalPages);
+        } catch {
+            setRows([]);
+            setTotal(0);
+            setTotalPages(1);
+        } finally {
+            setLoading(false);
+        }
+    }, [page, search, statusFilter]);
+
+    useEffect(() => {
+        fetchCampaigns();
+    }, [fetchCampaigns]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [search, statusFilter]);
+
+    // Local sorting
+    const sortedRows = useMemo(() => {
+        const sorted = [...rows].sort((a, b) => {
+            let aVal: number | string;
+            let bVal: number | string;
+
+            if (sortKey === "name") {
+                aVal = a.name.toLowerCase();
+                bVal = b.name.toLowerCase();
+            } else if (sortKey === "createdAt") {
+                aVal = new Date(a.createdAt).getTime();
+                bVal = new Date(b.createdAt).getTime();
+            } else if (sortKey === "replyRate") {
+                aVal = getReplyRate(a);
+                bVal = getReplyRate(b);
+            } else {
+                aVal = a[sortKey];
+                bVal = b[sortKey];
+            }
+
+            if (aVal < bVal) return -1;
+            if (aVal > bVal) return 1;
+            return 0;
+        });
+        if (sortOrder === "desc") sorted.reverse();
+        return sorted;
+    }, [rows, sortKey, sortOrder]);
+
+    function toggleSort(key: SortKey): void {
+        if (sortKey === key) {
+            setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
+        } else {
+            setSortKey(key);
+            setSortOrder("desc");
+        }
     }
 
-    const filtered = useMemo(() => {
-        let rows: CampaignRow[] = MOCK_CAMPAIGNS;
-        if (statusFilter !== "all") rows = rows.filter((r) => r.status === statusFilter);
-        if (searchQuery.trim()) { const q = searchQuery.toLowerCase(); rows = rows.filter((r) => r.name.toLowerCase().includes(q)); }
-        rows = [...rows].sort((a, b) => {
-            const av = a[sortKey]; const bv = b[sortKey];
-            if (typeof av === "number" && typeof bv === "number") return sortAsc ? av - bv : bv - av;
-            return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-        });
-        return rows;
-    }, [searchQuery, statusFilter, sortKey, sortAsc]);
+    async function handleDuplicate(id: string): Promise<void> {
+        try {
+            const res = await fetch(`/api/campaigns/${id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "duplicate" }),
+            });
+            if (res.ok) fetchCampaigns();
+        } catch {
+            // Silent fail
+        }
+    }
 
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    async function handleDelete(id: string): Promise<void> {
+        try {
+            const res = await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+            if (res.ok) fetchCampaigns();
+        } catch {
+            // Silent fail
+        }
+    }
 
     return (
         <div className="space-y-6">
+            {/* Header */}
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-[var(--text-primary)]">Campaigns</h1>
-                    <p className="text-sm text-[var(--text-secondary)]">{MOCK_CAMPAIGNS.length} campaigns total</p>
+                    <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+                        Campaigns
+                    </h1>
+                    <p className="text-sm text-[var(--text-secondary)]">
+                        {total} campaign{total !== 1 ? "s" : ""}
+                    </p>
                 </div>
                 <Link href="/campaigns/new">
                     <Button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
-                        <Plus className="mr-2 h-4 w-4" /> Create new Campaign
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create new Campaign
                     </Button>
                 </Link>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            {/* Search + Status Filter */}
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input type="text" placeholder="Search campaigns..." value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
-                        aria-label="Search campaigns"
-                        className="h-10 w-full rounded-lg border border-white/10 bg-[var(--bg-input)] pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500" />
+                    <input
+                        type="text"
+                        placeholder="Search campaigns..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full rounded-lg border border-white/10 bg-[var(--bg-input)] py-2 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-purple-500/50 focus:outline-none"
+                    />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 rounded-lg border border-white/10 bg-[var(--bg-input)] p-1">
                     {STATUS_OPTIONS.map((opt) => (
-                        <button key={opt.value} type="button" onClick={() => { setStatusFilter(opt.value); setPage(0); }}
-                            className={`rounded-lg border px-3 py-2 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-500 ${statusFilter === opt.value ? "border-purple-500/50 bg-purple-500/15 text-purple-300" : "border-white/10 bg-[var(--bg-input)] text-[var(--text-secondary)] hover:bg-white/10"}`}>
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setStatusFilter(opt.value)}
+                            className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                                statusFilter === opt.value
+                                    ? "bg-purple-500 text-white"
+                                    : "text-[var(--text-secondary)] hover:bg-white/5"
+                            }`}
+                        >
                             {opt.label}
                         </button>
                     ))}
                 </div>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-5">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-white/10 text-left text-[var(--text-secondary)]">
-                                <th className="px-3 py-3 font-medium">Campaign</th>
-                                <th className="px-3 py-3 font-medium">Status</th>
-                                <th className="px-3 py-3 font-medium">Created</th>
-                                <SortHeader label="Conn. Sent" sortKey="connectionsSent" current={sortKey} asc={sortAsc} onSort={handleSort} />
-                                <SortHeader label="Conn. Accepted" sortKey="connectionsAccepted" current={sortKey} asc={sortAsc} onSort={handleSort} />
-                                <SortHeader label="Msg. Sent" sortKey="messagesSent" current={sortKey} asc={sortAsc} onSort={handleSort} />
-                                <SortHeader label="Reply Rate" sortKey="replyRate" current={sortKey} asc={sortAsc} onSort={handleSort} />
-                                <SortHeader label="Opportunities" sortKey="opportunities" current={sortKey} asc={sortAsc} onSort={handleSort} />
-                                <th className="px-3 py-3 font-medium">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paged.map((row) => {
-                                const grade = getCampaignGrade(row);
-                                return (
-                                <tr key={row.id} className="border-b border-white/6 text-[var(--text-primary)] hover:bg-white/[0.02]">
-                                    <td className="px-3 py-3">
-                                        <div className="flex items-center gap-2">
-                                            <Link href={`/campaigns/${row.id}`} className="font-medium hover:text-purple-300 transition">{row.name}</Link>
-                                            <span className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[10px] font-bold ${grade.bg} ${grade.color}`}>
-                                                {grade.letter}
-                                                {grade.trend === "up" && <TrendingUp className="h-2.5 w-2.5" />}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-3"><StatusBadge status={row.status} /></td>
-                                    <td className="px-3 py-3 text-[var(--text-secondary)]">{row.created}</td>
-                                    <td className="px-3 py-3">{row.connectionsSent.toLocaleString()}</td>
-                                    <td className="px-3 py-3">{row.connectionsAccepted.toLocaleString()}</td>
-                                    <td className="px-3 py-3">{row.messagesSent.toLocaleString()}</td>
-                                    <td className="px-3 py-3"><PerformanceBadge rate={row.replyRate} /></td>
-                                    <td className="px-3 py-3">{row.opportunities}</td>
-                                    <td className="px-3 py-3">
-                                        <div className="flex items-center gap-1">
-                                            <button type="button" title="Duplicate" onClick={() => toast.success(`"${row.name}" duplicated`)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><Copy className="h-3.5 w-3.5" /></button>
-                                            <button type="button" title="Delete" onClick={() => toast.success(`"${row.name}" deleted`)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-red-500/15 hover:text-red-400 transition"><Trash2 className="h-3.5 w-3.5" /></button>
-                                            <button type="button" title="More" className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><MoreHorizontal className="h-3.5 w-3.5" /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )})}
-                            {paged.length === 0 && <tr><td colSpan={9}><EmptyState icon={Megaphone} title="No campaigns yet" description="Create your first campaign to start reaching leads on LinkedIn." actionLabel="Create Campaign" actionHref="/campaigns/new" /></td></tr>}
-                        </tbody>
-                    </table>
-                </div>
-                {totalPages > 1 && (
-                    <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
-                        <p className="text-xs text-[var(--text-secondary)]">Page {page + 1} of {totalPages} ({filtered.length} campaigns)</p>
-                        <div className="flex gap-2">
-                            <button type="button" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white/10 disabled:opacity-40">Previous</button>
-                            <button type="button" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)} className="rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white/10 disabled:opacity-40">Next</button>
-                        </div>
+            {/* Table */}
+            {loading ? (
+                <div className="animate-pulse rounded-xl border border-white/10 bg-[var(--bg-card)] p-5">
+                    <div className="space-y-3">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="flex gap-4">
+                                {Array.from({ length: 8 }).map((_, j) => (
+                                    <div
+                                        key={j}
+                                        className="h-5 flex-1 rounded bg-white/10"
+                                    />
+                                ))}
+                            </div>
+                        ))}
                     </div>
-                )}
-            </div>
+                </div>
+            ) : rows.length === 0 ? (
+                <EmptyState
+                    icon={Megaphone}
+                    title="No campaigns yet"
+                    description="Create your first campaign to start reaching out to leads."
+                />
+            ) : (
+                <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)]">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-white/10 text-left text-[var(--text-secondary)]">
+                                    <th className="px-4 py-3 font-medium">
+                                        <SortHeader
+                                            label="Campaign"
+                                            sortKey="name"
+                                            currentKey={sortKey}
+                                            currentOrder={sortOrder}
+                                            onSort={toggleSort}
+                                        />
+                                    </th>
+                                    <th className="px-4 py-3 font-medium">Status</th>
+                                    <th className="px-4 py-3 font-medium">
+                                        <SortHeader
+                                            label="Created"
+                                            sortKey="createdAt"
+                                            currentKey={sortKey}
+                                            currentOrder={sortOrder}
+                                            onSort={toggleSort}
+                                        />
+                                    </th>
+                                    <th className="px-4 py-3 font-medium">
+                                        <SortHeader
+                                            label="Conn. Sent"
+                                            sortKey="connectionsSent"
+                                            currentKey={sortKey}
+                                            currentOrder={sortOrder}
+                                            onSort={toggleSort}
+                                        />
+                                    </th>
+                                    <th className="px-4 py-3 font-medium">
+                                        <SortHeader
+                                            label="Accepted"
+                                            sortKey="connectionsAccepted"
+                                            currentKey={sortKey}
+                                            currentOrder={sortOrder}
+                                            onSort={toggleSort}
+                                        />
+                                    </th>
+                                    <th className="px-4 py-3 font-medium">
+                                        <SortHeader
+                                            label="Msgs Sent"
+                                            sortKey="messagesSent"
+                                            currentKey={sortKey}
+                                            currentOrder={sortOrder}
+                                            onSort={toggleSort}
+                                        />
+                                    </th>
+                                    <th className="px-4 py-3 font-medium">
+                                        <SortHeader
+                                            label="Reply %"
+                                            sortKey="replyRate"
+                                            currentKey={sortKey}
+                                            currentOrder={sortOrder}
+                                            onSort={toggleSort}
+                                        />
+                                    </th>
+                                    <th className="px-4 py-3 font-medium">
+                                        <SortHeader
+                                            label="Opp. $"
+                                            sortKey="opportunitiesValue"
+                                            currentKey={sortKey}
+                                            currentOrder={sortOrder}
+                                            onSort={toggleSort}
+                                        />
+                                    </th>
+                                    <th className="px-4 py-3 font-medium">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sortedRows.map((row) => (
+                                    <tr
+                                        key={row.id}
+                                        className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]"
+                                    >
+                                        <td className="px-4 py-3">
+                                            <Link
+                                                href={`/campaigns/${row.id}`}
+                                                className="flex items-center gap-2 hover:text-purple-300"
+                                            >
+                                                <PerformanceBadge row={row} />
+                                                <span className="font-medium">{row.name}</span>
+                                            </Link>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <StatusBadge status={row.status} />
+                                        </td>
+                                        <td className="px-4 py-3 text-[var(--text-secondary)]">
+                                            {formatDate(row.createdAt)}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {row.connectionsSent.toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {row.connectionsAccepted.toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {row.messagesSent.toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <TrendingUp className="mr-1 inline h-3 w-3 text-green-400" />
+                                            {getReplyRate(row)}%
+                                        </td>
+                                        <td className="px-4 py-3 text-cyan-300">
+                                            ${Number(row.opportunitiesValue).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDuplicate(row.id)}
+                                                    className="rounded p-1 transition-colors hover:bg-white/10"
+                                                    title="Duplicate"
+                                                >
+                                                    <Copy className="h-3.5 w-3.5 text-[var(--text-secondary)]" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDelete(row.id)}
+                                                    className="rounded p-1 transition-colors hover:bg-red-500/10"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5 text-[var(--text-secondary)] hover:text-red-400" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 text-sm text-[var(--text-secondary)]">
+                            <span>
+                                Page {page} of {totalPages} ({total} total)
+                            </span>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={page <= 1}
+                                    onClick={() => setPage((p) => p - 1)}
+                                    className="border-white/10 text-xs"
+                                >
+                                    Previous
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={page >= totalPages}
+                                    onClick={() => setPage((p) => p + 1)}
+                                    className="border-white/10 text-xs"
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

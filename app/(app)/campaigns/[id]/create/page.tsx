@@ -1,16 +1,18 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState, use } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Copy, FileText, Settings, X } from "lucide-react";
 import { SequenceBuilder } from "@/components/campaigns/sequence-builder";
+import { ArrowLeft, Copy, Save } from "lucide-react";
 
-type TabKey = "analytics" | "leads" | "sequences" | "schedule" | "accounts";
+// ─── Types ──────────────────────────────────────────────
 
-const TABS: { key: TabKey; label: string }[] = [
+type Tab = "sequences" | "schedule" | "accounts" | "leads" | "analytics";
+
+const TABS: Array<{ key: Tab; label: string }> = [
     { key: "analytics", label: "Analytics" },
     { key: "leads", label: "Leads" },
     { key: "sequences", label: "Sequences" },
@@ -18,115 +20,258 @@ const TABS: { key: TabKey; label: string }[] = [
     { key: "accounts", label: "LinkedIn Accounts" },
 ];
 
-interface SequenceTemplate {
+interface Campaign {
     id: string;
     name: string;
-    description: string;
-    steps: string[];
-    replyRate: string;
-    category: string;
+    status: string;
+    scheduleTimezone: string;
+    scheduleStartHour: number;
+    scheduleEndHour: number;
+    scheduleDays: string[];
+    totalLeads: number;
 }
 
-const SEQUENCE_TEMPLATES: SequenceTemplate[] = [
-    { id: "t1", name: "Classic Outreach", description: "Standard connection request → follow-up sequence for B2B sales.", steps: ["View Profile", "Send Connection", "Wait 2d", "Send Message", "Wait 3d", "Follow-up"], replyRate: "18-24%", category: "Outreach" },
-    { id: "t2", name: "Warm Engagement First", description: "Engage with content before reaching out — higher acceptance rates.", steps: ["View Profile", "Like Post", "Wait 1d", "Send Connection", "Wait 2d", "Send Message"], replyRate: "25-32%", category: "Engagement" },
-    { id: "t3", name: "ICP Qualifier", description: "Score leads with AI before sending connection — only reach qualified prospects.", steps: ["ICP Score ≥ 70", "View Profile", "Send Connection", "Wait 2d", "Send Message", "Wait 3d", "Follow-up"], replyRate: "28-35%", category: "AI-Powered" },
-    { id: "t4", name: "Multi-Touch Nurture", description: "Long-form nurture sequence with multiple value touchpoints.", steps: ["Send Connection", "Wait 3d", "Send Message", "Wait 5d", "Like Post", "Wait 2d", "Follow-up", "Wait 5d", "Final Follow-up"], replyRate: "20-28%", category: "Nurture" },
-    { id: "t5", name: "Event-Based Outreach", description: "Leverage shared events or webinars for warm introductions.", steps: ["View Profile", "Send Connection (event note)", "Wait 1d", "Send Message", "Wait 2d", "Voice Note"], replyRate: "30-40%", category: "Events" },
-];
+// ─── Main Component ─────────────────────────────────────
 
-export default function CampaignCreatePage() {
-    const [tab, setTab] = useState<TabKey>("sequences");
-    const [showTemplates, setShowTemplates] = useState(false);
+export default function CampaignEditorPage({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = use(params);
+    const [tab, setTab] = useState<Tab>("sequences");
+    const [campaign, setCampaign] = useState<Campaign | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    // Editable schedule fields
+    const [timezone, setTimezone] = useState("Europe/Stockholm");
+    const [startHour, setStartHour] = useState(9);
+    const [endHour, setEndHour] = useState(17);
+
+    const fetchCampaign = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/campaigns/${id}`);
+            if (!res.ok) throw new Error("Not found");
+            const json = await res.json();
+            const c = json.data;
+            setCampaign(c);
+            setTimezone(c.scheduleTimezone ?? "Europe/Stockholm");
+            setStartHour(c.scheduleStartHour ?? 9);
+            setEndHour(c.scheduleEndHour ?? 17);
+        } catch {
+            setCampaign(null);
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
+    useEffect(() => {
+        fetchCampaign();
+    }, [fetchCampaign]);
+
+    async function handleSaveSchedule(): Promise<void> {
+        setSaving(true);
+        try {
+            await fetch(`/api/campaigns/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    scheduleTimezone: timezone,
+                    scheduleStartHour: startHour,
+                    scheduleEndHour: endHour,
+                }),
+            });
+            fetchCampaign();
+        } catch {
+            // Silent fail
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    async function handleDuplicate(): Promise<void> {
+        try {
+            await fetch(`/api/campaigns/${id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "duplicate" }),
+            });
+        } catch {
+            // Silent fail
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="animate-pulse space-y-6">
+                <div className="h-8 w-64 rounded bg-white/10" />
+                <div className="h-10 w-full rounded bg-white/10" />
+                <div className="h-96 rounded-xl bg-white/5" />
+            </div>
+        );
+    }
+
+    if (!campaign) {
+        return (
+            <div className="flex h-64 items-center justify-center text-[var(--text-muted)]">
+                Campaign not found
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-3">
-                <Link href="/campaigns" className="rounded-lg border border-white/10 p-2 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition">
-                    <ArrowLeft className="h-4 w-4" />
-                </Link>
-                <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Edit Campaign</h1>
-                        <Badge className="border border-amber-500/30 bg-amber-500/15 text-amber-300">EDITING</Badge>
+            {/* Header */}
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/campaigns"
+                        className="rounded-lg border border-white/10 p-2 transition-colors hover:bg-white/5"
+                    >
+                        <ArrowLeft className="h-4 w-4 text-[var(--text-secondary)]" />
+                    </Link>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-xl font-bold text-[var(--text-primary)]">
+                                Edit Campaign
+                            </h1>
+                            <Badge className="border-yellow-500/30 bg-yellow-500/10 text-yellow-300">
+                                EDITING
+                            </Badge>
+                        </div>
+                        <p className="text-sm text-[var(--text-secondary)]">
+                            {campaign.name}
+                        </p>
                     </div>
-                    <p className="text-sm text-[var(--text-secondary)]">Outreach to Agency Owners</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="ghost" onClick={() => setShowTemplates(true)} className="border border-white/10 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
-                        <FileText className="mr-2 h-4 w-4" /> Templates
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDuplicate}
+                        className="border-white/10"
+                    >
+                        <Copy className="mr-1 h-3.5 w-3.5" /> Duplicate Campaign
                     </Button>
-                    <Button variant="ghost" className="border border-white/10 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
-                        <Copy className="mr-2 h-4 w-4" /> Duplicate Campaign
-                    </Button>
-                    <Button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
-                        <Settings className="mr-2 h-4 w-4" /> Save Changes
-                    </Button>
+                    {tab === "schedule" && (
+                        <Button
+                            size="sm"
+                            onClick={handleSaveSchedule}
+                            disabled={saving}
+                            className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                        >
+                            <Save className="mr-1 h-3.5 w-3.5" />
+                            {saving ? "Saving..." : "Save Changes"}
+                        </Button>
+                    )}
                 </div>
             </div>
 
+            {/* Tabs */}
             <div className="flex gap-1 rounded-lg border border-white/10 bg-[var(--bg-input)] p-1">
                 {TABS.map((t) => (
-                    <button key={t.key} type="button" onClick={() => setTab(t.key)}
-                        className={`rounded-md px-4 py-2 text-sm font-medium transition ${tab === t.key ? "bg-purple-500/20 text-purple-300" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}>
+                    <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => setTab(t.key)}
+                        className={`rounded-md px-4 py-2 text-xs font-medium transition ${
+                            tab === t.key
+                                ? "bg-purple-500 text-white"
+                                : "text-[var(--text-secondary)] hover:bg-white/5"
+                        }`}
+                    >
                         {t.label}
                     </button>
                 ))}
             </div>
 
-            {tab === "sequences" && <SequenceBuilder />}
-
-            {tab !== "sequences" && (
-                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-12 text-center">
-                    <p className="text-[var(--text-secondary)]">{tab.charAt(0).toUpperCase() + tab.slice(1)} editor — select Sequences tab for flowchart builder</p>
+            {/* Tab Content */}
+            {tab === "sequences" && (
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-5">
+                    <SequenceBuilder />
                 </div>
             )}
 
-            {/* Templates Modal */}
-            {showTemplates && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-[var(--bg-card)] p-6 shadow-2xl">
-                        <div className="mb-4 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Sequence Templates</h2>
-                                <p className="text-sm text-[var(--text-secondary)]">Pre-built sequences to get started quickly</p>
-                            </div>
-                            <button onClick={() => setShowTemplates(false)} className="rounded-lg p-2 text-[var(--text-muted)] transition-colors hover:bg-white/10 hover:text-white">
-                                <X className="h-4 w-4" />
-                            </button>
+            {tab === "schedule" && (
+                <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-6">
+                    <h3 className="mb-4 text-base font-semibold text-[var(--text-primary)]">
+                        Campaign Schedule
+                    </h3>
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <div>
+                            <label
+                                htmlFor="edit-timezone"
+                                className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
+                            >
+                                Timezone
+                            </label>
+                            <input
+                                id="edit-timezone"
+                                type="text"
+                                value={timezone}
+                                onChange={(e) => setTimezone(e.target.value)}
+                                className="w-full rounded-lg border border-white/10 bg-[var(--bg-input)] px-4 py-2 text-sm text-[var(--text-primary)] focus:border-purple-500/50 focus:outline-none"
+                            />
                         </div>
-                        <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
-                            {SEQUENCE_TEMPLATES.map((tmpl) => (
-                                <div key={tmpl.id} className="rounded-xl border border-white/6 bg-white/[0.02] p-4 transition-colors hover:border-purple-500/30 hover:bg-purple-500/5">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-sm font-medium text-[var(--text-primary)]">{tmpl.name}</h3>
-                                                <Badge variant="outline" className="text-[9px] border-purple-500/30 text-purple-300">{tmpl.category}</Badge>
-                                                <Badge variant="outline" className="text-[9px] border-green-500/30 text-green-300">{tmpl.replyRate} reply rate</Badge>
-                                            </div>
-                                            <p className="mt-1 text-xs text-[var(--text-muted)]">{tmpl.description}</p>
-                                            <div className="mt-2 flex flex-wrap gap-1">
-                                                {tmpl.steps.map((step, i) => (
-                                                    <span key={i} className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)]">
-                                                        {i > 0 && <span className="text-white/20">→</span>}
-                                                        <span className="rounded bg-white/5 px-1.5 py-0.5">{step}</span>
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            onClick={() => setShowTemplates(false)}
-                                            className="ml-3 shrink-0 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
-                                        >
-                                            Use Template
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
+                        <div>
+                            <label
+                                htmlFor="edit-start"
+                                className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
+                            >
+                                Start Hour
+                            </label>
+                            <input
+                                id="edit-start"
+                                type="number"
+                                min={0}
+                                max={23}
+                                value={startHour}
+                                onChange={(e) =>
+                                    setStartHour(parseInt(e.target.value, 10))
+                                }
+                                className="w-full rounded-lg border border-white/10 bg-[var(--bg-input)] px-4 py-2 text-sm text-[var(--text-primary)] focus:border-purple-500/50 focus:outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                htmlFor="edit-end"
+                                className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
+                            >
+                                End Hour
+                            </label>
+                            <input
+                                id="edit-end"
+                                type="number"
+                                min={0}
+                                max={23}
+                                value={endHour}
+                                onChange={(e) =>
+                                    setEndHour(parseInt(e.target.value, 10))
+                                }
+                                className="w-full rounded-lg border border-white/10 bg-[var(--bg-input)] px-4 py-2 text-sm text-[var(--text-primary)] focus:border-purple-500/50 focus:outline-none"
+                            />
                         </div>
                     </div>
+                </div>
+            )}
+
+            {tab === "analytics" && (
+                <div className="flex h-48 items-center justify-center rounded-xl border border-white/10 bg-[var(--bg-card)] text-sm text-[var(--text-muted)]">
+                    View analytics on the campaign detail page
+                </div>
+            )}
+
+            {tab === "leads" && (
+                <div className="flex h-48 items-center justify-center rounded-xl border border-white/10 bg-[var(--bg-card)] text-sm text-[var(--text-muted)]">
+                    Manage leads on the campaign detail page
+                </div>
+            )}
+
+            {tab === "accounts" && (
+                <div className="flex h-48 items-center justify-center rounded-xl border border-white/10 bg-[var(--bg-card)] text-sm text-[var(--text-muted)]">
+                    Manage linked accounts on the campaign detail page
                 </div>
             )}
         </div>
