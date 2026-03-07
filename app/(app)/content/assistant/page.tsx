@@ -98,34 +98,18 @@ const LANGUAGE_OPTIONS = [
     "Italian",
 ];
 
-/* ─── Mock generated posts ──────────────────────────── */
+/* ─── API response type ─────────────────────────────── */
 
-const MOCK_GENERATED: GeneratedPost[] = [
-    {
-        id: "g1",
-        variant: "A",
-        content: `I spent 6 months analyzing 10,000+ LinkedIn outreach campaigns.\n\nHere's what separates the top 1% from everyone else:\n\n1️⃣ They personalize beyond "{first_name}"\nThe best performers research 3+ data points per lead. Job changes, company news, shared connections.\n\n2️⃣ They lead with insight, not pitches\nTop reply rates came from messages that taught something. Share a stat, an observation, or a compliment that shows you did your homework.\n\n3️⃣ They follow up smartly\n80% of replies come after the 2nd-4th touchpoint. But the key? Each follow-up adds NEW value.\n\n4️⃣ They time it right\nTuesday-Thursday, 9-11 AM in the prospect's timezone. Sounds basic, but only 23% actually do this.\n\n5️⃣ They track and iterate\nThe top performers A/B test everything: connection notes, message templates, follow-up timing.\n\nThe gap between average and exceptional isn't talent.\n\nIt's systems.\n\n♻️ Repost if this resonates\n💬 What's your best outreach tip?`,
-        hookScore: 92,
-        predictedReach: "15K-25K",
-        hashtags: ["#LinkedInOutreach", "#SalesAutomation", "#B2BSales", "#LeadGeneration"],
-    },
-    {
-        id: "g2",
-        variant: "B",
-        content: `Hot take: 90% of LinkedIn outreach messages are garbage.\n\nI know because I've received hundreds.\n\nAnd I've also sent thousands.\n\nHere's what I learned from building an outreach platform used by 2,000+ salespeople:\n\nThe WORST messages all share 3 traits:\n→ Generic opener ("Hope you're doing well!")\n→ Feature dump ("We do X, Y, Z...")\n→ Pushy CTA ("Let's book a 30-min call")\n\nThe BEST messages share 3 different traits:\n→ Specific observation ("I saw your post about...")\n→ Value-first ("Here's something that might help...")\n→ Soft CTA ("Would this be worth exploring?")\n\nThe difference in reply rates? \n\n6% vs 34%.\n\nSame product. Same target audience.\nDifferent approach.\n\nStop sending messages you wouldn't reply to yourself.\n\nAgree? ♻️`,
-        hookScore: 88,
-        predictedReach: "12K-20K",
-        hashtags: ["#ColdOutreach", "#LinkedInTips", "#SalesTips", "#Entrepreneurship"],
-    },
-    {
-        id: "g3",
-        variant: "C",
-        content: `I used to send 50 connection requests a day.\n\nMy acceptance rate? 12%.\n\nThen I changed ONE thing:\n\nI started adding a personalized note that mentioned something specific from their profile.\n\nNot "I'd love to connect" — everyone says that.\n\nI mentioned:\n• A recent post they wrote\n• Their career transition\n• A mutual connection or shared interest\n\nMy acceptance rate jumped to 52%.\n\nThe lesson?\n\nPeople can smell automation from a mile away.\n\nBut genuine interest? That's rare on LinkedIn.\n\nAnd rare is what gets replies.\n\n---\nP.S. I'm building a tool that helps automate personalization at scale. DM me "pilot" if you want early access.`,
-        hookScore: 85,
-        predictedReach: "10K-18K",
-        hashtags: ["#LinkedInGrowth", "#Networking", "#PersonalBranding"],
-    },
-];
+interface ContentApiResponse {
+    variants: GeneratedPost[];
+    model: string;
+    tokensUsed: number;
+}
+
+interface ContentApiError {
+    error: string;
+    details?: Array<{ field: string; message: string }>;
+}
 
 const MOCK_LIBRARY: LibraryPost[] = [
     { id: "lib1", content: "I spent 6 months analyzing 10,000+ LinkedIn outreach campaigns...", status: "posted", scheduledAt: null, postedAt: "2026-03-03 09:00", impressions: 18420, reactions: 247, comments: 89, createdAt: "2026-03-02" },
@@ -164,14 +148,50 @@ export default function ContentAssistantPage() {
     const [isTrainingVoice, setIsTrainingVoice] = useState(false);
     const [voiceTrained, setVoiceTrained] = useState(false);
 
-    function handleGenerate() {
+    async function handleGenerate() {
+        if (!topic.trim() || !audience.trim()) {
+            toast.error("Please fill in Topic and Target Audience");
+            return;
+        }
+
         setIsGenerating(true);
-        setTimeout(() => {
-            setGenerated(MOCK_GENERATED);
-            setSelectedVariant("g1");
+        setGenerated([]);
+        setSelectedVariant(null);
+
+        try {
+            const response = await fetch("/api/content/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    category,
+                    topic: topic.trim(),
+                    audience: audience.trim(),
+                    language,
+                    tone,
+                    brandVoiceSamples: voiceTrained
+                        ? brandVoiceSamples.filter((s) => s.trim())
+                        : undefined,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = (await response.json()) as ContentApiError;
+                throw new Error(errorData.error || "Generation failed");
+            }
+
+            const data = (await response.json()) as ContentApiResponse;
+            setGenerated(data.variants);
+            setSelectedVariant(data.variants[0]?.id ?? null);
+            toast.success(
+                `${data.variants.length} variants generated (${data.tokensUsed} tokens used)`
+            );
+        } catch (error: unknown) {
+            const message =
+                error instanceof Error ? error.message : "Failed to generate content";
+            toast.error(message);
+        } finally {
             setIsGenerating(false);
-            toast.success("3 content variants generated!");
-        }, 2000);
+        }
     }
 
     function handleCopy(text: string) {
@@ -354,11 +374,17 @@ export default function ContentAssistantPage() {
                                 </div>
                                 <Button
                                     onClick={() => {
+                                        const filledSamples = brandVoiceSamples.filter((s) => s.trim().length > 0);
+                                        if (filledSamples.length === 0) return;
                                         setIsTrainingVoice(true);
+                                        // Brand voice is applied by passing samples to Claude on next generation
                                         setTimeout(() => {
                                             setIsTrainingVoice(false);
                                             setVoiceTrained(true);
-                                        }, 1500);
+                                            toast.success(
+                                                `Brand voice trained on ${filledSamples.length} sample${filledSamples.length > 1 ? "s" : ""}. Next generation will match your style.`
+                                            );
+                                        }, 800);
                                     }}
                                     disabled={isTrainingVoice || brandVoiceSamples.every((s) => s.trim() === "")}
                                     size="sm"
