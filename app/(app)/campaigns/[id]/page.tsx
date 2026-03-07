@@ -26,11 +26,11 @@ const KPI_DATA = [
 ];
 
 const LEAD_ROWS = [
-    { name: "Anna Lindqvist", title: "CEO at TechFlow", status: "replied", score: 92 },
-    { name: "Erik Johansson", title: "VP Sales at GrowthLab", status: "connected", score: 85 },
-    { name: "Sofia Berg", title: "Founder at ScaleUp", status: "messaged", score: 78 },
-    { name: "Marcus Holm", title: "CMO at Digital Nordic", status: "pending", score: 71 },
-    { name: "Lisa Eriksson", title: "Head of Growth at SaaSly", status: "opportunity", score: 95 },
+    { name: "Marcus Reyes", title: "CEO at Apple", status: "replied", score: 98 },
+    { name: "Devansh Rao", title: "CEO at Microsoft", status: "connected", score: 96 },
+    { name: "Arvind Mehta", title: "CEO at Alphabet", status: "messaged", score: 94 },
+    { name: "Elian Cross", title: "CEO at Anthropic", status: "pending", score: 92 },
+    { name: "Adrian Voss", title: "CEO at Meta", status: "opportunity", score: 97 },
 ];
 
 export default function CampaignDetailPage() {
@@ -179,7 +179,7 @@ export default function CampaignDetailPage() {
                                     <td className="px-3 py-3">312</td>
                                 </tr>
                                 <tr className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]">
-                                    <td className="px-3 py-3">Amir Kessler</td>
+                                    <td className="px-3 py-3">Nolan Vance</td>
                                     <td className="px-3 py-3"><Badge className="border border-green-500/30 bg-green-500/15 text-green-300">Connected</Badge></td>
                                     <td className="px-3 py-3">288</td>
                                 </tr>

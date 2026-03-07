@@ -243,9 +243,9 @@ export function Hero() {
 /* ---------- Dashboard Mockup (static illustration) ---------- */
 
 const MOCK_ACCOUNTS = [
-    { name: "Amir K.", connections: 847, messages: 203, replies: 142 },
-    { name: "Sarah K.", connections: 632, messages: 178, replies: 98 },
-    { name: "Tomas R.", connections: 1204, messages: 412, replies: 287 },
+    { name: "Said B.", connections: 1847, messages: 693, replies: 512 },
+    { name: "Elon M.", connections: 847, messages: 306, replies: 142 },
+    { name: "Sam A.", connections: 632, messages: 288, replies: 98 },
 ] as const;
 
 const KPI_DATA = [

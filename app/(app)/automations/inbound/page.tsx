@@ -65,8 +65,8 @@ interface InboundAutomation {
 
 const MOCK_SENDERS = [
     { id: "s1", name: "Said Borna", title: "CEO & Founder", avatar: "SB" },
-    { id: "s2", name: "Anna Lindström", title: "Growth Lead", avatar: "AL" },
-    { id: "s3", name: "Erik Johansson", title: "Sales Manager", avatar: "EJ" },
+    { id: "s2", name: "Nolan Vance", title: "CEO & Technoking", avatar: "EM" },
+    { id: "s3", name: "Ezra Kaplan", title: "CEO", avatar: "SA" },
 ];
 
 const MOCK_AUTOMATIONS: InboundAutomation[] = [
