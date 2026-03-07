@@ -38,10 +38,10 @@ export interface CreateAutomationInput {
 /** Input for updating an automation. */
 export interface UpdateAutomationInput {
   name?: string;
-  postUrl?: string;
+  postUrl?: string | null;
   triggerKeywords?: string[];
-  autoReplyComment?: string;
-  autoDmMessage?: string;
+  autoReplyComment?: string | null;
+  autoDmMessage?: string | null;
 }
 
 // ─── Queries ────────────────────────────────────────────

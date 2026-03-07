@@ -27,7 +27,7 @@ export interface UpdateLinkedinAccountInput {
   dailyConnectionLimit?: number;
   dailyMessageLimit?: number;
   sessionCookie?: string;
-  proxyUrl?: string;
+  proxyUrl?: string | null;
 }
 
 // ─── Queries ────────────────────────────────────────────
