@@ -25,8 +25,8 @@ const LEAD_SOURCES = [
 
 const MOCK_ACCOUNTS = [
     { id: "a1", name: "Said Borna", type: "Sales Navigator" },
-    { id: "a2", name: "Amir Kessler", type: "Premium" },
-    { id: "a3", name: "Lina Bergström", type: "Premium" },
+    { id: "a2", name: "Nolan Vance", type: "Premium" },
+    { id: "a3", name: "Ezra Kaplan", type: "Premium" },
 ];
 
 export default function NewCampaignPage() {

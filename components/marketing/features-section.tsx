@@ -494,11 +494,11 @@ function QualifyFeature() {
 /* ---------- Scale Feature ---------- */
 
 const MOCK_SENDERS = [
-    { name: "Amir Kessler", status: "active" as const },
-    { name: "Sarah Karlsson", status: "active" as const },
-    { name: "Tomas Richter", status: "active" as const },
-    { name: "Lina Bergström", status: "active" as const },
-    { name: "Alex Carter", status: "paused" as const },
+    { name: "Said Borna", status: "active" as const },
+    { name: "Nolan Vance", status: "active" as const },
+    { name: "Ezra Kaplan", status: "active" as const },
+    { name: "Wei Tanaka", status: "active" as const },
+    { name: "Miles Hutton", status: "paused" as const },
 ] as const;
 
 function ScaleFeature() {

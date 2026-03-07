@@ -56,18 +56,18 @@ interface ExtractedLead {
 
 const MOCK_JOBS: ExtractionJob[] = [
     { id: "e1", source: "search", query: "SaaS CEO Stockholm 2-15 employees", status: "completed", leadsFound: 342, leadsEnriched: 342, startedAt: "2026-03-05 14:30", completedAt: "2026-03-05 14:45", duplicatesSkipped: 18 },
-    { id: "e2", source: "post", query: "https://linkedin.com/posts/amir-kessler_...", status: "completed", leadsFound: 127, leadsEnriched: 127, startedAt: "2026-03-04 09:15", completedAt: "2026-03-04 09:22", duplicatesSkipped: 5 },
+    { id: "e2", source: "post", query: "https://linkedin.com/posts/said-borna_...", status: "completed", leadsFound: 127, leadsEnriched: 127, startedAt: "2026-03-04 09:15", completedAt: "2026-03-04 09:22", duplicatesSkipped: 5 },
     { id: "e3", source: "sales_navigator", query: "Marketing Director DACH region B2B SaaS", status: "running", leadsFound: 89, leadsEnriched: 56, startedAt: "2026-03-06 10:00", completedAt: null, duplicatesSkipped: 3 },
     { id: "e4", source: "search", query: "VP Sales Fintech Europe", status: "queued", leadsFound: 0, leadsEnriched: 0, startedAt: "2026-03-06 10:05", completedAt: null, duplicatesSkipped: 0 },
     { id: "e5", source: "search", query: "Agency Owner Digital Marketing US", status: "failed", leadsFound: 0, leadsEnriched: 0, startedAt: "2026-03-03 16:00", completedAt: "2026-03-03 16:01", duplicatesSkipped: 0 },
 ];
 
 const MOCK_EXTRACTED: ExtractedLead[] = [
-    { id: "x1", name: "Alexander Svensson", title: "CEO", company: "GrowthStack", location: "Stockholm", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 94 },
-    { id: "x2", name: "Maria Andersson", title: "Co-Founder", company: "LeadEngine", location: "Gothenburg", hasEmail: true, hasPhone: false, linkedinUrl: "#", qualityScore: 88 },
-    { id: "x3", name: "John Smith", title: "CTO", company: "DataSync AI", location: "London", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 82 },
-    { id: "x4", name: "Lena Müller", title: "VP Sales", company: "SalesPipe", location: "Berlin", hasEmail: false, hasPhone: false, linkedinUrl: "#", qualityScore: 71 },
-    { id: "x5", name: "Chris Johnson", title: "Founder", company: "ScaleUp Labs", location: "San Francisco", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 96 },
+    { id: "x1", name: "Marcus Reyes", title: "CEO", company: "Apple", location: "Cupertino", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 98 },
+    { id: "x2", name: "Devansh Rao", title: "CEO", company: "Microsoft", location: "Redmond", hasEmail: true, hasPhone: false, linkedinUrl: "#", qualityScore: 96 },
+    { id: "x3", name: "Arvind Mehta", title: "CEO", company: "Alphabet", location: "Mountain View", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 94 },
+    { id: "x4", name: "Elian Cross", title: "CEO", company: "Anthropic", location: "San Francisco", hasEmail: false, hasPhone: false, linkedinUrl: "#", qualityScore: 92 },
+    { id: "x5", name: "Wei Tanaka", title: "CEO & Founder", company: "NVIDIA", location: "Santa Clara", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 97 },
 ];
 
 const SOURCE_CONFIG: Record<ExtractionSource, { label: string; description: string }> = {
