@@ -10,6 +10,7 @@ import {
     Phone,
     Star,
     UserPlus,
+    Users,
 } from "lucide-react";
 
 /* ─── Types ─────────────────────────────────────────── */
@@ -40,6 +41,7 @@ interface LeadTableProps {
     sortKey: SortKey;
     sortDir: "asc" | "desc";
     onSort: (key: SortKey) => void;
+    onFindSimilar?: (lead: LeadRow) => void;
 }
 
 export type SortKey = "name" | "title" | "company" | "location" | "icpScore";
@@ -148,6 +150,7 @@ export function LeadTable({
     sortKey,
     sortDir,
     onSort,
+    onFindSimilar,
 }: LeadTableProps) {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -312,6 +315,18 @@ export function LeadTable({
                                             >
                                                 <Star className="h-3.5 w-3.5" />
                                             </Button>
+                                            {onFindSimilar && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => onFindSimilar(lead)}
+                                                    className="h-7 gap-1 px-1.5 text-[10px] text-[var(--text-muted)] hover:text-cyan-400"
+                                                    title="Find Similar Leads"
+                                                >
+                                                    <Users className="h-3 w-3" />
+                                                    Similar
+                                                </Button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

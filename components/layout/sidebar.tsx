@@ -17,12 +17,93 @@ import {
     Plus,
     type NavItem,
 } from "@/lib/constants/navigation";
-import { Menu } from "lucide-react";
+import { Menu, ChevronDown, Check } from "lucide-react";
 
 const APP_NAME = "OutreachPilot";
 const SIDEBAR_WIDTH = "220px";
 const CREATE_CAMPAIGN_LABEL = "+ Create Campaign";
 const SENDER_COUNT = 1;
+
+interface Workspace {
+    id: string;
+    name: string;
+    plan: string;
+    memberCount: number;
+}
+
+const WORKSPACES: Workspace[] = [
+    { id: "ws-1", name: "Personal", plan: "Solo", memberCount: 1 },
+    { id: "ws-2", name: "Said's Team", plan: "Team", memberCount: 4 },
+];
+
+const DEFAULT_WORKSPACE_ID = "ws-1";
+
+/**
+ * Workspace switcher dropdown — allows switching between workspaces.
+ */
+function WorkspaceSwitcher() {
+    const [isOpen, setIsOpen] = useState(false);
+    const [activeId, setActiveId] = useState(DEFAULT_WORKSPACE_ID);
+    const active = WORKSPACES.find((ws) => ws.id === activeId) ?? WORKSPACES[0];
+
+    return (
+        <div className="relative px-3 pt-2 pb-1">
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-white/[0.05]"
+                aria-label="Switch workspace"
+            >
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-gradient-to-br from-teal-400/20 to-green-400/20 text-[10px] font-bold text-teal-300">
+                    {active.name[0]}
+                </div>
+                <span className="flex-1 truncate text-xs font-medium text-[var(--text-primary)]">
+                    {active.name}
+                </span>
+                <ChevronDown className={cn("h-3 w-3 text-[var(--text-muted)] transition-transform", isOpen && "rotate-180")} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute left-3 right-3 top-full z-50 mt-1 rounded-lg border border-white/10 bg-[var(--bg-card)] p-1 shadow-xl">
+                    {WORKSPACES.map((ws) => (
+                        <button
+                            key={ws.id}
+                            type="button"
+                            onClick={() => {
+                                setActiveId(ws.id);
+                                setIsOpen(false);
+                            }}
+                            className={cn(
+                                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
+                                ws.id === activeId
+                                    ? "bg-white/[0.06]"
+                                    : "hover:bg-white/[0.04]"
+                            )}
+                        >
+                            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-gradient-to-br from-teal-400/20 to-green-400/20 text-[9px] font-bold text-teal-300">
+                                {ws.name[0]}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-medium text-[var(--text-primary)]">{ws.name}</p>
+                                <p className="text-[10px] text-[var(--text-muted)]">{ws.plan} · {ws.memberCount} member{ws.memberCount !== 1 ? "s" : ""}</p>
+                            </div>
+                            {ws.id === activeId && <Check className="h-3 w-3 text-green-400" />}
+                        </button>
+                    ))}
+                    <Separator className="my-1 bg-white/6" />
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(false)}
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-purple-300 transition-colors hover:bg-white/[0.04]"
+                    >
+                        <Plus className="h-3 w-3" />
+                        Create Workspace
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
 
 /**
  * Returns the user's initials from their full name.
@@ -83,6 +164,9 @@ function SidebarContent({
 }) {
     return (
         <>
+            {/* Workspace Switcher */}
+            <WorkspaceSwitcher />
+
             {/* Logo */}
             <div className="flex h-14 items-center gap-2.5 px-4">
                 <div

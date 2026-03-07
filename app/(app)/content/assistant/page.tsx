@@ -159,6 +159,9 @@ export default function ContentAssistantPage() {
     const [generated, setGenerated] = useState<GeneratedPost[]>([]);
     const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [brandVoiceSamples, setBrandVoiceSamples] = useState<string[]>(["", "", ""]);
+    const [isTrainingVoice, setIsTrainingVoice] = useState(false);
+    const [voiceTrained, setVoiceTrained] = useState(false);
 
     function handleGenerate() {
         setIsGenerating(true);
@@ -325,23 +328,56 @@ export default function ContentAssistantPage() {
                                 )}
                             </Button>
 
-                            {/* Brand voice */}
+                            {/* Brand voice training */}
                             <div className="rounded-xl border border-white/6 bg-white/3 p-3">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Wand2 className="h-3.5 w-3.5 text-purple-400" />
                                     <span className="text-xs font-medium text-[var(--text-secondary)]">
                                         Brand Voice Training
                                     </span>
-                                    <Badge
-                                        variant="outline"
-                                        className="text-[9px] border-amber-500/30 bg-amber-500/15 text-amber-300"
-                                    >
-                                        Coming Soon
-                                    </Badge>
+                                    {voiceTrained && (
+                                        <Badge
+                                            variant="outline"
+                                            className="text-[9px] border-green-500/30 bg-green-500/15 text-green-300"
+                                        >
+                                            Trained
+                                        </Badge>
+                                    )}
                                 </div>
-                                <p className="text-xs text-[var(--text-muted)]">
-                                    Train the AI on your writing style by providing sample posts
+                                <p className="text-xs text-[var(--text-muted)] mb-3">
+                                    Paste 2-3 sample posts to teach the AI your writing style
                                 </p>
+                                <div className="space-y-2">
+                                    {brandVoiceSamples.map((sample, i) => (
+                                        <textarea
+                                            key={i}
+                                            value={sample}
+                                            onChange={(e) => {
+                                                const next = [...brandVoiceSamples];
+                                                next[i] = e.target.value;
+                                                setBrandVoiceSamples(next);
+                                            }}
+                                            placeholder={`Sample post ${i + 1}...`}
+                                            rows={2}
+                                            className="w-full resize-none rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/20"
+                                        />
+                                    ))}
+                                </div>
+                                <Button
+                                    onClick={() => {
+                                        setIsTrainingVoice(true);
+                                        setTimeout(() => {
+                                            setIsTrainingVoice(false);
+                                            setVoiceTrained(true);
+                                        }, 1500);
+                                    }}
+                                    disabled={isTrainingVoice || brandVoiceSamples.every((s) => s.trim() === "")}
+                                    size="sm"
+                                    className="mt-2 w-full gap-1.5 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 disabled:opacity-40"
+                                >
+                                    <Wand2 className={`h-3 w-3 ${isTrainingVoice ? "animate-spin" : ""}`} />
+                                    {isTrainingVoice ? "Training..." : voiceTrained ? "Retrain Voice" : "Train Voice"}
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -462,20 +498,20 @@ export default function ContentAssistantPage() {
                                                     Performance Predictor
                                                 </h4>
                                                 <div className="space-y-3">
-                                                    <div>
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <span className="text-xs text-[var(--text-secondary)]">
-                                                                Hook Score
-                                                            </span>
-                                                            <span className="text-sm font-semibold text-green-400">
-                                                                {selectedPost.hookScore}%
-                                                            </span>
+                                                    {/* Circular score ring */}
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="relative flex h-16 w-16 items-center justify-center">
+                                                            <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
+                                                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+                                                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={selectedPost.hookScore >= 85 ? "#22c55e" : selectedPost.hookScore >= 70 ? "#eab308" : "#ef4444"} strokeWidth="3" strokeDasharray={`${selectedPost.hookScore}, 100`} strokeLinecap="round" className="transition-all duration-700" />
+                                                            </svg>
+                                                            <span className="absolute text-sm font-bold text-[var(--text-primary)]">{selectedPost.hookScore}</span>
                                                         </div>
-                                                        <div className="h-2 rounded-full bg-white/10">
-                                                            <div
-                                                                className="h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-400"
-                                                                style={{ width: `${selectedPost.hookScore}%` }}
-                                                            />
+                                                        <div>
+                                                            <p className="text-sm font-medium text-[var(--text-primary)]">Hook Score</p>
+                                                            <p className="text-xs text-[var(--text-muted)]">
+                                                                {selectedPost.hookScore >= 85 ? "Strong viral potential" : selectedPost.hookScore >= 70 ? "Good engagement expected" : "Consider improving the hook"}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center justify-between">
@@ -496,6 +532,23 @@ export default function ContentAssistantPage() {
                                                         >
                                                             Excellent
                                                         </Badge>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs text-[var(--text-secondary)]">
+                                                            Best Posting Time
+                                                        </span>
+                                                        <span className="flex items-center gap-1 text-xs font-medium text-blue-300">
+                                                            <Clock className="h-3 w-3" />
+                                                            Tue-Thu, 9-11 AM CET
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs text-[var(--text-secondary)]">
+                                                            Expected Engagement
+                                                        </span>
+                                                        <span className="text-xs font-medium text-green-300">
+                                                            ~{Math.round(selectedPost.hookScore * 2.8)} reactions · ~{Math.round(selectedPost.hookScore * 0.95)} comments
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>

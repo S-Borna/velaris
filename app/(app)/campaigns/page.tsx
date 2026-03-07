@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Copy, MoreHorizontal, Plus, Search, Trash2, Megaphone } from "lucide-react";
+import { ArrowUpDown, Copy, MoreHorizontal, Plus, Search, Trash2, TrendingUp, Megaphone } from "lucide-react";
 import { EmptyState } from "@/components/common/empty-state";
 import { toast } from "sonner";
 
@@ -21,6 +21,13 @@ interface CampaignRow {
     messagesSent: number;
     replyRate: number;
     opportunities: number;
+}
+
+interface CampaignGrade {
+    letter: string;
+    color: string;
+    bg: string;
+    trend: "up" | "down" | "stable";
 }
 
 const MOCK_CAMPAIGNS: CampaignRow[] = [
@@ -61,6 +68,17 @@ function PerformanceBadge({ rate }: { rate: number }) {
     if (rate >= 25) return <span className="text-green-400 font-medium">{rate}%</span>;
     if (rate >= 15) return <span className="text-amber-400 font-medium">{rate}%</span>;
     return <span className="text-[var(--text-secondary)]">{rate}%</span>;
+}
+
+/** Returns a letter grade, colors, and trend direction for campaign performance. */
+function getCampaignGrade(row: CampaignRow): CampaignGrade {
+    if (row.status === "draft") return { letter: "—", color: "text-[var(--text-muted)]", bg: "bg-white/5 border-white/10", trend: "stable" };
+    const acceptRate = row.connectionsSent > 0 ? row.connectionsAccepted / row.connectionsSent : 0;
+    const score = row.replyRate * 0.5 + acceptRate * 100 * 0.3 + Math.min(row.opportunities, 20) * 1;
+    if (score >= 25) return { letter: "A", color: "text-green-300", bg: "bg-green-500/15 border-green-500/30", trend: "up" };
+    if (score >= 18) return { letter: "B", color: "text-blue-300", bg: "bg-blue-500/15 border-blue-500/30", trend: "up" };
+    if (score >= 10) return { letter: "C", color: "text-amber-300", bg: "bg-amber-500/15 border-amber-500/30", trend: "stable" };
+    return { letter: "D", color: "text-red-300", bg: "bg-red-500/15 border-red-500/30", trend: "down" };
 }
 
 function SortHeader({ label, sortKey: key, current, asc, onSort }: { label: string; sortKey: SortKey; current: SortKey; asc: boolean; onSort: (k: SortKey) => void }) {
@@ -151,9 +169,19 @@ export default function CampaignsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {paged.map((row) => (
+                            {paged.map((row) => {
+                                const grade = getCampaignGrade(row);
+                                return (
                                 <tr key={row.id} className="border-b border-white/6 text-[var(--text-primary)] hover:bg-white/[0.02]">
-                                    <td className="px-3 py-3"><Link href={`/campaigns/${row.id}`} className="font-medium hover:text-purple-300 transition">{row.name}</Link></td>
+                                    <td className="px-3 py-3">
+                                        <div className="flex items-center gap-2">
+                                            <Link href={`/campaigns/${row.id}`} className="font-medium hover:text-purple-300 transition">{row.name}</Link>
+                                            <span className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[10px] font-bold ${grade.bg} ${grade.color}`}>
+                                                {grade.letter}
+                                                {grade.trend === "up" && <TrendingUp className="h-2.5 w-2.5" />}
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td className="px-3 py-3"><StatusBadge status={row.status} /></td>
                                     <td className="px-3 py-3 text-[var(--text-secondary)]">{row.created}</td>
                                     <td className="px-3 py-3">{row.connectionsSent.toLocaleString()}</td>
@@ -169,7 +197,7 @@ export default function CampaignsPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            )})}
                             {paged.length === 0 && <tr><td colSpan={9}><EmptyState icon={Megaphone} title="No campaigns yet" description="Create your first campaign to start reaching leads on LinkedIn." actionLabel="Create Campaign" actionHref="/campaigns/new" /></td></tr>}
                         </tbody>
                     </table>

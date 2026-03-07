@@ -564,15 +564,15 @@ export default function InboundAutomationsPage() {
         if (!selectedAutomation) return null;
         const auto = selectedAutomation;
         const totalProcessed = auto.completed + auto.processing + auto.failed;
+        const conversionRate = totalProcessed > 0 ? Math.round((auto.completed / totalProcessed) * 100) : 0;
 
         const KPI_CARDS = [
             { label: "Completed", value: auto.completed, color: "text-green-400", borderColor: "border-green-500/40", icon: CheckCircle2 },
             { label: "Processing", value: auto.processing, color: "text-amber-400", borderColor: "border-amber-500/40", icon: Clock },
             { label: "Failed", value: auto.failed, color: "text-red-400", borderColor: "border-red-500/40", icon: AlertCircle },
-            { label: "Total", value: totalProcessed, color: "text-blue-400", borderColor: "border-blue-500/40", icon: BarChart3 },
+            { label: "Conversion", value: `${conversionRate}%`, color: "text-purple-400", borderColor: "border-purple-500/40", icon: BarChart3 },
         ];
 
-        /* Mock comments for dashboard */
         const MOCK_COMMENTS = [
             { id: "c1", author: "Maria Chen", comment: "Interested! Send it over please", status: "completed" as const, time: "2h ago" },
             { id: "c2", author: "James Wilson", comment: "Would love the playbook!", status: "completed" as const, time: "4h ago" },
@@ -580,6 +580,23 @@ export default function InboundAutomationsPage() {
             { id: "c4", author: "David Park", comment: "Very interested in this guide", status: "completed" as const, time: "6h ago" },
             { id: "c5", author: "Lisa Müller", comment: "Please send!", status: "failed" as const, time: "5h ago" },
         ];
+
+        const MOCK_ACTIVITY_TIMELINE = [
+            { id: "at1", action: "Comment detected from Maria Chen", time: "2h ago", type: "trigger" as const },
+            { id: "at2", action: "Reply posted: \"Sent it!\"", time: "2h ago", type: "reply" as const },
+            { id: "at3", action: "DM sent to Maria Chen", time: "2h ago", type: "dm" as const },
+            { id: "at4", action: "Comment detected from Sofia Andersson", time: "1h ago", type: "trigger" as const },
+            { id: "at5", action: "Connection request sent to Sofia Andersson", time: "1h ago", type: "connect" as const },
+            { id: "at6", action: "Failed to send DM to Lisa Müller (rate limited)", time: "5h ago", type: "error" as const },
+        ];
+
+        const ACTIVITY_TYPE_COLORS: Record<string, string> = {
+            trigger: "text-blue-400",
+            reply: "text-green-400",
+            dm: "text-purple-400",
+            connect: "text-cyan-400",
+            error: "text-red-400",
+        };
 
         const COMMENT_STATUS_STYLES: Record<string, string> = {
             completed: "border-green-500/30 bg-green-500/15 text-green-300",
@@ -708,6 +725,54 @@ export default function InboundAutomationsPage() {
                             <p className="text-sm text-[var(--text-muted)]">No comments yet</p>
                         </div>
                     )}
+                </div>
+
+                {/* Analytics + Activity Grid */}
+                <div className="grid gap-4 lg:grid-cols-2">
+                    {/* Mini performance chart */}
+                    <div className="rounded-lg border border-white/6 bg-[var(--bg-card)] p-4">
+                        <h3 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Performance Over Time</h3>
+                        <div className="relative h-32 rounded-lg border border-white/6 bg-gradient-to-b from-white/[0.02] to-transparent p-3">
+                            <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="h-full w-full">
+                                <defs>
+                                    <linearGradient id="inboundGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="rgba(34,197,94,0.3)" />
+                                        <stop offset="100%" stopColor="rgba(34,197,94,0.02)" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M0,35 C10,30 20,28 30,25 C40,22 50,18 60,15 C70,12 80,10 90,8 L100,7 L100,40 L0,40 Z" fill="url(#inboundGrad)" />
+                                <path d="M0,35 C10,30 20,28 30,25 C40,22 50,18 60,15 C70,12 80,10 90,8 L100,7" stroke="rgba(34,197,94,0.8)" strokeWidth="1.5" fill="none" />
+                            </svg>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between text-xs text-[var(--text-muted)]">
+                            <span>7 days ago</span>
+                            <span>Today</span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs text-[var(--text-muted)]">Top keywords:</span>
+                                {auto.triggerKeywords.slice(0, 3).map((kw) => (
+                                    <Badge key={kw} variant="outline" className="text-[9px] border-purple-500/30 text-purple-300">{kw}</Badge>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Recent Activity Timeline */}
+                    <div className="rounded-lg border border-white/6 bg-[var(--bg-card)] p-4">
+                        <h3 className="mb-3 text-sm font-medium text-[var(--text-primary)]">Recent Activity</h3>
+                        <div className="space-y-3">
+                            {MOCK_ACTIVITY_TIMELINE.map((event) => (
+                                <div key={event.id} className="flex items-start gap-3">
+                                    <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${event.type === "error" ? "bg-red-400" : event.type === "trigger" ? "bg-blue-400" : event.type === "reply" ? "bg-green-400" : event.type === "dm" ? "bg-purple-400" : "bg-cyan-400"}`} />
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`text-xs ${ACTIVITY_TYPE_COLORS[event.type]}`}>{event.action}</p>
+                                        <p className="text-[10px] text-[var(--text-muted)]">{event.time}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         );
