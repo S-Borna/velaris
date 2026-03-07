@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { Input } from "@/components/ui/input";
 import {
     BookOpen,
@@ -230,17 +231,11 @@ export default function ContentAssistantPage() {
                                 <label className="text-xs font-medium text-[var(--text-secondary)]">
                                     Category
                                 </label>
-                                <select
+                                <CustomSelect
                                     value={category}
-                                    onChange={(e) => setCategory(e.target.value)}
-                                    className="w-full rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/20"
-                                >
-                                    {CATEGORY_OPTIONS.map((opt) => (
-                                        <option key={opt} value={opt}>
-                                            {opt}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={setCategory}
+                                    options={CATEGORY_OPTIONS.map((opt) => ({ label: opt, value: opt }))}
+                                />
                             </div>
 
                             {/* Topic */}
@@ -274,17 +269,11 @@ export default function ContentAssistantPage() {
                                 <label className="text-xs font-medium text-[var(--text-secondary)]">
                                     Language
                                 </label>
-                                <select
+                                <CustomSelect
                                     value={language}
-                                    onChange={(e) => setLanguage(e.target.value)}
-                                    className="w-full rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/20"
-                                >
-                                    {LANGUAGE_OPTIONS.map((opt) => (
-                                        <option key={opt} value={opt}>
-                                            {opt}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={setLanguage}
+                                    options={LANGUAGE_OPTIONS.map((opt) => ({ label: opt, value: opt }))}
+                                />
                             </div>
 
                             {/* Tone */}

@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { ArrowLeft, ArrowRight, Check, FileText, Linkedin, Users, Calendar, Workflow } from "lucide-react";
 
 const STEPS = [
@@ -141,13 +142,19 @@ export default function NewCampaignPage() {
                     <div className="max-w-md space-y-4">
                         <label className="block">
                             <span className="text-sm font-medium text-[var(--text-primary)]">Timezone</span>
-                            <select value={timezone} onChange={(e) => setTimezone(e.target.value)}
-                                className="mt-2 h-12 w-full rounded-lg border border-white/10 bg-[var(--bg-input)] px-4 text-sm text-[var(--text-primary)] focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">
-                                <option value="Europe/Stockholm">Europe/Stockholm (CET)</option>
-                                <option value="America/New_York">America/New_York (EST)</option>
-                                <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
-                                <option value="UTC">UTC</option>
-                            </select>
+                            <div className="mt-2">
+                                <CustomSelect
+                                    value={timezone}
+                                    onChange={setTimezone}
+                                    options={[
+                                        { label: "Europe/Stockholm (CET)", value: "Europe/Stockholm" },
+                                        { label: "America/New_York (EST)", value: "America/New_York" },
+                                        { label: "America/Los_Angeles (PST)", value: "America/Los_Angeles" },
+                                        { label: "UTC", value: "UTC" },
+                                    ]}
+                                    triggerClassName="h-12"
+                                />
+                            </div>
                         </label>
                         <div className="grid grid-cols-2 gap-4">
                             <label className="block">
