@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,13 @@ import { Input } from "@/components/ui/input";
 import {
     BookOpen,
     Calendar,
-    ChevronDown,
     Clock,
     Copy,
     FileText,
     Hash,
     Heart,
-    Image,
     Layout,
+    Loader2,
     MessageCircle,
     PenTool,
     Repeat2,
@@ -45,22 +44,21 @@ interface GeneratedPost {
 
 interface LibraryPost {
     id: string;
-    content: string;
-    status: "draft" | "scheduled" | "posted";
+    generatedContent: string | null;
+    topic: string | null;
+    category: string | null;
+    status: string;
     scheduledAt: string | null;
     postedAt: string | null;
-    impressions: number | null;
-    reactions: number | null;
-    comments: number | null;
     createdAt: string;
 }
 
 interface ScheduledPost {
     id: string;
-    content: string;
-    scheduledAt: string;
-    linkedinAccount: string;
-    status: "scheduled" | "posted";
+    generatedContent: string | null;
+    scheduledAt: string | null;
+    status: string;
+    linkedinAccountId: string | null;
 }
 
 /* ─── Options ───────────────────────────────────────── */
@@ -111,27 +109,12 @@ interface ContentApiError {
     details?: Array<{ field: string; message: string }>;
 }
 
-const MOCK_LIBRARY: LibraryPost[] = [
-    { id: "lib1", content: "I spent 6 months analyzing 10,000+ LinkedIn outreach campaigns...", status: "posted", scheduledAt: null, postedAt: "2026-03-03 09:00", impressions: 18420, reactions: 247, comments: 89, createdAt: "2026-03-02" },
-    { id: "lib2", content: "Hot take: 90% of LinkedIn outreach messages are garbage...", status: "scheduled", scheduledAt: "2026-03-07 10:00", postedAt: null, impressions: null, reactions: null, comments: null, createdAt: "2026-03-05" },
-    { id: "lib3", content: "3 things I wish I knew before starting my SaaS journey...", status: "draft", scheduledAt: null, postedAt: null, impressions: null, reactions: null, comments: null, createdAt: "2026-03-06" },
-    { id: "lib4", content: "We just hit $10K MRR. Here's the breakdown...", status: "posted", scheduledAt: null, postedAt: "2026-02-28 11:30", impressions: 32100, reactions: 512, comments: 134, createdAt: "2026-02-27" },
-    { id: "lib5", content: "The single best investment I made this year was...", status: "posted", scheduledAt: null, postedAt: "2026-02-20 09:15", impressions: 8900, reactions: 156, comments: 42, createdAt: "2026-02-19" },
-];
-
-const MOCK_SCHEDULED: ScheduledPost[] = [
-    { id: "s1", content: "Hot take: 90% of LinkedIn outreach messages are garbage...", scheduledAt: "2026-03-07 10:00", linkedinAccount: "Said Borna", status: "scheduled" },
-    { id: "s2", content: "3 things I wish I knew before starting my SaaS journey...", scheduledAt: "2026-03-08 09:00", linkedinAccount: "Said Borna", status: "scheduled" },
-    { id: "s3", content: "The future of cold outreach isn't cold at all...", scheduledAt: "2026-03-09 11:00", linkedinAccount: "Said Borna", status: "scheduled" },
-    { id: "s4", content: "I analyzed 500 LinkedIn profiles of top SDRs...", scheduledAt: "2026-03-10 10:30", linkedinAccount: "Said Borna", status: "scheduled" },
-];
-
 /* ─── Component ─────────────────────────────────────── */
 
 /**
  * Content Assistant — AI-powered LinkedIn content generation.
- * Form: Category, Topic, Target Audience, Language, Tone. Generate → multi-variant preview.
- * Tabs: Create Post | Library | Schedule Post.
+ * Create tab calls real /api/content/generate.
+ * Library + Schedule tabs fetch from /api/content-posts.
  */
 export default function ContentAssistantPage() {
     const [activeTab, setActiveTab] = useState<ContentTab>("create");
@@ -148,7 +131,53 @@ export default function ContentAssistantPage() {
     const [isTrainingVoice, setIsTrainingVoice] = useState(false);
     const [voiceTrained, setVoiceTrained] = useState(false);
 
-    async function handleGenerate() {
+    // Library + schedule from API
+    const [libraryPosts, setLibraryPosts] = useState<LibraryPost[]>([]);
+    const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
+    const [loadingLibrary, setLoadingLibrary] = useState(false);
+    const [loadingSchedule, setLoadingSchedule] = useState(false);
+
+    /* ── Fetch library ──────────────── */
+
+    const fetchLibrary = useCallback(async () => {
+        setLoadingLibrary(true);
+        try {
+            const res = await fetch("/api/content-posts?pageSize=50");
+            if (!res.ok) throw new Error("Failed");
+            const json = await res.json();
+            setLibraryPosts(json.data?.data ?? []);
+        } catch {
+            setLibraryPosts([]);
+        } finally {
+            setLoadingLibrary(false);
+        }
+    }, []);
+
+    const fetchScheduled = useCallback(async () => {
+        setLoadingSchedule(true);
+        try {
+            const res = await fetch("/api/content-posts?status=scheduled&pageSize=50");
+            if (!res.ok) throw new Error("Failed");
+            const json = await res.json();
+            setScheduledPosts(json.data?.data ?? []);
+        } catch {
+            setScheduledPosts([]);
+        } finally {
+            setLoadingSchedule(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === "library") fetchLibrary();
+        if (activeTab === "schedule") {
+            fetchScheduled();
+            fetchLibrary();
+        }
+    }, [activeTab, fetchLibrary, fetchScheduled]);
+
+    /* ── Generate ──────────────────── */
+
+    async function handleGenerate(): Promise<void> {
         if (!topic.trim() || !audience.trim()) {
             toast.error("Please fill in Topic and Target Audience");
             return;
@@ -183,8 +212,25 @@ export default function ContentAssistantPage() {
             setGenerated(data.variants);
             setSelectedVariant(data.variants[0]?.id ?? null);
             toast.success(
-                `${data.variants.length} variants generated (${data.tokensUsed} tokens used)`
+                `${data.variants.length} variants generated (${data.tokensUsed} tokens used)`,
             );
+
+            // Save each variant to DB
+            for (const variant of data.variants) {
+                await fetch("/api/content-posts", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        category,
+                        topic: topic.trim(),
+                        targetAudience: audience.trim(),
+                        language,
+                        tone,
+                        generatedContent: variant.content,
+                        status: "draft",
+                    }),
+                });
+            }
         } catch (error: unknown) {
             const message =
                 error instanceof Error ? error.message : "Failed to generate content";
@@ -194,7 +240,7 @@ export default function ContentAssistantPage() {
         }
     }
 
-    function handleCopy(text: string) {
+    function handleCopy(text: string): void {
         navigator.clipboard.writeText(text);
         setCopied(true);
         toast.success("Content copied to clipboard");
@@ -208,6 +254,15 @@ export default function ContentAssistantPage() {
         { value: "library", label: "Library", icon: BookOpen },
         { value: "schedule", label: "Schedule", icon: Calendar },
     ];
+
+    function formatDate(iso: string | null): string {
+        if (!iso) return "—";
+        return new Date(iso).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
+    }
 
     return (
         <div className="flex h-full flex-1 flex-col">
@@ -228,10 +283,11 @@ export default function ContentAssistantPage() {
                             variant={activeTab === tab.value ? "default" : "ghost"}
                             size="sm"
                             onClick={() => setActiveTab(tab.value)}
-                            className={`gap-1.5 ${activeTab === tab.value
+                            className={`gap-1.5 ${
+                                activeTab === tab.value
                                     ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
                                     : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                                }`}
+                            }`}
                         >
                             <tab.icon className="h-3.5 w-3.5" />
                             {tab.label}
@@ -254,7 +310,10 @@ export default function ContentAssistantPage() {
                                 <CustomSelect
                                     value={category}
                                     onChange={setCategory}
-                                    options={CATEGORY_OPTIONS.map((opt) => ({ label: opt, value: opt }))}
+                                    options={CATEGORY_OPTIONS.map((opt) => ({
+                                        label: opt,
+                                        value: opt,
+                                    }))}
                                 />
                             </div>
 
@@ -292,7 +351,10 @@ export default function ContentAssistantPage() {
                                 <CustomSelect
                                     value={language}
                                     onChange={setLanguage}
-                                    options={LANGUAGE_OPTIONS.map((opt) => ({ label: opt, value: opt }))}
+                                    options={LANGUAGE_OPTIONS.map((opt) => ({
+                                        label: opt,
+                                        value: opt,
+                                    }))}
                                 />
                             </div>
 
@@ -306,10 +368,11 @@ export default function ContentAssistantPage() {
                                         <button
                                             key={opt.value}
                                             onClick={() => setTone(opt.value)}
-                                            className={`rounded-lg border px-3 py-2 text-xs transition-colors ${tone === opt.value
+                                            className={`rounded-lg border px-3 py-2 text-xs transition-colors ${
+                                                tone === opt.value
                                                     ? "border-purple-500/40 bg-purple-500/10 text-purple-300"
                                                     : "border-white/6 bg-white/3 text-[var(--text-secondary)] hover:border-white/10"
-                                                }`}
+                                            }`}
                                         >
                                             <span className="mr-1">{opt.emoji}</span>
                                             {opt.label}
@@ -339,7 +402,7 @@ export default function ContentAssistantPage() {
 
                             {/* Brand voice training */}
                             <div className="rounded-xl border border-white/6 bg-white/3 p-3">
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="mb-2 flex items-center gap-2">
                                     <Wand2 className="h-3.5 w-3.5 text-purple-400" />
                                     <span className="text-xs font-medium text-[var(--text-secondary)]">
                                         Brand Voice Training
@@ -347,13 +410,13 @@ export default function ContentAssistantPage() {
                                     {voiceTrained && (
                                         <Badge
                                             variant="outline"
-                                            className="text-[9px] border-green-500/30 bg-green-500/15 text-green-300"
+                                            className="border-green-500/30 bg-green-500/15 text-[9px] text-green-300"
                                         >
                                             Trained
                                         </Badge>
                                     )}
                                 </div>
-                                <p className="text-xs text-[var(--text-muted)] mb-3">
+                                <p className="mb-3 text-xs text-[var(--text-muted)]">
                                     Paste 2-3 sample posts to teach the AI your writing style
                                 </p>
                                 <div className="space-y-2">
@@ -374,24 +437,34 @@ export default function ContentAssistantPage() {
                                 </div>
                                 <Button
                                     onClick={() => {
-                                        const filledSamples = brandVoiceSamples.filter((s) => s.trim().length > 0);
+                                        const filledSamples = brandVoiceSamples.filter(
+                                            (s) => s.trim().length > 0,
+                                        );
                                         if (filledSamples.length === 0) return;
                                         setIsTrainingVoice(true);
-                                        // Brand voice is applied by passing samples to Claude on next generation
                                         setTimeout(() => {
                                             setIsTrainingVoice(false);
                                             setVoiceTrained(true);
                                             toast.success(
-                                                `Brand voice trained on ${filledSamples.length} sample${filledSamples.length > 1 ? "s" : ""}. Next generation will match your style.`
+                                                `Brand voice trained on ${filledSamples.length} sample${filledSamples.length > 1 ? "s" : ""}. Next generation will match your style.`,
                                             );
                                         }, 800);
                                     }}
-                                    disabled={isTrainingVoice || brandVoiceSamples.every((s) => s.trim() === "")}
+                                    disabled={
+                                        isTrainingVoice ||
+                                        brandVoiceSamples.every((s) => s.trim() === "")
+                                    }
                                     size="sm"
                                     className="mt-2 w-full gap-1.5 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 disabled:opacity-40"
                                 >
-                                    <Wand2 className={`h-3 w-3 ${isTrainingVoice ? "animate-spin" : ""}`} />
-                                    {isTrainingVoice ? "Training..." : voiceTrained ? "Retrain Voice" : "Train Voice"}
+                                    <Wand2
+                                        className={`h-3 w-3 ${isTrainingVoice ? "animate-spin" : ""}`}
+                                    />
+                                    {isTrainingVoice
+                                        ? "Training..."
+                                        : voiceTrained
+                                          ? "Retrain Voice"
+                                          : "Train Voice"}
                                 </Button>
                             </div>
                         </div>
@@ -421,20 +494,22 @@ export default function ContentAssistantPage() {
                                             variant="outline"
                                             size="sm"
                                             onClick={() => setSelectedVariant(post.id)}
-                                            className={`gap-1.5 ${selectedVariant === post.id
+                                            className={`gap-1.5 ${
+                                                selectedVariant === post.id
                                                     ? "border-purple-500/40 bg-purple-500/15 text-purple-300"
                                                     : "border-white/10 bg-white/5 text-[var(--text-secondary)]"
-                                                }`}
+                                            }`}
                                         >
                                             Variant {post.variant}
                                             <Badge
                                                 variant="outline"
-                                                className={`text-[9px] ${post.hookScore >= 90
+                                                className={`text-[9px] ${
+                                                    post.hookScore >= 90
                                                         ? "border-green-500/30 text-green-300"
                                                         : post.hookScore >= 85
-                                                            ? "border-amber-500/30 text-amber-300"
-                                                            : "border-white/10 text-[var(--text-muted)]"
-                                                    }`}
+                                                          ? "border-amber-500/30 text-amber-300"
+                                                          : "border-white/10 text-[var(--text-muted)]"
+                                                }`}
                                             >
                                                 {post.hookScore}%
                                             </Badge>
@@ -455,7 +530,8 @@ export default function ContentAssistantPage() {
                                                         Said Borna
                                                     </p>
                                                     <p className="text-xs text-[var(--text-muted)]">
-                                                        Building Velaris · AI-powered LinkedIn automation
+                                                        Building Velaris · AI-powered LinkedIn
+                                                        automation
                                                     </p>
                                                     <p className="text-[10px] text-[var(--text-muted)]">
                                                         Just now · 🌐
@@ -488,7 +564,10 @@ export default function ContentAssistantPage() {
                                                 <div className="mt-2 flex items-center justify-around border-t border-white/6 pt-2">
                                                     {[
                                                         { icon: ThumbsUp, label: "Like" },
-                                                        { icon: MessageCircle, label: "Comment" },
+                                                        {
+                                                            icon: MessageCircle,
+                                                            label: "Comment",
+                                                        },
                                                         { icon: Repeat2, label: "Repost" },
                                                         { icon: Send, label: "Send" },
                                                     ].map((action) => (
@@ -513,19 +592,51 @@ export default function ContentAssistantPage() {
                                                     Performance Predictor
                                                 </h4>
                                                 <div className="space-y-3">
-                                                    {/* Circular score ring */}
                                                     <div className="flex items-center gap-4">
                                                         <div className="relative flex h-16 w-16 items-center justify-center">
-                                                            <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
-                                                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
-                                                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={selectedPost.hookScore >= 85 ? "#22c55e" : selectedPost.hookScore >= 70 ? "#eab308" : "#ef4444"} strokeWidth="3" strokeDasharray={`${selectedPost.hookScore}, 100`} strokeLinecap="round" className="transition-all duration-700" />
+                                                            <svg
+                                                                className="h-16 w-16 -rotate-90"
+                                                                viewBox="0 0 36 36"
+                                                            >
+                                                                <path
+                                                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                                    fill="none"
+                                                                    stroke="rgba(255,255,255,0.08)"
+                                                                    strokeWidth="3"
+                                                                />
+                                                                <path
+                                                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                                    fill="none"
+                                                                    stroke={
+                                                                        selectedPost.hookScore >=
+                                                                        85
+                                                                            ? "#22c55e"
+                                                                            : selectedPost.hookScore >=
+                                                                                70
+                                                                              ? "#eab308"
+                                                                              : "#ef4444"
+                                                                    }
+                                                                    strokeWidth="3"
+                                                                    strokeDasharray={`${selectedPost.hookScore}, 100`}
+                                                                    strokeLinecap="round"
+                                                                    className="transition-all duration-700"
+                                                                />
                                                             </svg>
-                                                            <span className="absolute text-sm font-bold text-[var(--text-primary)]">{selectedPost.hookScore}</span>
+                                                            <span className="absolute text-sm font-bold text-[var(--text-primary)]">
+                                                                {selectedPost.hookScore}
+                                                            </span>
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-medium text-[var(--text-primary)]">Hook Score</p>
+                                                            <p className="text-sm font-medium text-[var(--text-primary)]">
+                                                                Hook Score
+                                                            </p>
                                                             <p className="text-xs text-[var(--text-muted)]">
-                                                                {selectedPost.hookScore >= 85 ? "Strong viral potential" : selectedPost.hookScore >= 70 ? "Good engagement expected" : "Consider improving the hook"}
+                                                                {selectedPost.hookScore >= 85
+                                                                    ? "Strong viral potential"
+                                                                    : selectedPost.hookScore >=
+                                                                        70
+                                                                      ? "Good engagement expected"
+                                                                      : "Consider improving the hook"}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -534,19 +645,9 @@ export default function ContentAssistantPage() {
                                                             Predicted Reach
                                                         </span>
                                                         <span className="text-sm font-medium text-[var(--text-primary)]">
-                                                            {selectedPost.predictedReach} impressions
+                                                            {selectedPost.predictedReach}{" "}
+                                                            impressions
                                                         </span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs text-[var(--text-secondary)]">
-                                                            Readability
-                                                        </span>
-                                                        <Badge
-                                                            variant="outline"
-                                                            className="border-green-500/30 bg-green-500/15 text-green-300 text-xs"
-                                                        >
-                                                            Excellent
-                                                        </Badge>
                                                     </div>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-xs text-[var(--text-secondary)]">
@@ -555,14 +656,6 @@ export default function ContentAssistantPage() {
                                                         <span className="flex items-center gap-1 text-xs font-medium text-blue-300">
                                                             <Clock className="h-3 w-3" />
                                                             Tue-Thu, 9-11 AM CET
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs text-[var(--text-secondary)]">
-                                                            Expected Engagement
-                                                        </span>
-                                                        <span className="text-xs font-medium text-green-300">
-                                                            ~{Math.round(selectedPost.hookScore * 2.8)} reactions · ~{Math.round(selectedPost.hookScore * 0.95)} comments
                                                         </span>
                                                     </div>
                                                 </div>
@@ -579,24 +672,20 @@ export default function ContentAssistantPage() {
                                                         <Badge
                                                             key={tag}
                                                             variant="outline"
-                                                            className="border-blue-500/20 bg-blue-500/10 text-blue-300 text-xs cursor-pointer hover:bg-blue-500/20"
+                                                            className="cursor-pointer border-blue-500/20 bg-blue-500/10 text-xs text-blue-300 hover:bg-blue-500/20"
                                                         >
                                                             {tag}
                                                         </Badge>
                                                     ))}
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="border-white/10 text-[var(--text-muted)] text-xs cursor-pointer hover:bg-white/5"
-                                                    >
-                                                        + Add
-                                                    </Badge>
                                                 </div>
                                             </div>
 
                                             {/* Actions */}
                                             <div className="flex gap-3">
                                                 <Button
-                                                    onClick={() => handleCopy(selectedPost.content)}
+                                                    onClick={() =>
+                                                        handleCopy(selectedPost.content)
+                                                    }
                                                     variant="outline"
                                                     className="flex-1 gap-1.5 border-white/10 bg-white/5 text-[var(--text-secondary)] hover:bg-white/10"
                                                 >
@@ -609,22 +698,23 @@ export default function ContentAssistantPage() {
                                                 </Button>
                                             </div>
 
-                                            {/* Carousel creator teaser */}
+                                            {/* Carousel teaser */}
                                             <div className="rounded-xl border border-white/6 bg-white/3 p-3">
-                                                <div className="flex items-center gap-2 mb-1">
+                                                <div className="mb-1 flex items-center gap-2">
                                                     <Layout className="h-3.5 w-3.5 text-purple-400" />
                                                     <span className="text-xs font-medium text-[var(--text-secondary)]">
                                                         Carousel Creator
                                                     </span>
                                                     <Badge
                                                         variant="outline"
-                                                        className="text-[9px] border-amber-500/30 bg-amber-500/15 text-amber-300"
+                                                        className="border-amber-500/30 bg-amber-500/15 text-[9px] text-amber-300"
                                                     >
                                                         Coming Soon
                                                     </Badge>
                                                 </div>
                                                 <p className="text-xs text-[var(--text-muted)]">
-                                                    Convert this post into a slide carousel for higher engagement
+                                                    Convert this post into a slide carousel for
+                                                    higher engagement
                                                 </p>
                                             </div>
                                         </div>
@@ -639,137 +729,153 @@ export default function ContentAssistantPage() {
             {/* ─── Library tab ─── */}
             {activeTab === "library" && (
                 <div className="flex-1 overflow-y-auto p-6">
-                    <div className="space-y-4">
-                        {MOCK_LIBRARY.map((post) => (
-                            <div
-                                key={post.id}
-                                className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4 hover:border-white/10 transition-colors"
-                            >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Badge
-                                                variant="outline"
-                                                className={`text-xs ${post.status === "posted"
-                                                        ? "border-green-500/30 bg-green-500/15 text-green-300"
-                                                        : post.status === "scheduled"
-                                                            ? "border-blue-500/30 bg-blue-500/15 text-blue-300"
-                                                            : "border-white/10 bg-white/5 text-[var(--text-muted)]"
+                    {loadingLibrary ? (
+                        <div className="space-y-3">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className="h-20 animate-pulse rounded-xl bg-white/5"
+                                />
+                            ))}
+                        </div>
+                    ) : libraryPosts.length === 0 ? (
+                        <div className="flex h-64 items-center justify-center text-sm text-[var(--text-muted)]">
+                            No content yet. Generate your first post using the Create tab.
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {libraryPosts.map((post) => (
+                                <div
+                                    key={post.id}
+                                    className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4 transition-colors hover:border-white/10"
+                                >
+                                    <div className="flex items-start justify-between">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="mb-2 flex items-center gap-2">
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`text-xs ${
+                                                        post.status === "posted"
+                                                            ? "border-green-500/30 bg-green-500/15 text-green-300"
+                                                            : post.status === "scheduled"
+                                                              ? "border-blue-500/30 bg-blue-500/15 text-blue-300"
+                                                              : "border-white/10 bg-white/5 text-[var(--text-muted)]"
                                                     }`}
-                                            >
-                                                {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
-                                            </Badge>
-                                            <span className="text-xs text-[var(--text-muted)]">
-                                                {post.createdAt}
-                                            </span>
+                                                >
+                                                    {post.status.charAt(0).toUpperCase() +
+                                                        post.status.slice(1)}
+                                                </Badge>
+                                                {post.category && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="border-white/10 text-[10px] text-[var(--text-muted)]"
+                                                    >
+                                                        {post.category}
+                                                    </Badge>
+                                                )}
+                                                <span className="text-xs text-[var(--text-muted)]">
+                                                    {formatDate(post.createdAt)}
+                                                </span>
+                                            </div>
+                                            <p className="line-clamp-2 text-sm text-[var(--text-primary)]">
+                                                {post.generatedContent ?? post.topic ?? "—"}
+                                            </p>
                                         </div>
-                                        <p className="text-sm text-[var(--text-primary)] line-clamp-2">
-                                            {post.content}
-                                        </p>
                                     </div>
-                                    {post.status === "posted" && post.impressions && (
-                                        <div className="ml-4 flex items-center gap-4 text-xs text-[var(--text-secondary)]">
-                                            <span className="flex items-center gap-1">
-                                                <TrendingUp className="h-3 w-3" />
-                                                {post.impressions.toLocaleString()}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Heart className="h-3 w-3" />
-                                                {post.reactions}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <MessageCircle className="h-3 w-3" />
-                                                {post.comments}
-                                            </span>
-                                        </div>
-                                    )}
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 
             {/* ─── Schedule tab ─── */}
             {activeTab === "schedule" && (
                 <div className="flex-1 overflow-y-auto p-6">
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                        {/* Scheduled */}
-                        <div>
-                            <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-                                <Clock className="h-4 w-4 text-blue-400" />
-                                Scheduled ({MOCK_SCHEDULED.length})
-                            </h3>
-                            <div className="space-y-3">
-                                {MOCK_SCHEDULED.map((post) => (
-                                    <div
-                                        key={post.id}
-                                        className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4"
-                                    >
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-purple-700/20 text-[10px] font-medium text-purple-300">
-                                                SB
-                                            </div>
-                                            <span className="text-xs text-[var(--text-secondary)]">
-                                                {post.linkedinAccount}
-                                            </span>
-                                            <span className="text-[10px] text-[var(--text-muted)]">
-                                                · {post.scheduledAt}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-[var(--text-primary)] line-clamp-2">
-                                            {post.content}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
+                    {loadingSchedule ? (
+                        <div className="space-y-3">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className="h-20 animate-pulse rounded-xl bg-white/5"
+                                />
+                            ))}
                         </div>
-
-                        {/* Recently posted */}
-                        <div>
-                            <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
-                                <FileText className="h-4 w-4 text-green-400" />
-                                Recently Posted ({MOCK_LIBRARY.filter((p) => p.status === "posted").length})
-                            </h3>
-                            <div className="space-y-3">
-                                {MOCK_LIBRARY.filter((p) => p.status === "posted").map((post) => (
-                                    <div
-                                        key={post.id}
-                                        className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4"
-                                    >
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Badge
-                                                variant="outline"
-                                                className="text-xs border-green-500/30 bg-green-500/15 text-green-300"
+                    ) : (
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                            {/* Scheduled */}
+                            <div>
+                                <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
+                                    <Clock className="h-4 w-4 text-blue-400" />
+                                    Scheduled ({scheduledPosts.length})
+                                </h3>
+                                {scheduledPosts.length === 0 ? (
+                                    <div className="flex h-32 items-center justify-center rounded-xl border border-white/6 bg-[var(--bg-card)] text-xs text-[var(--text-muted)]">
+                                        No scheduled posts
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {scheduledPosts.map((post) => (
+                                            <div
+                                                key={post.id}
+                                                className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4"
                                             >
-                                                Posted
-                                            </Badge>
-                                            <span className="text-[10px] text-[var(--text-muted)]">
-                                                {post.postedAt}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-[var(--text-primary)] line-clamp-2 mb-2">
-                                            {post.content}
-                                        </p>
-                                        <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)]">
-                                            <span className="flex items-center gap-1">
-                                                <TrendingUp className="h-3 w-3" />
-                                                {post.impressions?.toLocaleString()}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Heart className="h-3 w-3" />
-                                                {post.reactions}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <MessageCircle className="h-3 w-3" />
-                                                {post.comments}
-                                            </span>
-                                        </div>
+                                                <div className="mb-2 flex items-center gap-2">
+                                                    <Calendar className="h-3 w-3 text-blue-400" />
+                                                    <span className="text-[10px] text-[var(--text-muted)]">
+                                                        {formatDate(post.scheduledAt)}
+                                                    </span>
+                                                </div>
+                                                <p className="line-clamp-2 text-sm text-[var(--text-primary)]">
+                                                    {post.generatedContent ?? "—"}
+                                                </p>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
+                            </div>
+
+                            {/* Recently posted */}
+                            <div>
+                                <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
+                                    <FileText className="h-4 w-4 text-green-400" />
+                                    All Posts (
+                                    {libraryPosts.filter((p) => p.status === "posted").length})
+                                </h3>
+                                <div className="space-y-3">
+                                    {libraryPosts
+                                        .filter((p) => p.status === "posted")
+                                        .map((post) => (
+                                            <div
+                                                key={post.id}
+                                                className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4"
+                                            >
+                                                <div className="mb-2 flex items-center gap-2">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="border-green-500/30 bg-green-500/15 text-xs text-green-300"
+                                                    >
+                                                        Posted
+                                                    </Badge>
+                                                    <span className="text-[10px] text-[var(--text-muted)]">
+                                                        {formatDate(post.postedAt)}
+                                                    </span>
+                                                </div>
+                                                <p className="line-clamp-2 text-sm text-[var(--text-primary)]">
+                                                    {post.generatedContent ?? "—"}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    {libraryPosts.filter((p) => p.status === "posted")
+                                        .length === 0 && (
+                                        <div className="flex h-32 items-center justify-center rounded-xl border border-white/6 bg-[var(--bg-card)] text-xs text-[var(--text-muted)]">
+                                            No posted content yet
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
         </div>
