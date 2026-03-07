@@ -1,514 +1,509 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/common/empty-state";
 import {
-    AlertCircle,
     CheckCircle2,
-    Clock,
     Download,
     ExternalLink,
-    Linkedin,
     Loader2,
     Mail,
     Phone,
     Plus,
     Search,
-    Sparkles,
     Users,
     X,
 } from "lucide-react";
-import { EmptyState } from "@/components/common/empty-state";
 
-/* ─── Types ─────────────────────────────────────────── */
+// ─── Types ──────────────────────────────────────────────
 
 type ExtractionSource = "search" | "post" | "sales_navigator";
-type ExtractionStatus = "completed" | "running" | "queued" | "failed";
-
-interface ExtractionJob {
-    id: string;
-    source: ExtractionSource;
-    query: string;
-    status: ExtractionStatus;
-    leadsFound: number;
-    leadsEnriched: number;
-    startedAt: string;
-    completedAt: string | null;
-    duplicatesSkipped: number;
-}
 
 interface ExtractedLead {
     id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     title: string;
     company: string;
     location: string;
-    hasEmail: boolean;
-    hasPhone: boolean;
     linkedinUrl: string;
-    qualityScore: number;
+    email: string | null;
+    phone: string | null;
+    icpScore: number | null;
 }
 
-/* ─── Mock data ─────────────────────────────────────── */
-
-const MOCK_JOBS: ExtractionJob[] = [
-    { id: "e1", source: "search", query: "SaaS CEO Stockholm 2-15 employees", status: "completed", leadsFound: 342, leadsEnriched: 342, startedAt: "2026-03-05 14:30", completedAt: "2026-03-05 14:45", duplicatesSkipped: 18 },
-    { id: "e2", source: "post", query: "https://linkedin.com/posts/said-borna_...", status: "completed", leadsFound: 127, leadsEnriched: 127, startedAt: "2026-03-04 09:15", completedAt: "2026-03-04 09:22", duplicatesSkipped: 5 },
-    { id: "e3", source: "sales_navigator", query: "Marketing Director DACH region B2B SaaS", status: "running", leadsFound: 89, leadsEnriched: 56, startedAt: "2026-03-06 10:00", completedAt: null, duplicatesSkipped: 3 },
-    { id: "e4", source: "search", query: "VP Sales Fintech Europe", status: "queued", leadsFound: 0, leadsEnriched: 0, startedAt: "2026-03-06 10:05", completedAt: null, duplicatesSkipped: 0 },
-    { id: "e5", source: "search", query: "Agency Owner Digital Marketing US", status: "failed", leadsFound: 0, leadsEnriched: 0, startedAt: "2026-03-03 16:00", completedAt: "2026-03-03 16:01", duplicatesSkipped: 0 },
-];
-
-const MOCK_EXTRACTED: ExtractedLead[] = [
-    { id: "x1", name: "Marcus Reyes", title: "CEO", company: "Apple", location: "Cupertino", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 98 },
-    { id: "x2", name: "Devansh Rao", title: "CEO", company: "Microsoft", location: "Redmond", hasEmail: true, hasPhone: false, linkedinUrl: "#", qualityScore: 96 },
-    { id: "x3", name: "Arvind Mehta", title: "CEO", company: "Alphabet", location: "Mountain View", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 94 },
-    { id: "x4", name: "Elian Cross", title: "CEO", company: "Anthropic", location: "San Francisco", hasEmail: false, hasPhone: false, linkedinUrl: "#", qualityScore: 92 },
-    { id: "x5", name: "Wei Tanaka", title: "CEO & Founder", company: "NVIDIA", location: "Santa Clara", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 97 },
-];
+// ─── Constants ──────────────────────────────────────────
 
 const SOURCE_CONFIG: Record<ExtractionSource, { label: string; description: string }> = {
-    search: { label: "LinkedIn Search", description: "Extract from LinkedIn search results URL" },
-    post: { label: "LinkedIn Post", description: "Extract from post commenters and likers" },
-    sales_navigator: { label: "Sales Navigator", description: "Extract from Sales Navigator search" },
+    search: { label: "LinkedIn Search", description: "Extract from a LinkedIn search URL" },
+    post: { label: "LinkedIn Post", description: "Extract from a LinkedIn post's engagers" },
+    sales_navigator: {
+        label: "Sales Navigator",
+        description: "Extract from Sales Navigator search",
+    },
 };
 
-const STATUS_STYLES: Record<ExtractionStatus, { icon: typeof CheckCircle2; color: string; label: string }> = {
-    completed: { icon: CheckCircle2, color: "text-green-400", label: "Completed" },
-    running: { icon: Loader2, color: "text-amber-400", label: "Running" },
-    queued: { icon: Clock, color: "text-blue-400", label: "Queued" },
-    failed: { icon: AlertCircle, color: "text-red-400", label: "Failed" },
-};
+// ─── Main Component ─────────────────────────────────────
 
-/**
- * Lead Extractor page — extract leads from LinkedIn searches, posts, and Sales Navigator.
- * Shows extraction wizard, real-time progress, and results with enrichment.
- */
 export default function LeadExtractorPage() {
     const [showWizard, setShowWizard] = useState(false);
-    const [selectedSource, setSelectedSource] = useState<ExtractionSource>("search");
-    const [extractUrl, setExtractUrl] = useState("");
-    const [maxLeads, setMaxLeads] = useState("500");
-    const [selectedJob, setSelectedJob] = useState<string | null>("e1");
+    const [selectedSource, setSelectedSource] = useState<ExtractionSource | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [maxLeads, setMaxLeads] = useState(100);
+    const [extracting, setExtracting] = useState(false);
 
-    const activeJob = MOCK_JOBS.find((j) => j.id === selectedJob);
+    // Results
+    const [results, setResults] = useState<ExtractedLead[]>([]);
+    const [resultTotal, setResultTotal] = useState(0);
+    const [hasSearched, setHasSearched] = useState(false);
+
+    // Previously extracted leads (from DB with source=extractor)
+    const [recentLeads, setRecentLeads] = useState<ExtractedLead[]>([]);
+    const [recentTotal, setRecentTotal] = useState(0);
+    const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+
+    // Load recent extracted leads from the database
+    const fetchRecentExtractions = useCallback(async () => {
+        try {
+            const res = await fetch("/api/leads?source=extractor&pageSize=20");
+            if (!res.ok) return;
+            const json = await res.json();
+            const items = json.data?.data ?? [];
+            setRecentLeads(
+                items.map(
+                    (l: {
+                        id: string;
+                        firstName: string | null;
+                        lastName: string | null;
+                        title: string | null;
+                        company: string | null;
+                        location: string | null;
+                        linkedinUrl: string | null;
+                        email: string | null;
+                        phone: string | null;
+                        icpScore: number | null;
+                    }) => ({
+                        id: l.id,
+                        firstName: l.firstName ?? "",
+                        lastName: l.lastName ?? "",
+                        title: l.title ?? "",
+                        company: l.company ?? "",
+                        location: l.location ?? "",
+                        linkedinUrl: l.linkedinUrl ?? "",
+                        email: l.email,
+                        phone: l.phone,
+                        icpScore: l.icpScore,
+                    }),
+                ),
+            );
+            setRecentTotal(json.data?.total ?? 0);
+        } catch {
+            // Silent
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchRecentExtractions();
+    }, [fetchRecentExtractions]);
+
+    async function handleExtract(): Promise<void> {
+        if (!searchQuery.trim()) return;
+        setExtracting(true);
+        setHasSearched(true);
+        try {
+            const res = await fetch("/api/leads/search", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    query: searchQuery.trim(),
+                    size: maxLeads,
+                }),
+            });
+
+            if (!res.ok) throw new Error("Search failed");
+            const json = await res.json();
+            const leads = json.leads ?? [];
+
+            setResults(
+                leads.map(
+                    (
+                        l: {
+                            id?: string;
+                            firstName?: string;
+                            lastName?: string;
+                            title?: string;
+                            company?: string;
+                            location?: string;
+                            linkedinUrl?: string;
+                            email?: string;
+                            phone?: string;
+                        },
+                        idx: number,
+                    ) => ({
+                        id: l.id ?? `search-${idx}`,
+                        firstName: l.firstName ?? "",
+                        lastName: l.lastName ?? "",
+                        title: l.title ?? "",
+                        company: l.company ?? "",
+                        location: l.location ?? "",
+                        linkedinUrl: l.linkedinUrl ?? "",
+                        email: l.email ?? null,
+                        phone: l.phone ?? null,
+                        icpScore: null,
+                    }),
+                ),
+            );
+            setResultTotal(json.total ?? leads.length);
+        } catch {
+            setResults([]);
+            setResultTotal(0);
+        } finally {
+            setExtracting(false);
+        }
+    }
+
+    async function handleSaveLead(lead: ExtractedLead): Promise<void> {
+        setSavingIds((prev) => new Set(prev).add(lead.id));
+        try {
+            await fetch("/api/leads", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    firstName: lead.firstName,
+                    lastName: lead.lastName,
+                    fullName: `${lead.firstName} ${lead.lastName}`.trim(),
+                    title: lead.title,
+                    company: lead.company,
+                    location: lead.location,
+                    linkedinUrl: lead.linkedinUrl,
+                    email: lead.email,
+                    phone: lead.phone,
+                    source: "extractor",
+                }),
+            });
+            fetchRecentExtractions();
+        } catch {
+            // Silent
+        } finally {
+            setSavingIds((prev) => {
+                const next = new Set(prev);
+                next.delete(lead.id);
+                return next;
+            });
+        }
+    }
+
+    async function handleSaveAll(): Promise<void> {
+        if (results.length === 0) return;
+        try {
+            await fetch("/api/leads/import", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    leads: results.map((l) => ({
+                        firstName: l.firstName,
+                        lastName: l.lastName,
+                        fullName: `${l.firstName} ${l.lastName}`.trim(),
+                        title: l.title,
+                        company: l.company,
+                        location: l.location,
+                        linkedinUrl: l.linkedinUrl,
+                        email: l.email,
+                        phone: l.phone,
+                        source: "extractor" as const,
+                    })),
+                }),
+            });
+            fetchRecentExtractions();
+        } catch {
+            // Silent
+        }
+    }
+
+    const emailCount = results.filter((l) => l.email).length;
+    const phoneCount = results.filter((l) => l.phone).length;
 
     return (
-        <div className="flex h-full flex-1 flex-col">
-            {/* Top bar */}
-            <div className="flex items-center justify-between border-b border-white/6 px-6 py-4">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-semibold text-[var(--text-primary)]">
+                    <h1 className="text-2xl font-bold text-[var(--text-primary)]">
                         Lead Extractor
                     </h1>
                     <p className="text-sm text-[var(--text-secondary)]">
-                        Extract and enrich leads from LinkedIn searches, posts, and Sales Navigator
+                        Extract leads from LinkedIn searches and posts
                     </p>
                 </div>
                 <Button
                     onClick={() => setShowWizard(!showWizard)}
-                    className="gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                    className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
                 >
-                    <Plus className="h-4 w-4" />
-                    Extract Leads
+                    {showWizard ? (
+                        <X className="mr-2 h-4 w-4" />
+                    ) : (
+                        <Plus className="mr-2 h-4 w-4" />
+                    )}
+                    {showWizard ? "Close" : "Extract Leads"}
                 </Button>
             </div>
 
-            {/* Extraction wizard */}
+            {/* Extraction Wizard */}
             {showWizard && (
-                <div className="border-b border-white/6 bg-[var(--bg-card)] px-6 py-5">
-                    <div className="mx-auto max-w-2xl space-y-4">
-                        <h3 className="text-sm font-semibold text-[var(--text-primary)]">
-                            New Extraction
-                        </h3>
+                <div className="rounded-xl border border-purple-500/20 bg-[var(--bg-card)] p-6">
+                    <h3 className="mb-4 text-base font-semibold text-[var(--text-primary)]">
+                        New Extraction
+                    </h3>
 
-                        {/* Source selection */}
-                        <div className="grid grid-cols-3 gap-3">
-                            {(Object.entries(SOURCE_CONFIG) as [ExtractionSource, typeof SOURCE_CONFIG.search][]).map(
-                                ([key, cfg]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => setSelectedSource(key)}
-                                        className={`rounded-xl border p-3 text-left transition-colors ${selectedSource === key
-                                            ? "border-purple-500/40 bg-purple-500/10"
-                                            : "border-white/6 bg-white/3 hover:border-white/10"
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <Linkedin
-                                                className={`h-4 w-4 ${selectedSource === key
-                                                    ? "text-purple-400"
-                                                    : "text-[var(--text-muted)]"
-                                                    }`}
-                                            />
-                                            <span className="text-sm font-medium text-[var(--text-primary)]">
-                                                {cfg.label}
-                                            </span>
-                                        </div>
-                                        <p className="mt-1 text-xs text-[var(--text-muted)]">
-                                            {cfg.description}
-                                        </p>
-                                    </button>
-                                )
-                            )}
-                        </div>
-
-                        {/* URL input */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium text-[var(--text-secondary)]">
-                                {selectedSource === "post"
-                                    ? "LinkedIn Post URL"
-                                    : "Search URL or Query"}
-                            </label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-                                <Input
-                                    placeholder={
-                                        selectedSource === "post"
-                                            ? "https://linkedin.com/posts/..."
-                                            : "Paste LinkedIn search URL or describe your target..."
-                                    }
-                                    value={extractUrl}
-                                    onChange={(e) => setExtractUrl(e.target.value)}
-                                    className="h-10 border-white/10 bg-[var(--bg-input)] pl-10 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-purple-500/50 focus:ring-purple-500/20"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Max leads + actions */}
-                        <div className="flex items-end gap-4">
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-[var(--text-secondary)]">
-                                    Max Leads
-                                </label>
-                                <Input
-                                    type="number"
-                                    value={maxLeads}
-                                    onChange={(e) => setMaxLeads(e.target.value)}
-                                    className="h-10 w-28 border-white/10 bg-[var(--bg-input)] text-sm text-[var(--text-primary)] focus:border-purple-500/50 focus:ring-purple-500/20"
-                                />
-                            </div>
-                            <div className="flex flex-1 items-center gap-3">
-                                <label className="flex items-center gap-2 text-sm">
-                                    <input
-                                        type="checkbox"
-                                        defaultChecked
-                                        className="h-4 w-4 rounded border-white/20 bg-[var(--bg-input)] accent-purple-500"
-                                    />
-                                    <span className="text-[var(--text-secondary)]">
-                                        Auto-enrich contacts
-                                    </span>
-                                </label>
-                                <label className="flex items-center gap-2 text-sm">
-                                    <input
-                                        type="checkbox"
-                                        defaultChecked
-                                        className="h-4 w-4 rounded border-white/20 bg-[var(--bg-input)] accent-purple-500"
-                                    />
-                                    <span className="text-[var(--text-secondary)]">
-                                        Skip duplicates
-                                    </span>
-                                </label>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setShowWizard(false)}
-                                    className="h-10 border-white/10 text-[var(--text-secondary)] hover:bg-white/5"
+                    {/* Source Selection */}
+                    <div className="mb-4 grid gap-3 md:grid-cols-3">
+                        {(Object.entries(SOURCE_CONFIG) as Array<[ExtractionSource, typeof SOURCE_CONFIG.search]>).map(
+                            ([key, cfg]) => (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    onClick={() => setSelectedSource(key)}
+                                    className={`rounded-lg border p-4 text-left transition ${
+                                        selectedSource === key
+                                            ? "border-purple-500/50 bg-purple-500/5"
+                                            : "border-white/10 hover:border-white/20"
+                                    }`}
                                 >
-                                    Cancel
-                                </Button>
-                                <Button className="h-10 gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
-                                    <Sparkles className="h-3.5 w-3.5" />
-                                    Start Extraction
-                                </Button>
-                            </div>
+                                    <p className="text-sm font-medium text-[var(--text-primary)]">
+                                        {cfg.label}
+                                    </p>
+                                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                                        {cfg.description}
+                                    </p>
+                                </button>
+                            ),
+                        )}
+                    </div>
+
+                    {/* Search Input */}
+                    <div className="mb-4 grid gap-4 md:grid-cols-3">
+                        <div className="md:col-span-2">
+                            <label
+                                htmlFor="extract-query"
+                                className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
+                            >
+                                Search Query or URL
+                            </label>
+                            <input
+                                id="extract-query"
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="e.g., Marketing agencies in Sweden"
+                                className="w-full rounded-lg border border-white/10 bg-[var(--bg-input)] px-4 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-purple-500/50 focus:outline-none"
+                            />
                         </div>
+                        <div>
+                            <label
+                                htmlFor="max-leads"
+                                className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]"
+                            >
+                                Max Leads
+                            </label>
+                            <input
+                                id="max-leads"
+                                type="number"
+                                min={1}
+                                max={1000}
+                                value={maxLeads}
+                                onChange={(e) =>
+                                    setMaxLeads(parseInt(e.target.value, 10) || 100)
+                                }
+                                className="w-full rounded-lg border border-white/10 bg-[var(--bg-input)] px-4 py-2 text-sm text-[var(--text-primary)] focus:border-purple-500/50 focus:outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowWizard(false)}
+                            className="border-white/10"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={handleExtract}
+                            disabled={extracting || !searchQuery.trim()}
+                            className="bg-gradient-to-r from-purple-600 to-purple-500 text-white"
+                        >
+                            {extracting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Searching...
+                                </>
+                            ) : (
+                                <>
+                                    <Search className="mr-2 h-4 w-4" />
+                                    Start Extraction
+                                </>
+                            )}
+                        </Button>
                     </div>
                 </div>
             )}
 
-            {/* Main content — split view */}
-            <div className="flex flex-1 overflow-hidden">
-                {/* Jobs list */}
-                <div className="w-96 flex-shrink-0 border-r border-white/6 overflow-y-auto">
-                    <div className="px-4 py-3 border-b border-white/6">
-                        <h3 className="text-sm font-medium text-[var(--text-secondary)]">
-                            Extraction History
-                        </h3>
+            {/* Results */}
+            {hasSearched && (
+                <div className="space-y-4">
+                    {/* Stats */}
+                    <div className="grid gap-3 md:grid-cols-4">
+                        <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                            <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">
+                                Leads Found
+                            </p>
+                            <p className="mt-1 text-xl font-semibold text-[var(--text-primary)]">
+                                {resultTotal}
+                            </p>
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                            <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">
+                                Displayed
+                            </p>
+                            <p className="mt-1 text-xl font-semibold text-[var(--text-primary)]">
+                                {results.length}
+                            </p>
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                            <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">
+                                With Email
+                            </p>
+                            <p className="mt-1 text-xl font-semibold text-green-400">
+                                {emailCount}
+                            </p>
+                        </div>
+                        <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-4">
+                            <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">
+                                With Phone
+                            </p>
+                            <p className="mt-1 text-xl font-semibold text-blue-400">
+                                {phoneCount}
+                            </p>
+                        </div>
                     </div>
-                    {MOCK_JOBS.length === 0 ? (
-                        <EmptyState icon={Search} title="No extractions yet" description="Start by extracting leads from LinkedIn searches or posts." />
-                    ) : MOCK_JOBS.map((job) => {
-                        const statusCfg = STATUS_STYLES[job.status];
-                        const StatusIcon = statusCfg.icon;
-                        return (
-                            <button
-                                key={job.id}
-                                onClick={() => setSelectedJob(job.id)}
-                                className={`w-full border-b border-white/4 px-4 py-3 text-left transition-colors ${selectedJob === job.id
-                                    ? "bg-purple-500/10 border-l-2 border-l-purple-500"
-                                    : "hover:bg-white/3"
-                                    }`}
+
+                    {/* Action Bar */}
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                            Results
+                        </h3>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-white/10 text-xs"
                             >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                                            {job.query}
-                                        </p>
-                                        <div className="mt-1 flex items-center gap-2">
-                                            <Badge
-                                                variant="outline"
-                                                className="text-[10px] border-white/10 text-[var(--text-muted)]"
-                                            >
-                                                {SOURCE_CONFIG[job.source].label}
-                                            </Badge>
-                                            <span className="text-xs text-[var(--text-muted)]">
-                                                {job.startedAt}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 ml-2">
-                                        <StatusIcon
-                                            className={`h-4 w-4 ${statusCfg.color} ${job.status === "running"
-                                                ? "animate-spin"
-                                                : ""
-                                                }`}
-                                        />
-                                        <span className={`text-xs ${statusCfg.color}`}>
-                                            {statusCfg.label}
-                                        </span>
-                                    </div>
-                                </div>
-                                {job.status !== "queued" && (
-                                    <div className="mt-2 flex items-center gap-3 text-xs text-[var(--text-secondary)]">
-                                        <span className="flex items-center gap-1">
-                                            <Users className="h-3 w-3" />
-                                            {job.leadsFound} found
-                                        </span>
-                                        {job.duplicatesSkipped > 0 && (
-                                            <span className="text-amber-400/70">
-                                                {job.duplicatesSkipped} duplicates skipped
-                                            </span>
-                                        )}
-                                        {job.status === "running" && (
-                                            <div className="flex-1">
-                                                <div className="h-1.5 rounded-full bg-white/10">
-                                                    <div
-                                                        className="h-1.5 rounded-full bg-purple-500 transition-all"
-                                                        style={{
-                                                            width: `${job.leadsFound > 0
-                                                                ? Math.round(
-                                                                    (job.leadsEnriched /
-                                                                        job.leadsFound) *
-                                                                    100
-                                                                )
-                                                                : 0
-                                                                }%`,
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
+                                <Download className="mr-1 h-3.5 w-3.5" /> Export
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={handleSaveAll}
+                                disabled={results.length === 0}
+                                className="bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 text-xs"
+                            >
+                                <Plus className="mr-1 h-3.5 w-3.5" /> Save All to Database
+                            </Button>
+                        </div>
+                    </div>
 
-                {/* Results panel */}
-                <div className="flex flex-1 flex-col">
-                    {activeJob ? (
-                        <>
-                            {/* Job detail header */}
-                            <div className="flex items-center justify-between border-b border-white/6 px-6 py-3">
-                                <div>
-                                    <p className="text-sm font-medium text-[var(--text-primary)]">
-                                        {activeJob.query}
-                                    </p>
-                                    <p className="text-xs text-[var(--text-muted)]">
-                                        {activeJob.leadsFound} leads found
-                                        {activeJob.leadsEnriched > 0 &&
-                                            ` · ${activeJob.leadsEnriched} enriched`}
-                                        {activeJob.completedAt &&
-                                            ` · completed ${activeJob.completedAt}`}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-7 gap-1 border-white/10 bg-white/5 text-xs text-[var(--text-secondary)] hover:bg-white/10"
-                                    >
-                                        <Download className="h-3 w-3" />
-                                        Export
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        className="h-7 gap-1 bg-purple-500/20 text-purple-300 text-xs hover:bg-purple-500/30"
-                                    >
-                                        <Plus className="h-3 w-3" />
-                                        Add to Campaign
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Enrichment stats */}
-                            {activeJob.status === "completed" && (
-                                <div className="grid grid-cols-4 gap-4 border-b border-white/6 px-6 py-3">
-                                    {[
-                                        {
-                                            label: "Leads Found",
-                                            value: activeJob.leadsFound,
-                                            icon: Users,
-                                            color: "text-blue-400",
-                                        },
-                                        {
-                                            label: "Enriched",
-                                            value: activeJob.leadsEnriched,
-                                            icon: Sparkles,
-                                            color: "text-purple-400",
-                                        },
-                                        {
-                                            label: "With Email",
-                                            value: Math.round(activeJob.leadsFound * 0.72),
-                                            icon: Mail,
-                                            color: "text-green-400",
-                                        },
-                                        {
-                                            label: "With Phone",
-                                            value: Math.round(activeJob.leadsFound * 0.38),
-                                            icon: Phone,
-                                            color: "text-teal-400",
-                                        },
-                                    ].map((stat) => (
-                                        <div
-                                            key={stat.label}
-                                            className="flex items-center gap-3 rounded-lg border border-white/6 bg-white/3 px-3 py-2"
-                                        >
-                                            <stat.icon
-                                                className={`h-4 w-4 ${stat.color}`}
-                                            />
-                                            <div>
-                                                <p className="text-lg font-semibold text-[var(--text-primary)]">
-                                                    {stat.value}
-                                                </p>
-                                                <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">
-                                                    {stat.label}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Results table */}
-                            <div className="flex-1 overflow-x-auto">
-                                <table className="w-full">
+                    {/* Results Table */}
+                    {results.length === 0 ? (
+                        <div className="flex h-32 items-center justify-center rounded-xl border border-white/10 bg-[var(--bg-card)] text-sm text-[var(--text-muted)]">
+                            No results found for this query
+                        </div>
+                    ) : (
+                        <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)]">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full text-sm">
                                     <thead>
-                                        <tr className="border-b border-white/6">
-                                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                                                Name
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                                                Title
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                                                Company
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                                                Location
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                                                Contact
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                                                Quality
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                                                Actions
-                                            </th>
+                                        <tr className="border-b border-white/10 text-left text-[var(--text-secondary)]">
+                                            <th className="px-4 py-3 font-medium">Name</th>
+                                            <th className="px-4 py-3 font-medium">Title</th>
+                                            <th className="px-4 py-3 font-medium">Company</th>
+                                            <th className="px-4 py-3 font-medium">Location</th>
+                                            <th className="px-4 py-3 font-medium">Contact</th>
+                                            <th className="px-4 py-3 font-medium">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {MOCK_EXTRACTED.map((lead) => (
+                                        {results.map((lead) => (
                                             <tr
                                                 key={lead.id}
-                                                className="border-b border-white/4 hover:bg-white/3 transition-colors"
+                                                className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]"
                                             >
                                                 <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-purple-700/20 text-xs font-medium text-purple-300">
-                                                            {lead.name
-                                                                .split(" ")
-                                                                .map((n) => n[0])
-                                                                .join("")}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/20 text-xs font-bold text-purple-300">
+                                                            {lead.firstName.charAt(0)}
+                                                            {lead.lastName.charAt(0)}
                                                         </div>
-                                                        <span className="text-sm font-medium text-[var(--text-primary)]">
-                                                            {lead.name}
+                                                        <span className="font-medium">
+                                                            {lead.firstName} {lead.lastName}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">
-                                                    {lead.title}
+                                                <td className="px-4 py-3 text-[var(--text-secondary)]">
+                                                    {lead.title || "—"}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
-                                                    {lead.company}
+                                                <td className="px-4 py-3 text-[var(--text-secondary)]">
+                                                    {lead.company || "—"}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">
-                                                    {lead.location}
+                                                <td className="px-4 py-3 text-[var(--text-secondary)]">
+                                                    {lead.location || "—"}
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <Mail
-                                                            className={`h-4 w-4 ${lead.hasEmail
-                                                                ? "text-green-400"
-                                                                : "text-[var(--text-muted)] opacity-40"
-                                                                }`}
-                                                        />
-                                                        <Phone
-                                                            className={`h-4 w-4 ${lead.hasPhone
-                                                                ? "text-green-400"
-                                                                : "text-[var(--text-muted)] opacity-40"
-                                                                }`}
-                                                        />
+                                                    <div className="flex gap-1.5">
+                                                        {lead.email && (
+                                                            <Mail className="h-3.5 w-3.5 text-green-400" />
+                                                        )}
+                                                        {lead.phone && (
+                                                            <Phone className="h-3.5 w-3.5 text-blue-400" />
+                                                        )}
+                                                        {!lead.email && !lead.phone && (
+                                                            <span className="text-xs text-[var(--text-muted)]">
+                                                                —
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={`text-xs ${lead.qualityScore >= 80
-                                                            ? "border-green-500/30 bg-green-500/15 text-green-300"
-                                                            : lead.qualityScore >= 60
-                                                                ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
-                                                                : "border-red-500/30 bg-red-500/15 text-red-300"
-                                                            }`}
-                                                    >
-                                                        {lead.qualityScore}%
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-1">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="h-7 w-7 p-0 text-[var(--text-muted)] hover:text-blue-400"
-                                                            title="View LinkedIn"
+                                                    <div className="flex gap-1">
+                                                        {lead.linkedinUrl && (
+                                                            <a
+                                                                href={lead.linkedinUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="rounded p-1 transition-colors hover:bg-white/10"
+                                                                title="View LinkedIn"
+                                                            >
+                                                                <ExternalLink className="h-3.5 w-3.5 text-[var(--text-secondary)]" />
+                                                            </a>
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleSaveLead(lead)
+                                                            }
+                                                            disabled={savingIds.has(lead.id)}
+                                                            className="rounded p-1 transition-colors hover:bg-purple-500/10"
+                                                            title="Save to database"
                                                         >
-                                                            <ExternalLink className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="h-7 w-7 p-0 text-[var(--text-muted)] hover:text-purple-400"
-                                                            title="Add to Campaign"
-                                                        >
-                                                            <Plus className="h-3.5 w-3.5" />
-                                                        </Button>
+                                                            {savingIds.has(lead.id) ? (
+                                                                <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-400" />
+                                                            ) : (
+                                                                <Plus className="h-3.5 w-3.5 text-purple-400" />
+                                                            )}
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -516,19 +511,81 @@ export default function LeadExtractorPage() {
                                     </tbody>
                                 </table>
                             </div>
-                        </>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Recent Extractions */}
+            {!hasSearched && (
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-base font-semibold text-[var(--text-primary)]">
+                            Recently Extracted Leads
+                        </h3>
+                        {recentTotal > 0 && (
+                            <Badge className="border-white/10 bg-white/5 text-[var(--text-secondary)] text-[10px]">
+                                {recentTotal} total
+                            </Badge>
+                        )}
+                    </div>
+
+                    {recentLeads.length === 0 ? (
+                        <EmptyState
+                            icon={Users}
+                            title="No extractions yet"
+                            description="Click 'Extract Leads' to start finding new leads."
+                        />
                     ) : (
-                        <div className="flex flex-1 items-center justify-center">
-                            <div className="text-center">
-                                <Search className="mx-auto mb-3 h-10 w-10 text-[var(--text-muted)]" />
-                                <p className="text-sm text-[var(--text-secondary)]">
-                                    Select an extraction to view results
-                                </p>
+                        <div className="overflow-hidden rounded-xl border border-white/10 bg-[var(--bg-card)]">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-white/10 text-left text-[var(--text-secondary)]">
+                                            <th className="px-4 py-3 font-medium">Name</th>
+                                            <th className="px-4 py-3 font-medium">Title</th>
+                                            <th className="px-4 py-3 font-medium">Company</th>
+                                            <th className="px-4 py-3 font-medium">Location</th>
+                                            <th className="px-4 py-3 font-medium">Contact</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recentLeads.map((lead) => (
+                                            <tr
+                                                key={lead.id}
+                                                className="border-b border-white/6 text-[var(--text-primary)] transition-colors hover:bg-white/[0.02]"
+                                            >
+                                                <td className="px-4 py-3 font-medium">
+                                                    {lead.firstName} {lead.lastName}
+                                                </td>
+                                                <td className="px-4 py-3 text-[var(--text-secondary)]">
+                                                    {lead.title || "—"}
+                                                </td>
+                                                <td className="px-4 py-3 text-[var(--text-secondary)]">
+                                                    {lead.company || "—"}
+                                                </td>
+                                                <td className="px-4 py-3 text-[var(--text-secondary)]">
+                                                    {lead.location || "—"}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex gap-1.5">
+                                                        {lead.email && (
+                                                            <Mail className="h-3.5 w-3.5 text-green-400" />
+                                                        )}
+                                                        {lead.phone && (
+                                                            <Phone className="h-3.5 w-3.5 text-blue-400" />
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     )}
                 </div>
-            </div>
+            )}
         </div>
     );
 }
