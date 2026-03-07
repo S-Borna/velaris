@@ -14,6 +14,7 @@ import {
     MessageSquare,
     MoreHorizontal,
     Paperclip,
+    RefreshCw,
     Search,
     Send,
     Smile,
@@ -95,19 +96,24 @@ const MOCK_MESSAGES: Record<string, Message[]> = {
 
 /* ─── AI suggestions ────────────────────────────────── */
 
-const AI_SUGGESTIONS: Record<string, string[]> = {
+interface AiSuggestion {
+    text: string;
+    tone: string;
+}
+
+const AI_SUGGESTIONS: Record<string, AiSuggestion[]> = {
     conv1: [
-        "Thanks Jonas! How about Tuesday or Wednesday? I have openings at 10 AM and 2 PM CET.",
-        "Perfect! I'll send over a Calendly link — pick whatever suits you best.",
-        "Great, looking forward to it! I'll prepare a custom demo showing ICP scoring with your portfolio companies.",
+        { text: "Thanks Jonas! How about Tuesday or Wednesday? I have openings at 10 AM and 2 PM CET.", tone: "Professional" },
+        { text: "Perfect! I'll send over a Calendly link — pick whatever suits you best.", tone: "Friendly" },
+        { text: "Great, looking forward to it! I'll prepare a custom demo showing ICP scoring with your portfolio companies.", tone: "Value-add" },
     ],
     conv2: [
-        "Thanks Elliot! We're building OutreachPilot — an AI-powered LinkedIn automation platform. Would love to exchange notes since you're in the same space.",
-        "Appreciate the curiosity! It's a full-stack LinkedIn platform: outreach sequences, AI content, unified inbox, and 300M+ lead database. Happy to jump on a call if you're interested.",
+        { text: "Thanks Elliot! We're building OutreachPilot — an AI-powered LinkedIn automation platform. Would love to exchange notes since you're in the same space.", tone: "Professional" },
+        { text: "Appreciate the curiosity! It's a full-stack LinkedIn platform: outreach sequences, AI content, unified inbox, and 300M+ lead database. Happy to jump on a call if you're interested.", tone: "Detailed" },
     ],
     conv6: [
-        "Absolutely! Here's our demo link: https://cal.com/outreachpilot/demo — pick any time that works for you.",
-        "Sure thing! I'll send you a personalized demo link. What's the best email to send it to?",
+        { text: "Absolutely! Here's our demo link: https://cal.com/outreachpilot/demo — pick any time that works for you.", tone: "Direct" },
+        { text: "Sure thing! I'll send you a personalized demo link. What's the best email to send it to?", tone: "Friendly" },
     ],
 };
 
@@ -140,6 +146,8 @@ export default function UniboxPage() {
     const [selectedConversation, setSelectedConversation] = useState<string>("conv1");
     const [messageInput, setMessageInput] = useState("");
     const [showAiSuggestions, setShowAiSuggestions] = useState(false);
+    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+    const [isAiDrafted, setIsAiDrafted] = useState(false);
     const [starredIds, setStarredIds] = useState<Set<string>>(new Set(["conv6"]));
 
     /* ─── Filtered conversations ────────────────────── */
@@ -464,26 +472,55 @@ export default function UniboxPage() {
                     {/* AI suggestions */}
                     {showAiSuggestions && suggestions.length > 0 && (
                         <div className="border-t border-white/6 bg-purple-500/5 px-6 py-3">
-                            <div className="mb-2 flex items-center gap-1.5">
-                                <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                                <span className="text-xs font-medium text-purple-300">
-                                    AI Reply Suggestions
-                                </span>
+                            <div className="mb-2 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                                    <span className="text-xs font-medium text-purple-300">
+                                        AI Reply Suggestions
+                                    </span>
+                                    <Badge variant="outline" className="text-[9px] border-purple-500/30 bg-purple-500/10 text-purple-300">
+                                        Powered by Claude
+                                    </Badge>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setIsLoadingSuggestions(true);
+                                        setTimeout(() => setIsLoadingSuggestions(false), 800);
+                                    }}
+                                    className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] text-purple-300 transition-colors hover:bg-purple-500/10"
+                                >
+                                    <RefreshCw className={`h-3 w-3 ${isLoadingSuggestions ? "animate-spin" : ""}`} />
+                                    Regenerate
+                                </button>
                             </div>
-                            <div className="space-y-2">
-                                {suggestions.map((suggestion, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => {
-                                            setMessageInput(suggestion);
-                                            setShowAiSuggestions(false);
-                                        }}
-                                        className="w-full rounded-lg border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-left text-xs text-[var(--text-secondary)] transition-colors hover:border-purple-500/40 hover:bg-purple-500/15"
-                                    >
-                                        {suggestion}
-                                    </button>
-                                ))}
-                            </div>
+                            {isLoadingSuggestions ? (
+                                <div className="space-y-2">
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="h-10 animate-pulse rounded-lg bg-purple-500/10" />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {suggestions.map((suggestion, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => {
+                                                setMessageInput(suggestion.text);
+                                                setShowAiSuggestions(false);
+                                                setIsAiDrafted(true);
+                                            }}
+                                            className="w-full rounded-lg border border-purple-500/20 bg-purple-500/10 px-3 py-2 text-left transition-colors hover:border-purple-500/40 hover:bg-purple-500/15"
+                                        >
+                                            <div className="mb-1 flex items-center gap-1.5">
+                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-purple-500/30 text-purple-300">
+                                                    {suggestion.tone}
+                                                </Badge>
+                                            </div>
+                                            <span className="text-xs text-[var(--text-secondary)]">{suggestion.text}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -495,7 +532,7 @@ export default function UniboxPage() {
                                     placeholder="Type a message..."
                                     aria-label="Message input"
                                     value={messageInput}
-                                    onChange={(e) => setMessageInput(e.target.value)}
+                                    onChange={(e) => { setMessageInput(e.target.value); if (isAiDrafted) setIsAiDrafted(false); }}
                                     rows={messageInput.split("\n").length > 3 ? 4 : 2}
                                     className="w-full resize-none rounded-xl border border-white/10 bg-[var(--bg-input)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/20"
                                 />
@@ -519,7 +556,15 @@ export default function UniboxPage() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => setShowAiSuggestions(!showAiSuggestions)}
+                                        onClick={() => {
+                                            if (showAiSuggestions) {
+                                                setShowAiSuggestions(false);
+                                            } else {
+                                                setIsLoadingSuggestions(true);
+                                                setShowAiSuggestions(true);
+                                                setTimeout(() => setIsLoadingSuggestions(false), 800);
+                                            }
+                                        }}
                                         className={`h-7 gap-1 px-2 text-xs ${showAiSuggestions
                                             ? "text-purple-400"
                                             : "text-[var(--text-muted)] hover:text-purple-400"
@@ -529,6 +574,15 @@ export default function UniboxPage() {
                                         AI Suggest
                                     </Button>
                                     <div className="flex-1" />
+                                    {isAiDrafted && (
+                                        <Badge
+                                            variant="outline"
+                                            className="border-purple-500/30 bg-purple-500/10 text-[10px] text-purple-300 gap-1"
+                                        >
+                                            <Sparkles className="h-2.5 w-2.5" />
+                                            AI-drafted
+                                        </Badge>
+                                    )}
                                     <Badge
                                         variant="outline"
                                         className="border-white/10 text-[10px] text-[var(--text-muted)]"

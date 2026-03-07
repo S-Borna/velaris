@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpRight, ChevronUp, Share2 } from "lucide-react";
+import { ArrowUpRight, ChevronUp, Lightbulb, Share2, Sparkles } from "lucide-react";
 
 type TimeFilter = "1 day" | "1 week" | "1 month";
 type CampaignFilter = "All Campaigns" | "Agency Owners" | "SaaS Founders" | "Inbound Campaign";
@@ -83,6 +83,20 @@ const REALTIME_FEED: ActivityEvent[] = [
     { id: "a3", actor: "[redacted]", action: "moved 2 leads to opportunities", when: "14 min ago" },
     { id: "a4", actor: "Martin Smith", action: "accepted 7 new connections", when: "26 min ago" },
 ];
+
+const AI_INSIGHTS = [
+    { text: "Your acceptance rate from Agency Owners campaign (51%) is 2x higher than SaaS Founders (52%). Consider allocating more daily sends to Agency Owners.", type: "optimization" as const },
+    { text: "Reply rates peak on Tuesday-Thursday between 9-11 AM CET. Adjust your campaign schedules to maximize engagement in this window.", type: "timing" as const },
+    { text: "Martin Smith has the highest opportunity value ($23.8K) but lowest reply rate (25/322 = 7.8%). Consider revising his message templates.", type: "alert" as const },
+    { text: "Based on current trends, you're on track to hit 120 opportunities this quarter — 18% above target.", type: "forecast" as const },
+];
+
+const INSIGHT_COLORS: Record<string, string> = {
+    optimization: "text-purple-400",
+    timing: "text-blue-400",
+    alert: "text-amber-400",
+    forecast: "text-green-400",
+};
 
 function formatCurrency(amount: number): string {
     return `$${(amount / 1000).toFixed(1)}K`;
@@ -272,22 +286,37 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                     <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-5">
                         <h3 className="mb-3 text-base font-semibold text-[var(--text-primary)]">Conversion Funnel</h3>
-                        <div className="space-y-3 text-sm">
+                        <div className="space-y-1 text-sm">
                             <div>
                                 <div className="mb-1 flex items-center justify-between text-[var(--text-secondary)]"><span>Connections Sent</span><span>{funnel.sent}</span></div>
-                                <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-blue-500" style={{ width: "100%" }} /></div>
+                                <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-blue-500 transition-all duration-700" style={{ width: "100%" }} /></div>
+                            </div>
+                            <div className="flex items-center justify-center">
+                                <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] font-medium text-purple-300">
+                                    {funnel.sent > 0 ? Math.round((funnel.accepted / funnel.sent) * 100) : 0}% accepted
+                                </span>
                             </div>
                             <div>
                                 <div className="mb-1 flex items-center justify-between text-[var(--text-secondary)]"><span>Accepted</span><span>{funnel.accepted}</span></div>
-                                <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-purple-500" style={{ width: `${Math.max(6, Math.round((funnel.accepted / Math.max(1, funnel.sent)) * 100))}%` }} /></div>
+                                <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-purple-500 transition-all duration-700" style={{ width: `${Math.max(6, Math.round((funnel.accepted / Math.max(1, funnel.sent)) * 100))}%` }} /></div>
+                            </div>
+                            <div className="flex items-center justify-center">
+                                <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-medium text-orange-300">
+                                    {funnel.accepted > 0 ? Math.round((funnel.replied / funnel.accepted) * 100) : 0}% replied
+                                </span>
                             </div>
                             <div>
                                 <div className="mb-1 flex items-center justify-between text-[var(--text-secondary)]"><span>Replied</span><span>{funnel.replied}</span></div>
-                                <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-orange-500" style={{ width: `${Math.max(4, Math.round((funnel.replied / Math.max(1, funnel.sent)) * 100))}%` }} /></div>
+                                <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-orange-500 transition-all duration-700" style={{ width: `${Math.max(4, Math.round((funnel.replied / Math.max(1, funnel.sent)) * 100))}%` }} /></div>
+                            </div>
+                            <div className="flex items-center justify-center">
+                                <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium text-cyan-300">
+                                    {funnel.replied > 0 ? Math.round((funnel.opportunity / funnel.replied) * 100) : 0}% converted
+                                </span>
                             </div>
                             <div>
                                 <div className="mb-1 flex items-center justify-between text-[var(--text-secondary)]"><span>Opportunity</span><span>{funnel.opportunity}</span></div>
-                                <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-cyan-400" style={{ width: `${Math.max(3, Math.round((funnel.opportunity / Math.max(1, funnel.sent)) * 100))}%` }} /></div>
+                                <div className="h-2 rounded-full bg-white/10"><div className="h-2 rounded-full bg-cyan-400 transition-all duration-700" style={{ width: `${Math.max(3, Math.round((funnel.opportunity / Math.max(1, funnel.sent)) * 100))}%` }} /></div>
                             </div>
                         </div>
                     </div>
@@ -302,6 +331,25 @@ export default function DashboardPage() {
                                 <li key={event.id} className="rounded-lg border border-white/8 bg-white/[0.02] p-3 transition-colors duration-150 hover:bg-white/[0.04]">
                                     <p className="text-[var(--text-primary)]"><span className="font-medium">{event.actor}</span> {event.action}</p>
                                     <p className="mt-1 text-xs text-[var(--text-secondary)]">{event.when}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* AI Insights */}
+                    <div className="rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent p-5">
+                        <div className="mb-3 flex items-center justify-between">
+                            <h3 className="flex items-center gap-2 text-base font-semibold text-[var(--text-primary)]">
+                                <Sparkles className="h-4 w-4 text-purple-400" />
+                                AI Insights
+                            </h3>
+                            <Badge className="border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px]">Powered by Claude</Badge>
+                        </div>
+                        <ul className="space-y-3 text-sm">
+                            {AI_INSIGHTS.map((insight, i) => (
+                                <li key={i} className="flex gap-2.5 rounded-lg border border-white/6 bg-white/[0.02] p-3">
+                                    <Lightbulb className={`mt-0.5 h-4 w-4 shrink-0 ${INSIGHT_COLORS[insight.type]}`} />
+                                    <p className="text-xs leading-relaxed text-[var(--text-secondary)]">{insight.text}</p>
                                 </li>
                             ))}
                         </ul>

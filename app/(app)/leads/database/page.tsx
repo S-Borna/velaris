@@ -13,6 +13,7 @@ import {
     Search,
     Sparkles,
     Users,
+    X,
 } from "lucide-react";
 import { LeadFilterPanel, EMPTY_FILTERS } from "@/components/leads/lead-filters";
 import type { LeadFilters } from "@/components/leads/lead-filters";
@@ -67,6 +68,7 @@ export default function LeadDatabasePage() {
     const [page, setPage] = useState(1);
     const [sortKey, setSortKey] = useState<SortKey>("icpScore");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+    const [lookalikeSource, setLookalikeSource] = useState<string | null>(null);
 
     /* ─── Filter + sort logic ───────────────────────── */
 
@@ -201,6 +203,25 @@ export default function LeadDatabasePage() {
                     </div>
                 </div>
 
+                {/* Lookalike banner */}
+                {lookalikeSource && (
+                    <div className="flex items-center justify-between border-b border-cyan-500/20 bg-cyan-500/5 px-6 py-2.5">
+                        <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-cyan-400" />
+                            <span className="text-xs text-cyan-300">
+                                Showing leads similar to <strong>{lookalikeSource}</strong>
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setLookalikeSource(null)}
+                            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-cyan-300 transition-colors hover:bg-cyan-500/10"
+                        >
+                            <X className="h-3 w-3" />
+                            Clear
+                        </button>
+                    </div>
+                )}
+
                 {/* Search + action bar */}
                 <div className="flex items-center gap-3 border-b border-white/6 px-6 py-3">
                     <div className="relative flex-1">
@@ -323,6 +344,11 @@ export default function LeadDatabasePage() {
                         sortKey={sortKey}
                         sortDir={sortDir}
                         onSort={handleSort}
+                        onFindSimilar={(lead) => {
+                            setLookalikeSource(`${lead.firstName} ${lead.lastName}`);
+                            setSearchQuery("");
+                            setPage(1);
+                        }}
                     />
                 )}
             </div>
