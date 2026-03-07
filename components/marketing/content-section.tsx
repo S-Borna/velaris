@@ -130,8 +130,8 @@ function CreateTab() {
                     Multiple variants, performance predictions, and one-click scheduling.
                 </p>
                 <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
-                    <p className="text-sm font-medium text-white">&ldquo;I got 100,000 impressions in 14 days&rdquo;</p>
-                    <p className="mt-1 text-xs text-[var(--text-muted)]">Julian Marsh @ Airbnb</p>
+                    <p className="text-sm font-medium text-white">AI-powered content</p>
+                    <p className="mt-1 text-xs text-[var(--text-muted)]">Generate posts tailored to your brand voice</p>
                 </div>
             </div>
 
@@ -278,8 +278,8 @@ function ScheduleTab() {
                     Queue posts across all your LinkedIn accounts. Visual calendar, optimal timing suggestions, and bulk scheduling.
                 </p>
                 <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
-                    <p className="text-sm font-medium text-white">8K+</p>
-                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">BecGrowth — LinkedIn followers gained</p>
+                    <p className="text-sm font-medium text-white">Bulk</p>
+                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">Schedule across all connected profiles</p>
                 </div>
             </div>
 
@@ -366,8 +366,8 @@ function AutomateTab() {
                     Monitor posts for trigger keywords and automatically reply + DM engaged prospects. Turn every viral post into a pipeline.
                 </p>
                 <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
-                    <p className="text-sm font-medium text-white">2.2K</p>
-                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">A-Leads — New connections through automated inbound</p>
+                    <p className="text-sm font-medium text-white">Auto</p>
+                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">Trigger-based DMs and comment replies</p>
                 </div>
             </div>
 

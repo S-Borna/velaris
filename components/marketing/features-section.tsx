@@ -54,29 +54,29 @@ interface Testimonial {
 
 const TESTIMONIALS: Record<string, Testimonial> = {
     leads: {
-        metric: "28",
-        company: "SeaOfLeads",
-        description: "Qualified opportunities from our lead finder",
+        metric: "2,847",
+        company: "Demo",
+        description: "Leads found with advanced filters",
     },
     qualify: {
-        metric: "$50K",
-        company: "A-Leads",
-        description: "Contracts closed through ICP qualification",
+        metric: "92%",
+        company: "Demo",
+        description: "ICP match accuracy with AI scoring",
     },
     scale: {
-        metric: "$70K",
-        company: "BecGrowth",
-        description: "Generated in 40 days",
+        metric: "5",
+        company: "Demo",
+        description: "LinkedIn accounts managed simultaneously",
     },
     contact: {
-        metric: "30%",
-        company: "Meed",
-        description: "Cold reply rate on LinkedIn on auto-pilot",
+        metric: "12",
+        company: "Demo",
+        description: "Steps in a single outreach sequence",
     },
     unibox: {
-        metric: "4.28",
-        company: "Velaris",
-        description: "Calls booked per day on autopilot",
+        metric: "1",
+        company: "Demo",
+        description: "Unified inbox for all conversations",
     },
 };
 
@@ -312,10 +312,10 @@ function FeatureBlock({
 /* ---------- Leads Feature ---------- */
 
 const MOCK_LEADS = [
-    { name: "Sarah Bloomberg", title: "CEO at TechCorp", location: "Stockholm, SE", company: "TechCorp" },
-    { name: "Marcus Lindgren", title: "Co-founder at SaaSify", location: "London, UK", company: "SaaSify" },
-    { name: "Anna Johansson", title: "VP Sales at GrowthCo", location: "Berlin, DE", company: "GrowthCo" },
-    { name: "Daniel Eriksson", title: "CTO at DataPipe", location: "Oslo, NO", company: "DataPipe" },
+    { name: "Alex Rivera", title: "CEO at CloudNova", location: "Stockholm, SE", company: "CloudNova" },
+    { name: "Priya Sharma", title: "Co-founder at Optera", location: "London, UK", company: "Optera" },
+    { name: "Leo Andersen", title: "VP Sales at Meridian", location: "Berlin, DE", company: "Meridian" },
+    { name: "Sofia Chen", title: "CTO at Luminos", location: "Oslo, NO", company: "Luminos" },
 ] as const;
 
 const LEAD_FILTERS = [
@@ -332,7 +332,7 @@ function LeadsFeature() {
             icon={<Search className="h-3.5 w-3.5" />}
             tag="Lead Finder"
             title="Find and enrich leads"
-            description="Access 300M+ verified contacts. Search by job title, company, location, seniority, and 80+ advanced filters. Import from LinkedIn, Sales Navigator, CSV, or our built-in database. Every lead auto-enriched with email, phone, and company data."
+            description="Search by job title, company, location, seniority, and 80+ advanced filters. Import from LinkedIn, Sales Navigator, or CSV. Leads auto-enriched with email, phone, and company data."
             testimonialKey="leads"
         >
             <div className="p-4 sm:p-5">
@@ -361,7 +361,7 @@ function LeadsFeature() {
                 <div className="mb-3 flex items-center justify-between text-xs text-[var(--text-muted)]">
                     <span>Showing 4 of 2,847 leads</span>
                     <span className="rounded-full bg-purple-500/15 px-2.5 py-0.5 text-[10px] font-medium text-purple-300">
-                        300M+ Verified
+                        Advanced Search
                     </span>
                 </div>
 

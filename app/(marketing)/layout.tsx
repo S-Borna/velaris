@@ -1,6 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 import { Navbar } from "@/components/marketing/navbar";
 import { Footer } from "@/components/marketing/footer";
+import { DemoDisclaimer } from "@/components/marketing/demo-disclaimer";
 
 /**
  * Marketing layout — public pages with navbar + footer, no sidebar.
@@ -16,6 +17,7 @@ export default function MarketingLayout({
             <Navbar />
             <main className="flex-1">{children}</main>
             <Footer />
+            <DemoDisclaimer />
         </div>
     );
 }

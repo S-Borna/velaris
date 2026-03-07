@@ -89,7 +89,7 @@ const MOCK_MESSAGES: Record<string, Message[]> = {
     conv6: [
         { id: "m9", conversationId: "conv6", direction: "sent", content: "Hi Tim, I saw your keynote about innovation at scale — really resonated with my experience. We've built a tool that automates the entire outreach process.", timestamp: "3 days ago 2:00 PM", type: "connection_request", read: true },
         { id: "m10", conversationId: "conv6", direction: "received", content: "Hey! Yeah that post got a lot of traction. What tool are you building?", timestamp: "2 days ago 10:00 AM", type: "text", read: true },
-        { id: "m11", conversationId: "conv6", direction: "sent", content: "It's called Velaris — think of it as the all-in-one LinkedIn automation platform. AI content generation, smart sequences, unified inbox, and a 300M+ lead database. All in one dashboard.", timestamp: "2 days ago 11:30 AM", type: "text", read: true },
+        { id: "m11", conversationId: "conv6", direction: "sent", content: "It's called Velaris — think of it as the all-in-one LinkedIn automation platform. AI content generation, smart sequences, unified inbox, and advanced lead search. All in one dashboard.", timestamp: "2 days ago 11:30 AM", type: "text", read: true },
         { id: "m12", conversationId: "conv6", direction: "received", content: "Absolutely, I'd love to see a demo. Can you send me a link?", timestamp: "Yesterday 3:00 PM", type: "text", read: true },
     ],
 };
@@ -109,7 +109,7 @@ const AI_SUGGESTIONS: Record<string, AiSuggestion[]> = {
     ],
     conv2: [
         { text: "Thanks Mark! We're building Velaris — an AI-powered LinkedIn automation platform. Would love to show you how it could scale Meta's enterprise outreach.", tone: "Professional" },
-        { text: "Appreciate the curiosity! It's a full-stack LinkedIn platform: outreach sequences, AI content, unified inbox, and 300M+ lead database. Happy to jump on a call if you're interested.", tone: "Detailed" },
+        { text: "Appreciate the curiosity! It's a full-stack LinkedIn platform: outreach sequences, AI content, unified inbox, and advanced lead search. Happy to jump on a call if you're interested.", tone: "Detailed" },
     ],
     conv6: [
         { text: "Absolutely! Here's our demo link: https://cal.com/velaris/demo — pick any time that works for you.", tone: "Direct" },

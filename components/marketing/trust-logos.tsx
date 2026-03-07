@@ -9,23 +9,23 @@ interface LogoItem {
 }
 
 const LOGOS_ROW_1: LogoItem[] = [
-    { name: "TechFlow", badge: "Review" },
-    { name: "ScaleUp Labs" },
-    { name: "GrowthHive" },
-    { name: "NordLead", badge: "Case study" },
-    { name: "DataSync AI" },
-    { name: "Verma Tech", badge: "Review" },
-    { name: "Lemon Squeezy" },
-    { name: "BecGrowth", badge: "Case study" },
+    { name: "Vercel" },
+    { name: "Stripe" },
+    { name: "Linear" },
+    { name: "Notion" },
+    { name: "Figma" },
+    { name: "Supabase" },
+    { name: "Railway" },
+    { name: "Resend" },
 ];
 
 const LOGOS_ROW_2: LogoItem[] = [
-    { name: "SalesPipe" },
-    { name: "LeadEngine", badge: "Review" },
-    { name: "OutboundPro" },
-    { name: "ConnectIQ" },
-    { name: "PipelineAI", badge: "Case study" },
-    { name: "RevenueStack" },
+    { name: "Prisma" },
+    { name: "Tailwind" },
+    { name: "Anthropic" },
+    { name: "Cloudflare" },
+    { name: "Next.js" },
+    { name: "shadcn/ui" },
 ];
 
 const SCROLL_DURATION_ROW_1 = "40s";
@@ -41,7 +41,7 @@ export function TrustLogos() {
         <section className="relative overflow-hidden border-y border-white/[0.04] bg-[var(--bg-primary)] py-16 sm:py-20">
             <AnimatedSection className="mb-10 text-center">
                 <p className="text-sm font-medium uppercase tracking-widest text-[var(--text-muted)]">
-                    Trusted by many heavy lifters
+                    Built with industry-leading tools
                 </p>
             </AnimatedSection>
 

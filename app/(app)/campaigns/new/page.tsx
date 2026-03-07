@@ -19,7 +19,7 @@ type StepKey = (typeof STEPS)[number]["key"];
 
 const LEAD_SOURCES = [
     { id: "csv", label: "Upload CSV", desc: "Import leads from a CSV file" },
-    { id: "database", label: "Lead Database", desc: "Search 300M+ contacts" },
+    { id: "database", label: "Lead Database", desc: "Search your lead database" },
     { id: "extractor", label: "Lead Extractor", desc: "Extract from LinkedIn search" },
 ];
 
