@@ -21,6 +21,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "autoprefixer": "^10.4.27",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.70.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
