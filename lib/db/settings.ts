@@ -31,7 +31,7 @@ export type WorkspaceWithMembers = Prisma.WorkspaceGetPayload<{
 /** Input for updating user profile. */
 export interface UpdateProfileInput {
   fullName?: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
 }
 
 /** Input for updating workspace settings. */

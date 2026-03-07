@@ -44,7 +44,7 @@ export interface UpdateContentPostInput {
   tone?: string;
   generatedContent?: string;
   status?: string;
-  linkedinAccountId?: string;
+  linkedinAccountId?: string | null;
 }
 
 // ─── Queries ────────────────────────────────────────────
