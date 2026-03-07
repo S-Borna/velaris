@@ -1,197 +1,339 @@
-# ROADMAP — Velaris Backend Implementation
+# ROADMAP — Velaris Full-Stack Implementation
 
 > **Owner:** Said Borna  
 > **Created:** 2026-03-07  
-> **Status:** ✅ All 5 points complete  
+> **Updated:** 2026-03-07  
+> **Directive:** Alla sidor bakom login ska vara fullt fungerande med riktig data. Inget lämnas åt slumpen.
 
 ---
 
-## Current State
+## Project Status Overview
 
-The frontend is **complete** — all 19 routes built, all UI pages functional with mock data.  
-The database schema is **complete** — all Prisma models exist with correct relations.  
-The backend is **empty** — no API routes (beyond auth), no service logic, no third-party integrations.
+### What's Done
+
+| Layer | Status | Details |
+|-------|--------|---------|
+| Frontend | ✅ Complete | 19 routes, all UI pages built, landing page, polish pass |
+| Prisma Schema | ✅ Complete | 18 models, migration applied on Railway PostgreSQL |
+| Auth | ✅ Complete | NextAuth + Credentials, signup creates user + workspace |
+| Service Libraries | ✅ Complete | Claude AI, PDL enrichment, BullMQ queues, LinkedIn adapter |
+| Deploy | ✅ Complete | Vercel (frontend) + Railway (PostgreSQL + Redis) |
+
+### What's Missing (the gap)
+
+**13 of 14 app pages are 100% MOCK.** The service libraries exist but:
+- Zero Prisma queries exist for core entities (campaigns, leads, messages, etc.)
+- Zero CRUD API routes exist (only auth + external service proxies)
+- Zero frontend pages fetch from the database
+- Only `api/auth/signup` writes to the database
+- Only `content/assistant` partially calls a real API (Claude generation)
+
+**The entire data layer between frontend ↔ database is missing.**
 
 ---
 
-## Implementation Points (5 phases, sequential)
+## Phase 2: Database-Backed Application (7 Blocks)
 
-### Point 1: AI Content Generation
+> **Rules:** Sequential execution. Each block is independently built, tested, committed, and checkpointed.  
+> No batching. Maximum quality per block. Verify before commit.  
+> **Excluded:** Stripe/billing (last polish step), Academy (stays static).
 
-**Goal:** Replace mock content generation with real Claude API calls.
+---
 
-| What | Details |
-|------|---------|
-| Package | `@anthropic-ai/sdk` |
-| Backend | `lib/ai/content-generator.ts` — Claude API wrapper with prompt engineering |
-| API Route | `app/api/content/generate/route.ts` — POST endpoint, Zod-validated input |
-| Frontend | Wire `content/assistant/page.tsx` to call real API instead of `MOCK_GENERATED` |
-| DB | Save generated content to `ContentPost` model |
-| Env | `ANTHROPIC_API_KEY` (already in .env.example) |
-| Effort | ~1 day |
-| Risk | Low — straightforward API integration |
+### Block 1: Service Layer (Prisma Query Helpers)
+
+**Goal:** Create `lib/db/` with typed, workspace-scoped Prisma query functions for every entity.
+
+**Files to create:**
+| File | Entity | Key Functions |
+|------|--------|---------------|
+| `lib/db/campaigns.ts` | Campaign | list, getById, create, update, updateStatus, getStats |
+| `lib/db/leads.ts` | Lead | list (filtered/paginated), getById, create, bulkCreate, update, updateIcpScore |
+| `lib/db/campaign-leads.ts` | CampaignLead | list, assign, updateStatus, getNextActions |
+| `lib/db/sequences.ts` | Sequence | listByCampaign, create, update, reorder, delete |
+| `lib/db/linkedin-accounts.ts` | LinkedinAccount | list, getById, create, update, updateUsage, updateStatus |
+| `lib/db/messages.ts` | Message | listByConversation, listByLead, create, markRead, toggleStar |
+| `lib/db/content-posts.ts` | ContentPost | list, getById, create, update, schedule, markPosted |
+| `lib/db/automations.ts` | InboundAutomation | list, getById, create, update, updateStatus |
+| `lib/db/activity-log.ts` | ActivityLog | list (paginated), create, getStats |
+| `lib/db/settings.ts` | User + Workspace | getProfile, updateProfile, getWorkspace, updateWorkspace |
+| `lib/db/auth-helpers.ts` | Session → Workspace | getWorkspaceIdFromSession (shared auth utility) |
+
+**Patterns:**
+- Every function takes `workspaceId` as first param (workspace-scoped)
+- `getWorkspaceIdFromSession()` resolves JWT session → userId → workspace membership
+- Zod schemas for input validation co-located with service functions
+- Return typed results (Prisma generated types, no `any`)
+- Pagination via `{ page, pageSize }` → `{ data, total, page, pageSize, totalPages }`
 
 **Acceptance criteria:**
-- [ ] User fills out form (category, topic, audience, language, tone)
-- [ ] "Generate Content" calls Claude API and streams/returns real LinkedIn post content
-- [ ] Multiple variants generated per request
-- [ ] Content saved to database
-- [ ] Error handling for API failures, rate limits, invalid API key
+- [ ] All 11 files created with full CRUD operations
+- [ ] Every function is typed (params + return)
+- [ ] Workspace scoping enforced on every query
+- [ ] `tsc --noEmit` passes
+- [ ] Unit-testable (pure Prisma calls, no HTTP layer)
 
 ---
 
-### Point 2: ICP Scoring
+### Block 2: CRUD API Routes
 
-**Goal:** AI-powered lead qualification — Claude analyzes lead profiles against ICP criteria and returns a match score.
+**Goal:** Create RESTful API routes for every entity, all Zod-validated, all workspace-scoped via session.
 
-| What | Details |
-|------|---------|
-| Package | `@anthropic-ai/sdk` (already installed from Point 1) |
-| Backend | `lib/ai/icp-scorer.ts` — Claude API wrapper for lead evaluation |
-| API Route | `app/api/icp/score/route.ts` — POST endpoint, accepts lead data + ICP description |
-| Frontend | Wire sequence builder ICP condition node + lead database ICP scores |
-| DB | Write scores to `Lead.icpScore`, save config to `IcpConfig` |
-| Effort | ~1 day |
-| Risk | Low — same Claude API pattern as Point 1 |
+**Routes to create:**
+| Route | Methods | Purpose |
+|-------|---------|---------|
+| `api/campaigns/route.ts` | GET, POST | List campaigns, create campaign |
+| `api/campaigns/[id]/route.ts` | GET, PATCH, DELETE | Get/update/delete campaign |
+| `api/campaigns/[id]/status/route.ts` | PATCH | Start/pause/complete campaign |
+| `api/campaigns/[id]/leads/route.ts` | GET, POST | Get/assign leads to campaign |
+| `api/campaigns/[id]/sequences/route.ts` | GET, POST, PUT | Get/create/reorder sequences |
+| `api/leads/route.ts` | GET, POST | List leads (filtered), create lead |
+| `api/leads/[id]/route.ts` | GET, PATCH, DELETE | Get/update/delete lead |
+| `api/leads/import/route.ts` | POST | CSV bulk import |
+| `api/linkedin-accounts/route.ts` | GET, POST | List accounts, add account |
+| `api/linkedin-accounts/[id]/route.ts` | GET, PATCH, DELETE | Get/update/delete account |
+| `api/messages/route.ts` | GET, POST | List conversations, send message |
+| `api/messages/[id]/route.ts` | PATCH | Mark read, toggle star |
+| `api/content-posts/route.ts` | GET, POST | List posts, save generated post |
+| `api/content-posts/[id]/route.ts` | GET, PATCH, DELETE | Get/update/delete post |
+| `api/content-posts/[id]/schedule/route.ts` | POST | Schedule post |
+| `api/automations/route.ts` | GET, POST | List automations, create automation |
+| `api/automations/[id]/route.ts` | GET, PATCH, DELETE | Get/update/delete automation |
+| `api/dashboard/stats/route.ts` | GET | Aggregated KPIs for dashboard |
+| `api/dashboard/activity/route.ts` | GET | Activity feed from activity_log |
+| `api/settings/profile/route.ts` | GET, PATCH | Get/update user profile |
+| `api/settings/workspace/route.ts` | GET, PATCH | Get/update workspace |
+
+**Patterns:**
+- Every route: `getServerSession()` → `getWorkspaceIdFromSession()` → call service layer
+- POST/PATCH: Zod validation on request body, return 400 on failure
+- GET with filters: query params parsed via Zod
+- Standard response shape: `{ data }` or `{ error, details }`
+- HTTP status codes: 200 (ok), 201 (created), 400 (validation), 401 (unauth), 404 (not found), 500 (server)
 
 **Acceptance criteria:**
-- [ ] User writes ICP description ("Europe-based SaaS founder/CEO with 2-15 employees")
-- [ ] System sends lead profile data to Claude for scoring (0-100)
-- [ ] Scores saved to database and visible in lead table
-- [ ] Batch scoring supported (score multiple leads at once)
-- [ ] "Test Lead Scores" preview works in sequence builder
+- [ ] All 21 route files created
+- [ ] Every route authenticates via session
+- [ ] Every POST/PATCH validates input with Zod
+- [ ] `tsc --noEmit` passes
+- [ ] Routes testable via curl/Postman
 
 ---
 
-### Point 3: Scheduling / Workers (BullMQ + Redis)
+### Block 3: Dashboard — Real Data
 
-**Goal:** Background job infrastructure for campaign execution, lead enrichment, and content scheduling.
+**Goal:** Replace all hardcoded KPIs, charts, and feed with real database aggregations.
 
-| What | Details |
-|------|---------|
-| Packages | `bullmq`, `ioredis` |
-| Backend | `lib/queue/connection.ts` — Redis connection singleton |
-|  | `lib/queue/queues.ts` — Queue definitions (campaign, enrichment, content) |
-|  | `workers/campaign-executor.ts` — Processes campaign sequence steps |
-|  | `workers/content-scheduler.ts` — Posts scheduled content |
-| API Routes | `app/api/campaigns/[id]/start/route.ts` — Enqueue campaign |
-|  | `app/api/campaigns/[id]/pause/route.ts` — Pause campaign |
-| Env | `REDIS_URL` (already in .env.example) |
-| Effort | ~2 days |
-| Risk | Medium — requires Redis instance (Railway or local) |
+**What changes:**
+| Component | Currently | After |
+|-----------|-----------|-------|
+| 5 KPI cards | Hardcoded numbers | `GET /api/dashboard/stats` → aggregate from campaigns + campaign_leads |
+| Activity feed | Hardcoded array | `GET /api/dashboard/activity` → last 20 entries from activity_log |
+| Account analytics table | Hardcoded rows | `GET /api/linkedin-accounts` → real accounts with usage stats |
+| Conversion funnel | Hardcoded percentages | Calculated from real campaign_leads status distribution |
+| AI Insights | Hardcoded insights | `POST /api/content/generate` with dashboard data context (or static until data exists) |
+| Time filter | No effect | Pass `timeRange` param to API, filter by `created_at` |
+| Campaign filter | No effect | Pass `campaignId` param to API, filter aggregations |
 
 **Acceptance criteria:**
-- [ ] Redis connection established and health-checked
-- [ ] Campaign start/pause enqueues/dequeues jobs
-- [ ] Campaign executor processes sequence steps (using mock LinkedIn adapter initially)
-- [ ] Content scheduler publishes posts at scheduled times
-- [ ] Failed jobs retry with exponential backoff
-- [ ] Job status visible via API (for future dashboard)
-
-**Dependency:** LinkedIn Adapter interface needed (built as mock in this phase, real in Point 5)
+- [ ] Dashboard shows real zeros for new workspace (no fake data)
+- [ ] As campaigns/leads are created, KPIs update
+- [ ] Activity feed shows real actions
+- [ ] Time filter and campaign filter affect displayed data
+- [ ] Loading states while fetching
+- [ ] Empty state when no data exists
 
 ---
 
-### Point 4: Lead Enrichment
+### Block 4: Campaigns + Sequences — Real Data
 
-**Goal:** Enrich lead profiles with real data from a third-party provider.
+**Goal:** Full campaign CRUD, wizard persists to DB, sequence builder saves/loads real data.
 
-| What | Details |
-|------|---------|
-| Provider | People Data Labs (best coverage + pricing for startup) |
-| Package | `peopledatalabs` (or direct REST API calls) |
-| Backend | `lib/enrichment/provider.ts` — PDL API wrapper |
-|  | `lib/enrichment/enrich-lead.ts` — Enrichment orchestrator |
-| API Route | `app/api/leads/enrich/route.ts` — POST endpoint for single/batch enrichment |
-| Worker | `workers/lead-enricher.ts` — Background enrichment via BullMQ |
-| DB | Update `Lead` fields (email, phone, company data) + set `enrichmentStatus` |
-| Env | `PDL_API_KEY` (new) |
-| Effort | ~1-2 days |
-| Risk | Medium — requires PDL API key + credits (paid service) |
+**What changes:**
+| Page | Currently | After |
+|------|-----------|-------|
+| `/campaigns` | 8 hardcoded campaigns | `GET /api/campaigns` → real list with stats |
+| `/campaigns/new` | Wizard saves nothing | POST to `/api/campaigns` + `/api/campaigns/[id]/sequences` |
+| `/campaigns/[id]` | Hardcoded detail | `GET /api/campaigns/[id]` with leads, sequences, schedule |
+| `/campaigns/[id]/create` | Local-only sequence builder | Load/save sequences via API |
+
+**Sequence builder specifics:**
+- Load sequence nodes from `GET /api/campaigns/[id]/sequences`
+- Save on "Save" click → `PUT /api/campaigns/[id]/sequences` (replace all)
+- Node types map to `action_type` enum in Sequence model
+- Condition nodes store `condition_type` + `condition_value`
+- Template library inserts pre-built sequences via POST
+
+**Campaign lifecycle:**
+- Draft → Active → Paused → Completed
+- Status change via `PATCH /api/campaigns/[id]/status`
+- Active campaigns enqueue to BullMQ via existing `/api/campaigns/schedule`
 
 **Acceptance criteria:**
-- [ ] Single lead enrichment via API call
-- [ ] Batch enrichment via background worker
-- [ ] Enriched data reflected in lead table UI
-- [ ] `enrichmentStatus` field updated (pending → enriched / failed)
-- [ ] Cost-aware: skip already-enriched leads
-- [ ] Graceful fallback when API key not set (show mock data + warning)
-
-**Note:** Without a PDL API key, this point will include the full integration code with a graceful mock fallback. Real data flows when the key is configured.
+- [ ] Campaign list shows real campaigns from DB
+- [ ] Create wizard persists campaign + leads + accounts + sequences + schedule
+- [ ] Campaign detail page loads real data
+- [ ] Sequence builder loads/saves to DB
+- [ ] Campaign status changes persist
+- [ ] Duplicate campaign creates a real copy
+- [ ] Search + filters work on real data
+- [ ] Pagination works with real total count
 
 ---
 
-### Point 5: LinkedIn Automation Engine
+### Block 5: Leads + Extractor — Real Data
 
-**Goal:** Real browser-based LinkedIn automation — campaign execution, inbound monitoring, inbox sync.
+**Goal:** Lead database reads from Prisma, CSV import writes to DB, enrichment updates DB, extractor saves results.
 
-| What | Details |
-|------|---------|
-| Package | `playwright` (or `playwright-core` + Chromium) |
-| Backend | `lib/linkedin/adapter.ts` — Interface definition |
-|  | `lib/linkedin/mock-adapter.ts` — Simulator with realistic delays |
-|  | `lib/linkedin/playwright-adapter.ts` — Real browser automation |
-|  | `lib/linkedin/session-manager.ts` — Cookie/session management |
-|  | `lib/linkedin/anti-detection.ts` — Fingerprint randomization, human delays |
-| API Routes | `app/api/linkedin/connect/route.ts` — Connect LinkedIn account |
-|  | `app/api/linkedin/messages/route.ts` — Fetch/send messages |
-|  | `app/api/linkedin/actions/route.ts` — View profile, like, connect |
-| Workers | Campaign executor (from Point 3) uses LinkedIn adapter |
-| Effort | ~3-5 days |
-| Risk | **HIGH** — Breaks LinkedIn ToS, risk for account restrictions/bans |
+**What changes:**
+| Page | Currently | After |
+|------|-----------|-------|
+| `/leads/database` | 25 hardcoded leads | `GET /api/leads?page=1&filters=...` → paginated from DB |
+| `/leads/extractor` | 5 hardcoded jobs | Extraction jobs tracked in DB, results saved as leads |
+| Filters | Client-side only | Server-side filtering via Prisma `where` clauses |
+| CSV import | No implementation | `POST /api/leads/import` → parse CSV, bulk create leads |
+| ICP scoring | Mock badges | Real scores from `lead.icp_score` field |
+| Enrichment | No implementation | `POST /api/leads/enrich` → PDL lookup → update lead fields |
+
+**Lead database filter mapping:**
+- General: search (name, title, company), tags, source
+- Company: company name, size, industry
+- Location: country, city
+- Seniority: title keywords
+- ICP Score: min/max range
+- Enrichment: status filter
 
 **Acceptance criteria:**
-- [ ] `LinkedInAdapter` interface fully implemented (connect, sendConnection, sendMessage, viewProfile, likePost, extractLeads, getMessages)
-- [ ] Mock adapter works for all action types with realistic delays
-- [ ] Playwright adapter connects via session cookie
-- [ ] Anti-detection measures (random delays, human-like mouse movement, fingerprint spoofing)
-- [ ] Campaign executor drives sequences through adapter
-- [ ] Daily limit enforcement per account
-- [ ] Inbound automation: monitor posts for keywords, auto-comment, auto-DM
-- [ ] Unibox: fetch real messages from LinkedIn inbox
+- [ ] Lead list shows real leads from DB (empty for new workspace)
+- [ ] All filter categories work server-side
+- [ ] CSV import creates leads in bulk
+- [ ] ICP scores displayed from DB field
+- [ ] Enrichment button calls PDL API and updates lead
+- [ ] Extractor saves extracted leads to DB
+- [ ] Pagination shows real total counts
+- [ ] Sort by any column works server-side
+- [ ] Export generates real CSV from DB query
 
-**Important caveats:**
-- This violates LinkedIn's Terms of Service
-- Accounts may get restricted or banned
-- Anti-detection is a cat-and-mouse game — no guarantee of safety
-- Recommend starting with mock adapter for demo, playwright for brave users
+---
+
+### Block 6: Unibox + LinkedIn Accounts — Real Data
+
+**Goal:** Messages CRUD, conversations grouped per lead, LinkedIn account management.
+
+**What changes:**
+| Page | Currently | After |
+|------|-----------|-------|
+| `/unibox` | 8 hardcoded conversations | `GET /api/messages` → grouped by lead_id |
+| Message thread | Hardcoded bubbles | `GET /api/messages?leadId=X` → real messages |
+| Send message | No-op | `POST /api/messages` → save to DB (+ optionally send via LinkedIn adapter) |
+| AI suggestions | Hardcoded | `POST /api/content/generate` with conversation context |
+| Star/read | Client-only state | `PATCH /api/messages/[id]` → persist to DB |
+| `/linkedin/accounts` | Hardcoded table | `GET /api/linkedin-accounts` → real accounts |
+| Add account | No-op | `POST /api/linkedin-accounts` → save to DB |
+| Account actions | No-op | PATCH/DELETE on `/api/linkedin-accounts/[id]` |
+
+**Conversation model:**
+- Messages grouped by `(linkedin_account_id, lead_id)` = one conversation
+- Conversation list: last message per lead, unread count, lead info
+- Thread: all messages between account and lead, ordered by `sent_at`
+
+**Acceptance criteria:**
+- [ ] Unibox shows real conversations (empty for new workspace)
+- [ ] Message thread loads real messages
+- [ ] Send message saves to DB
+- [ ] Star/read persists to DB
+- [ ] AI suggestions use conversation context
+- [ ] LinkedIn accounts list shows real accounts
+- [ ] Add/edit/delete accounts persists to DB
+- [ ] Account health/usage metrics from real data
+- [ ] Filters (unread/starred/account) work on real data
+
+---
+
+### Block 7: Content + Automations + Settings — Real Data
+
+**Goal:** Generated content saved to library, scheduled posts from DB, automations CRUD, profile/workspace settings persist.
+
+**What changes:**
+| Page | Currently | After |
+|------|-----------|-------|
+| Content — Create | Real Claude API (partial) | Also save to `ContentPost` on generate |
+| Content — Library | 5 hardcoded posts | `GET /api/content-posts` → real saved posts |
+| Content — Schedule | Hardcoded | `GET /api/content-posts?status=scheduled` + `?status=posted` |
+| Schedule post | No-op | `POST /api/content-posts/[id]/schedule` → BullMQ job |
+| Automations list | 3 hardcoded | `GET /api/automations` → real list |
+| Create automation | Wizard saves nothing | `POST /api/automations` → persist all 5 steps |
+| Automation dashboard | Hardcoded KPIs | Aggregated from activity_log per automation |
+| Settings — Profile | Hardcoded | `GET/PATCH /api/settings/profile` → real user data |
+| Settings — Workspace | Hardcoded | `GET/PATCH /api/settings/workspace` → real workspace |
+| Settings — Notifications | Client-only | Persist to user preferences (JSON field or table) |
+| Settings — Security | No-op | Password change via Prisma, session list from DB |
+
+**Acceptance criteria:**
+- [ ] Generated content auto-saved to library
+- [ ] Library shows real posts with status badges
+- [ ] Schedule post enqueues BullMQ job
+- [ ] Inbound automations full CRUD
+- [ ] Automation wizard persists all 5 steps
+- [ ] Profile changes persist (name, email, timezone)
+- [ ] Workspace settings persist (name, branding)
+- [ ] Password change works
+- [ ] Notification preferences persist
+
+---
+
+## Exclusions
+
+| Item | Reason | When |
+|------|--------|------|
+| Stripe / Billing | Sekundärt — sista steg polish | After all 7 blocks |
+| Academy | Static content, not data-driven | Stays as-is |
+| Integrations (HubSpot, etc.) | Third-party OAuth flows, complex | Future enhancement |
 
 ---
 
 ## Build Order & Dependencies
 
 ```
-Point 1: AI Content Generation  (independent, start here)
+Block 1: Service Layer          ← Foundation, all other blocks depend on this
     ↓
-Point 2: ICP Scoring            (reuses Anthropic SDK from Point 1)
+Block 2: CRUD API Routes        ← HTTP layer on top of service layer
     ↓
-Point 3: Scheduling / Workers   (independent, but enriches Points 1-2)
+Block 3: Dashboard              ← Reads from campaigns, leads, activity_log
     ↓
-Point 4: Lead Enrichment        (uses worker queue from Point 3)
+Block 4: Campaigns + Sequences  ← Full CRUD, references leads + accounts
     ↓
-Point 5: LinkedIn Automation    (uses workers from Point 3, mock→real adapter)
+Block 5: Leads + Extractor      ← Full CRUD, CSV import, enrichment, ICP
+    ↓
+Block 6: Unibox + Accounts      ← Messages CRUD, account management
+    ↓
+Block 7: Content + Auto + Sett. ← Content library, automations, user settings
 ```
 
 ---
 
-## Risk Matrix
+## Completed Work (Phase 1 — Service Libraries)
 
-| Point | Technical Risk | Legal Risk | Cost |
-|-------|---------------|------------|------|
-| 1. AI Content | Low | None | Claude API usage (~$0.01/request) |
-| 2. ICP Scoring | Low | None | Claude API usage (~$0.02/lead) |
-| 3. Scheduling | Medium | None | Redis hosting (~$5/mo Railway) |
-| 4. Lead Enrichment | Medium | None | PDL credits (~$0.10/lead) |
-| 5. LinkedIn Automation | High | **ToS violation** | Playwright compute + ban risk |
+> These are the building blocks. They provide external API integrations but do NOT touch the database.
+
+| Point | Status | Commit | What It Does |
+|-------|--------|--------|--------------|
+| AI Content Generation | ✅ | `2cdd14d` | Claude API wrapper, generates LinkedIn post variants |
+| ICP Scoring | ✅ | `91600c8` | Claude API lead scoring, batch up to 50 leads |
+| BullMQ Scheduling | ✅ | `d84af7e` | 3 Redis queues (campaign, content, enrichment) |
+| Lead Enrichment (PDL) | ✅ | `f16d9d6` | People Data Labs client, 3 enrichment methods |
+| LinkedIn Automation | ✅ | `b83dd13` | Playwright adapter + mock adapter, 5 API routes |
 
 ---
 
-## Status Tracker
+## Block Status Tracker
 
-| Point | Status | Started | Completed | Commit |
+| Block | Status | Started | Completed | Commit |
 |-------|--------|---------|-----------|--------|
-| 1. AI Content Generation | ✅ Complete | 2026-03-07 | 2026-03-07 | `2cdd14d` |
-| 2. ICP Scoring | ✅ Complete | 2026-03-07 | 2026-03-07 | `91600c8` |
-| 3. Scheduling / Workers | ✅ Complete | 2026-03-07 | 2026-03-07 | `d84af7e` |
-| 4. Lead Enrichment | ✅ Complete | 2026-03-07 | 2026-03-07 | `f16d9d6` |
-| 5. LinkedIn Automation | ✅ Complete | 2026-03-07 | 2026-03-07 | `b83dd13` |
+| 1. Service Layer | ⬜ Not Started | — | — | — |
+| 2. CRUD API Routes | ⬜ Not Started | — | — | — |
+| 3. Dashboard | ⬜ Not Started | — | — | — |
+| 4. Campaigns + Sequences | ⬜ Not Started | — | — | — |
+| 5. Leads + Extractor | ⬜ Not Started | — | — | — |
+| 6. Unibox + Accounts | ⬜ Not Started | — | — | — |
+| 7. Content + Auto + Settings | ⬜ Not Started | — | — | — |
