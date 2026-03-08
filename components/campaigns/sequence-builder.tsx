@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
     ArrowDown,
@@ -19,9 +19,9 @@ import {
     Square,
 } from "lucide-react";
 
-type NodeType = "start" | "condition" | "connect" | "message" | "voice_note" | "view_profile" | "like_post" | "wait" | "stop";
+export type NodeType = "start" | "condition" | "connect" | "message" | "voice_note" | "view_profile" | "like_post" | "wait" | "stop";
 
-interface SequenceNode {
+export interface SequenceNode {
     id: string;
     type: NodeType;
     label: string;
@@ -81,10 +81,24 @@ function getNodeIcon(type: NodeType) {
     return icons[type];
 }
 
-export function SequenceBuilder() {
-    const [nodes, setNodes] = useState<SequenceNode[]>(INITIAL_NODES);
+interface SequenceBuilderProps {
+    initialNodes?: SequenceNode[];
+    onNodesChange?: (nodes: SequenceNode[]) => void;
+}
+
+export function SequenceBuilder({ initialNodes, onNodesChange }: SequenceBuilderProps) {
+    const [nodes, setNodes] = useState<SequenceNode[]>(initialNodes ?? INITIAL_NODES);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [showPalette, setShowPalette] = useState<string | null>(null);
+    const isFirstRender = useRef(true);
+
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        onNodesChange?.(nodes);
+    }, [nodes, onNodesChange]);
 
     const selectedNode = nodes.find((n) => n.id === selectedId);
 

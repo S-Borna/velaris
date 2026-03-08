@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -101,55 +101,89 @@ export default function CampaignsPage() {
     const [sortAsc, setSortAsc] = useState(false);
     const [page, setPage] = useState(0);
     const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
+    const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        async function load() {
-            try {
-                const res = await fetch("/api/campaigns?pageSize=100");
-                if (!res.ok) throw new Error("Failed to fetch");
-                const json = await res.json();
-                const rows: CampaignRow[] = (json.data ?? []).map((c: Record<string, unknown>) => ({
-                    id: String(c.id),
-                    name: String(c.name),
-                    status: String(c.status) as CampaignStatus,
-                    created: String(c.createdAt).slice(0, 10),
-                    connectionsSent: Number(c.connectionsSent) || 0,
-                    connectionsAccepted: Number(c.connectionsAccepted) || 0,
-                    messagesSent: Number(c.messagesSent) || 0,
-                    replyRate: Number(c.messagesSent) > 0
-                        ? Math.round((Number(c.repliesReceived) / Number(c.messagesSent)) * 100)
-                        : 0,
-                    opportunities: Math.round(Number(c.opportunitiesValue) / 4000) || 0,
-                }));
-                setCampaigns(rows);
-            } catch {
-                setCampaigns(MOCK_CAMPAIGNS);
-            } finally {
-                setLoading(false);
-            }
+    /** Map from client sort keys to API column names */
+    const SORT_MAP: Record<SortKey, string> = useMemo(() => ({
+        name: "name",
+        connectionsSent: "connectionsSent",
+        connectionsAccepted: "connectionsAccepted",
+        messagesSent: "messagesSent",
+        replyRate: "repliesReceived",
+        opportunities: "opportunitiesValue",
+    }), []);
+
+    const mapRow = useCallback((c: Record<string, unknown>): CampaignRow => ({
+        id: String(c.id),
+        name: String(c.name),
+        status: String(c.status) as CampaignStatus,
+        created: String(c.createdAt).slice(0, 10),
+        connectionsSent: Number(c.connectionsSent) || 0,
+        connectionsAccepted: Number(c.connectionsAccepted) || 0,
+        messagesSent: Number(c.messagesSent) || 0,
+        replyRate: Number(c.messagesSent) > 0
+            ? Math.round((Number(c.repliesReceived) / Number(c.messagesSent)) * 100)
+            : 0,
+        opportunities: Math.round(Number(c.opportunitiesValue) / 4000) || 0,
+    }), []);
+
+    const fetchCampaigns = useCallback(async () => {
+        try {
+            const params = new URLSearchParams();
+            params.set("page", String(page));
+            params.set("pageSize", String(PAGE_SIZE));
+            if (statusFilter !== "all") params.set("status", statusFilter);
+            if (searchQuery.trim()) params.set("search", searchQuery.trim());
+            params.set("sort", SORT_MAP[sortKey]);
+            params.set("order", sortAsc ? "asc" : "desc");
+
+            const res = await fetch(`/api/campaigns?${params.toString()}`);
+            if (!res.ok) throw new Error("Failed to fetch");
+            const json = await res.json() as { data: Record<string, unknown>[]; totalPages?: number };
+            setCampaigns((json.data ?? []).map(mapRow));
+            setTotalPages(json.totalPages ?? 1);
+        } catch {
+            setCampaigns(MOCK_CAMPAIGNS);
+            setTotalPages(1);
+        } finally {
+            setLoading(false);
         }
-        load();
-    }, []);
+    }, [mapRow, page, statusFilter, searchQuery, sortKey, sortAsc, SORT_MAP]);
+
+    useEffect(() => { void fetchCampaigns(); }, [fetchCampaigns]);
+
+    async function handleDelete(row: CampaignRow): Promise<void> {
+        setCampaigns((prev) => prev.filter((c) => c.id !== row.id));
+        try {
+            const res = await fetch(`/api/campaigns/${row.id}`, { method: "DELETE" });
+            if (!res.ok) throw new Error("Delete failed");
+            toast.success(`"${row.name}" deleted`);
+        } catch {
+            toast.error("Failed to delete campaign");
+            void fetchCampaigns();
+        }
+    }
+
+    async function handleDuplicate(row: CampaignRow): Promise<void> {
+        try {
+            const res = await fetch("/api/campaigns", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: `${row.name} (Copy)` }),
+            });
+            if (!res.ok) throw new Error("Duplicate failed");
+            toast.success(`"${row.name}" duplicated`);
+            void fetchCampaigns();
+        } catch {
+            toast.error("Failed to duplicate campaign");
+        }
+    }
 
     function handleSort(key: SortKey): void {
         if (sortKey === key) { setSortAsc((p) => !p); } else { setSortKey(key); setSortAsc(false); }
+        setPage(0);
     }
-
-    const filtered = useMemo(() => {
-        let rows: CampaignRow[] = campaigns;
-        if (statusFilter !== "all") rows = rows.filter((r) => r.status === statusFilter);
-        if (searchQuery.trim()) { const q = searchQuery.toLowerCase(); rows = rows.filter((r) => r.name.toLowerCase().includes(q)); }
-        rows = [...rows].sort((a, b) => {
-            const av = a[sortKey]; const bv = b[sortKey];
-            if (typeof av === "number" && typeof bv === "number") return sortAsc ? av - bv : bv - av;
-            return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-        });
-        return rows;
-    }, [campaigns, searchQuery, statusFilter, sortKey, sortAsc]);
-
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
     if (loading) return <div className="flex h-96 items-center justify-center"><p className="text-sm text-[var(--text-muted)]">Loading campaigns…</p></div>;
 
@@ -202,7 +236,7 @@ export default function CampaignsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {paged.map((row) => {
+                            {campaigns.map((row) => {
                                 const grade = getCampaignGrade(row);
                                 return (
                                 <tr key={row.id} className="border-b border-white/6 text-[var(--text-primary)] hover:bg-white/[0.02]">
@@ -224,20 +258,20 @@ export default function CampaignsPage() {
                                     <td className="px-3 py-3">{row.opportunities}</td>
                                     <td className="px-3 py-3">
                                         <div className="flex items-center gap-1">
-                                            <button type="button" title="Duplicate" onClick={() => toast.success(`"${row.name}" duplicated`)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><Copy className="h-3.5 w-3.5" /></button>
-                                            <button type="button" title="Delete" onClick={() => toast.success(`"${row.name}" deleted`)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-red-500/15 hover:text-red-400 transition"><Trash2 className="h-3.5 w-3.5" /></button>
+                                            <button type="button" title="Duplicate" onClick={() => void handleDuplicate(row)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><Copy className="h-3.5 w-3.5" /></button>
+                                            <button type="button" title="Delete" onClick={() => void handleDelete(row)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-red-500/15 hover:text-red-400 transition"><Trash2 className="h-3.5 w-3.5" /></button>
                                             <button type="button" title="More" className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><MoreHorizontal className="h-3.5 w-3.5" /></button>
                                         </div>
                                     </td>
                                 </tr>
                             )})}
-                            {paged.length === 0 && <tr><td colSpan={9}><EmptyState icon={Megaphone} title="No campaigns yet" description="Create your first campaign to start reaching leads on LinkedIn." actionLabel="Create Campaign" actionHref="/campaigns/new" /></td></tr>}
+                            {campaigns.length === 0 && <tr><td colSpan={9}><EmptyState icon={Megaphone} title="No campaigns yet" description="Create your first campaign to start reaching leads on LinkedIn." actionLabel="Create Campaign" actionHref="/campaigns/new" /></td></tr>}
                         </tbody>
                     </table>
                 </div>
                 {totalPages > 1 && (
                     <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
-                        <p className="text-xs text-[var(--text-secondary)]">Page {page + 1} of {totalPages} ({filtered.length} campaigns)</p>
+                        <p className="text-xs text-[var(--text-secondary)]">Page {page + 1} of {totalPages}</p>
                         <div className="flex gap-2">
                             <button type="button" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white/10 disabled:opacity-40">Previous</button>
                             <button type="button" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)} className="rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-white/10 disabled:opacity-40">Next</button>
