@@ -2,8 +2,11 @@
 // Velaris — ICP Scoring API Route
 
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { scoreLeadsForIcp, IcpScoringInputSchema } from "@/lib/ai/icp-scorer";
 import { ZodError, ZodIssue } from "zod";
+import { authOptions } from "@/lib/auth/options";
+import { aiLimiter, getRateLimitKey } from "@/lib/security/rate-limiter";
 
 /* ─── Constants ─────────────────────────────────────── */
 
@@ -15,12 +18,23 @@ const INTERNAL_ERROR_MESSAGE = "Failed to score leads. Please try again.";
 /**
  * POST /api/leads/score
  * Accepts ICP description + lead profiles, returns AI-generated scores.
+ * Requires authentication.
  *
  * Body: { icpDescription, minScore?, leads: LeadProfile[] }
  * Returns: { scores: LeadScore[], model, tokensUsed }
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const limitResult = aiLimiter.check(getRateLimitKey(request));
+    if (!limitResult.allowed) {
+      return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
+    }
+
     const body: unknown = await request.json();
     const input = IcpScoringInputSchema.parse(body);
     const result = await scoreLeadsForIcp(input);

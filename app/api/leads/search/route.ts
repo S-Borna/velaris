@@ -2,8 +2,11 @@
 // Velaris — Lead Search API Route (People Data Labs)
 
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { ZodError, ZodIssue } from "zod";
 import { searchLeads, LeadSearchSchema } from "@/lib/enrichment/pdl-client";
+import { authOptions } from "@/lib/auth/options";
+import { aiLimiter, getRateLimitKey } from "@/lib/security/rate-limiter";
 
 /* ─── Constants ─────────────────────────────────────── */
 
@@ -14,12 +17,23 @@ const INTERNAL_ERROR_MESSAGE = "Failed to search leads. Please try again.";
 /**
  * POST /api/leads/search
  * Search for leads via People Data Labs person search API.
+ * Requires authentication.
  *
  * Body: { query, size?, jobTitle?, companyName?, location?, industry? }
  * Returns: { leads: EnrichedLead[], total: number }
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const limitResult = aiLimiter.check(getRateLimitKey(request));
+    if (!limitResult.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please wait." }, { status: 429 });
+    }
+
     const body: unknown = await request.json();
     const input = LeadSearchSchema.parse(body);
     const result = await searchLeads(input);

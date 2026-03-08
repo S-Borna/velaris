@@ -2,14 +2,20 @@
 // Velaris — Campaign Launch/Schedule API Route
 
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { ZodError, ZodIssue } from "zod";
 import { enqueueCampaignStep } from "@/lib/queue/jobs";
 import type { CampaignStepJob } from "@/lib/queue/jobs";
+import { authOptions } from "@/lib/auth/options";
+import { getWorkspaceIdFromSession } from "@/lib/db/auth-helpers";
+import { prisma } from "@/lib/db/prisma";
+import { apiLimiter, getRateLimitKey } from "@/lib/security/rate-limiter";
 
 /* ─── Constants ─────────────────────────────────────── */
 
 const MILLISECONDS_PER_DAY = 86400000;
+const INTERNAL_ERROR_MESSAGE = "Failed to schedule campaign. Please try again.";
 
 /* ─── Schemas ───────────────────────────────────────── */
 
@@ -45,8 +51,29 @@ type CampaignScheduleInput = z.infer<typeof CampaignScheduleSchema>;
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const limitResult = apiLimiter.check(getRateLimitKey(request));
+    if (!limitResult.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please wait." }, { status: 429 });
+    }
+
     const body: unknown = await request.json();
     const input: CampaignScheduleInput = CampaignScheduleSchema.parse(body);
+
+    // Verify campaign belongs to user's workspace
+    const workspaceId = await getWorkspaceIdFromSession(session);
+    const campaign = await prisma.campaign.findFirst({
+      where: { id: input.campaignId, workspaceId },
+      select: { id: true },
+    });
+
+    if (!campaign) {
+      return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+    }
 
     const jobIds: string[] = [];
     let cumulativeDelayMs = 0;
@@ -111,7 +138,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     console.error("[Campaign Schedule API]", errorMessage);
 
     return NextResponse.json(
-      { error: "Failed to schedule campaign" },
+      { error: INTERNAL_ERROR_MESSAGE },
       { status: 500 }
     );
   }
