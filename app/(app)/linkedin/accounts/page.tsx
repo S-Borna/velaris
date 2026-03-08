@@ -1,10 +1,11 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Linkedin, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 type AccountStatus = "connected" | "syncing" | "error";
 
@@ -20,6 +21,17 @@ interface LinkedInAccountRow {
     lastSync: string;
     warmupEnabled: boolean;
     proxyConfigured: boolean;
+}
+
+interface LinkedInAccountApi {
+    id: string;
+    accountName: string;
+    status: "connected" | "disconnected" | "syncing" | "error";
+    accountType: "basic" | "premium" | "sales_navigator";
+    dailyMessagesUsed: number;
+    dailyMessageLimit: number;
+    lastSyncAt: string | null;
+    proxyUrl: string | null;
 }
 
 const INITIAL_ACCOUNTS: LinkedInAccountRow[] = [
@@ -104,6 +116,54 @@ function HealthBadge({ score }: { score: number }) {
 export default function LinkedInAccountsPage() {
     const [accounts, setAccounts] = useState<LinkedInAccountRow[]>(INITIAL_ACCOUNTS);
 
+    useEffect(() => {
+        async function loadAccounts(): Promise<void> {
+            const response = await fetch("/api/linkedin-accounts", { cache: "no-store" });
+            if (!response.ok) {
+                return;
+            }
+
+            const payload: unknown = await response.json();
+            const parsed = payload as { data?: LinkedInAccountApi[] };
+            const rows = parsed.data ?? [];
+
+            if (rows.length === 0) {
+                setAccounts([]);
+                return;
+            }
+
+            setAccounts(
+                rows.map((row) => {
+                    const usageRatio = row.dailyMessageLimit > 0 ? row.dailyMessagesUsed / row.dailyMessageLimit : 0;
+                    const baseHealth = row.status === "error" ? 40 : row.status === "syncing" ? 72 : 88;
+                    const usagePenalty = Math.round(Math.min(30, usageRatio * 30));
+                    const healthScore = Math.max(35, Math.min(99, baseHealth - usagePenalty));
+
+                    return {
+                        id: row.id,
+                        account: row.accountName,
+                        status: row.status === "disconnected" ? "error" : row.status,
+                        type: row.accountType.replaceAll("_", " "),
+                        connections: 0,
+                        dailyMessagesUsed: row.dailyMessagesUsed,
+                        dailyMessagesLimit: row.dailyMessageLimit,
+                        healthScore,
+                        lastSync: row.lastSyncAt ? new Date(row.lastSyncAt).toLocaleString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                        }) : "Never",
+                        warmupEnabled: row.dailyMessagesUsed > 0,
+                        proxyConfigured: Boolean(row.proxyUrl),
+                    };
+                }),
+            );
+        }
+
+        void loadAccounts();
+    }, []);
+
     const summary = useMemo(() => {
         const healthAverage = Math.round(accounts.reduce((sum, row) => sum + row.healthScore, 0) / accounts.length);
         const connectedCount = accounts.filter((row) => row.status === "connected").length;
@@ -123,6 +183,75 @@ export default function LinkedInAccountsPage() {
                 return { ...row, warmupEnabled: !row.warmupEnabled };
             }),
         );
+
+        const account = accounts.find((row) => row.id === id);
+        if (account) {
+            void fetch(`/api/linkedin-accounts/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    status: account.warmupEnabled ? "connected" : "syncing",
+                }),
+            });
+        }
+    }
+
+    async function addLinkedInAccount(): Promise<void> {
+        const response = await fetch("/api/linkedin-accounts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                accountName: `New Account ${accounts.length + 1}`,
+                accountType: "basic",
+                dailyConnectionLimit: 20,
+                dailyMessageLimit: 50,
+            }),
+        });
+
+        if (!response.ok) {
+            toast.error("Failed to add account");
+            return;
+        }
+
+        const payload: unknown = await response.json();
+        const parsed = payload as { data?: LinkedInAccountApi };
+        const account = parsed.data;
+        if (!account) {
+            return;
+        }
+
+        setAccounts((prev) => [
+            {
+                id: account.id,
+                account: account.accountName,
+                status: account.status === "disconnected" ? "error" : account.status,
+                type: account.accountType.replaceAll("_", " "),
+                connections: 0,
+                dailyMessagesUsed: account.dailyMessagesUsed,
+                dailyMessagesLimit: account.dailyMessageLimit,
+                healthScore: 82,
+                lastSync: "Just now",
+                warmupEnabled: false,
+                proxyConfigured: Boolean(account.proxyUrl),
+            },
+            ...prev,
+        ]);
+        toast.success("LinkedIn account added");
+    }
+
+    async function manageAccount(id: string): Promise<void> {
+        const response = await fetch(`/api/linkedin-accounts/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "syncing" }),
+        });
+
+        if (response.ok) {
+            setAccounts((prev) => prev.map((row) => row.id === id ? { ...row, status: "syncing", lastSync: "Syncing now" } : row));
+            toast.success("Sync started");
+        } else {
+            toast.error("Failed to start sync");
+        }
     }
 
     return (
@@ -133,7 +262,7 @@ export default function LinkedInAccountsPage() {
                     <p className="text-sm text-[var(--text-secondary)]">Manage sender accounts, usage, sync status and health</p>
                 </div>
 
-                <Button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                <Button onClick={() => void addLinkedInAccount()} className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
                     <Plus className="mr-2 h-4 w-4" />
                     Add LinkedIn Account
                 </Button>
@@ -217,7 +346,7 @@ export default function LinkedInAccountsPage() {
                                         </td>
                                         <td className="px-3 py-3 text-[var(--text-secondary)]">{row.lastSync}</td>
                                         <td className="px-3 py-3">
-                                            <Button variant="ghost" size="sm" className="h-8 border border-white/10 bg-[var(--bg-input)] px-3 text-xs text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
+                                            <Button variant="ghost" size="sm" onClick={() => void manageAccount(row.id)} className="h-8 border border-white/10 bg-[var(--bg-input)] px-3 text-xs text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
                                                 Manage
                                             </Button>
                                         </td>

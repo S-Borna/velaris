@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +57,31 @@ interface Message {
     content: string;
     timestamp: string;
     type: "text" | "connection_request" | "voice_note" | "inmail";
+    read: boolean;
+}
+
+interface ConversationApi {
+    leadId: string;
+    leadName: string;
+    leadTitle: string | null;
+    leadCompany: string | null;
+    linkedinAccountId: string | null;
+    linkedinAccountName: string | null;
+    lastMessage: string;
+    lastMessageDirection: string | null;
+    lastMessageAt: string;
+    unreadCount: number;
+    isStarred: boolean;
+    campaignName: string | null;
+}
+
+interface MessageApi {
+    id: string;
+    leadId: string | null;
+    direction: string;
+    content: string;
+    sentAt: string;
+    messageType: string;
     read: boolean;
 }
 
@@ -134,6 +159,28 @@ const SENTIMENT_STYLES: Record<string, { bg: string; text: string; label: string
     negative: { bg: "bg-red-500/15 border-red-500/30", text: "text-red-300", label: "Negative" },
 };
 
+function toRelativeTime(isoDate: string): string {
+    const timestamp = new Date(isoDate).getTime();
+    const now = Date.now();
+    const diff = Math.max(0, now - timestamp);
+    const MINUTE = 60 * 1000;
+    const HOUR = 60 * MINUTE;
+    const DAY = 24 * HOUR;
+
+    if (diff < MINUTE) return "Just now";
+    if (diff < HOUR) return `${Math.floor(diff / MINUTE)} min ago`;
+    if (diff < DAY) return `${Math.floor(diff / HOUR)} hour${Math.floor(diff / HOUR) > 1 ? "s" : ""} ago`;
+    if (diff < DAY * 2) return "Yesterday";
+    return `${Math.floor(diff / DAY)} days ago`;
+}
+
+function initials(name: string): string {
+    const tokens = name.split(" ").filter(Boolean);
+    if (tokens.length === 0) return "??";
+    if (tokens.length === 1) return tokens[0].slice(0, 2).toUpperCase();
+    return `${tokens[0][0]}${tokens[1][0]}`.toUpperCase();
+}
+
 /* ─── Component ─────────────────────────────────────── */
 
 /**
@@ -149,11 +196,134 @@ export default function UniboxPage() {
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
     const [isAiDrafted, setIsAiDrafted] = useState(false);
     const [starredIds, setStarredIds] = useState<Set<string>>(new Set(["conv6"]));
+    const [archivedIds, setArchivedIds] = useState<Set<string>>(new Set());
+    const [conversations, setConversations] = useState<Conversation[]>(MOCK_CONVERSATIONS);
+    const [threadMessages, setThreadMessages] = useState<Message[]>([]);
+
+    useEffect(() => {
+        async function loadConversations(): Promise<void> {
+            const params = new URLSearchParams();
+            if (searchQuery.trim()) {
+                params.set("search", searchQuery.trim());
+            }
+            if (filterTab === "unread") {
+                params.set("unreadOnly", "true");
+            }
+            if (filterTab === "starred") {
+                params.set("starredOnly", "true");
+            }
+
+            const response = await fetch(`/api/messages?${params.toString()}`, { cache: "no-store" });
+            if (!response.ok) {
+                return;
+            }
+
+            const payload: unknown = await response.json();
+            const parsed = payload as { data?: ConversationApi[] };
+            const rows = parsed.data ?? [];
+
+            if (rows.length === 0) {
+                setConversations([]);
+                return;
+            }
+
+            const mapped = rows.map((row) => {
+                const convId = row.leadId;
+                const isStarred = row.isStarred || starredIds.has(convId);
+
+                return {
+                    id: convId,
+                    leadName: row.leadName,
+                    leadTitle: row.leadTitle ?? "—",
+                    leadCompany: row.leadCompany ?? "Unknown",
+                    leadAvatar: initials(row.leadName),
+                    linkedinAccountName: row.linkedinAccountName ?? "Workspace",
+                    linkedinAccountAvatar: initials(row.linkedinAccountName ?? "WS"),
+                    lastMessage: row.lastMessage,
+                    lastMessageAt: toRelativeTime(row.lastMessageAt),
+                    lastMessageDirection: row.lastMessageDirection === "sent" ? "sent" : "received",
+                    status: archivedIds.has(convId)
+                        ? "archived"
+                        : row.unreadCount > 0
+                            ? "unread"
+                            : isStarred
+                                ? "starred"
+                                : "read",
+                    unreadCount: row.unreadCount,
+                    sentiment: null,
+                    campaignName: row.campaignName,
+                    note: null,
+                } as Conversation;
+            });
+
+            setConversations(mapped);
+
+            if (!selectedConversation && mapped.length > 0) {
+                setSelectedConversation(mapped[0].id);
+            }
+        }
+
+        void loadConversations();
+    }, [archivedIds, filterTab, searchQuery, selectedConversation, starredIds]);
+
+    useEffect(() => {
+        async function loadThread(): Promise<void> {
+            if (!selectedConversation) {
+                setThreadMessages([]);
+                return;
+            }
+
+            const response = await fetch(`/api/messages?leadId=${selectedConversation}&page=1&pageSize=100`, {
+                cache: "no-store",
+            });
+
+            if (!response.ok) {
+                setThreadMessages(MOCK_MESSAGES[selectedConversation] ?? []);
+                return;
+            }
+
+            const payload: unknown = await response.json();
+            const parsed = payload as { data?: { data?: MessageApi[] } };
+            const rows = parsed.data?.data ?? [];
+
+            if (rows.length === 0) {
+                setThreadMessages(MOCK_MESSAGES[selectedConversation] ?? []);
+                return;
+            }
+
+            setThreadMessages(
+                rows.map((msg) => ({
+                    id: msg.id,
+                    conversationId: msg.leadId ?? selectedConversation,
+                    direction: msg.direction === "sent" ? "sent" : "received",
+                    content: msg.content,
+                    timestamp: new Date(msg.sentAt).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                    }),
+                    type: msg.messageType === "voice_note" || msg.messageType === "connection_request" || msg.messageType === "inmail"
+                        ? msg.messageType
+                        : "text",
+                    read: msg.read,
+                })),
+            );
+
+            await fetch("/api/messages", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ leadId: selectedConversation }),
+            });
+        }
+
+        void loadThread();
+    }, [selectedConversation]);
 
     /* ─── Filtered conversations ────────────────────── */
 
     const filtered = useMemo(() => {
-        let result = [...MOCK_CONVERSATIONS];
+        let result = [...conversations];
 
         if (filterTab === "unread") {
             result = result.filter((c) => c.unreadCount > 0);
@@ -176,9 +346,16 @@ export default function UniboxPage() {
         return result;
     }, [filterTab, searchQuery, starredIds]);
 
-    const activeConvo = MOCK_CONVERSATIONS.find((c) => c.id === selectedConversation);
-    const messages = selectedConversation ? MOCK_MESSAGES[selectedConversation] ?? [] : [];
+    const activeConvo = conversations.find((c) => c.id === selectedConversation);
+    const messages = selectedConversation ? threadMessages : [];
     const suggestions = selectedConversation ? AI_SUGGESTIONS[selectedConversation] ?? [] : [];
+
+    const tabCounts = useMemo(() => ({
+        all: conversations.length,
+        unread: conversations.filter((c) => c.unreadCount > 0).length,
+        starred: conversations.filter((c) => starredIds.has(c.id)).length,
+        archived: archivedIds.size,
+    }), [archivedIds.size, conversations, starredIds]);
 
     function toggleStar(id: string) {
         setStarredIds((prev) => {
@@ -190,6 +367,37 @@ export default function UniboxPage() {
             }
             return next;
         });
+
+        const lastMessage = [...threadMessages].reverse().find((msg) => msg.conversationId === id);
+        if (lastMessage) {
+            void fetch(`/api/messages/${lastMessage.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "toggleStar" }),
+            });
+        }
+    }
+
+    async function sendMessage(): Promise<void> {
+        if (!messageInput.trim() || !activeConvo) {
+            return;
+        }
+
+        await fetch("/api/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                leadId: activeConvo.id,
+                direction: "sent",
+                content: messageInput.trim(),
+                messageType: "text",
+            }),
+        });
+
+        setMessageInput("");
+        setIsAiDrafted(false);
+        setShowAiSuggestions(false);
+        setSelectedConversation(activeConvo.id);
     }
 
     return (
@@ -221,9 +429,9 @@ export default function UniboxPage() {
                                 }`}
                         >
                             {tab.label}
-                            {tab.count > 0 && (
+                            {(tabCounts[tab.value] ?? 0) > 0 && (
                                 <span className="ml-1 text-[10px] text-[var(--text-muted)]">
-                                    ({tab.count})
+                                    ({tabCounts[tab.value]})
                                 </span>
                             )}
                         </button>
@@ -393,6 +601,10 @@ export default function UniboxPage() {
                                 size="sm"
                                 className="h-8 w-8 p-0 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                                 title="Archive"
+                                onClick={() => {
+                                    if (!activeConvo) return;
+                                    setArchivedIds((prev) => new Set(prev).add(activeConvo.id));
+                                }}
                             >
                                 <Archive className="h-4 w-4" />
                             </Button>
@@ -401,6 +613,13 @@ export default function UniboxPage() {
                                 size="sm"
                                 className="h-8 w-8 p-0 text-[var(--text-muted)] hover:text-red-400"
                                 title="Delete"
+                                onClick={() => {
+                                    if (!activeConvo) return;
+                                    setConversations((prev) => prev.filter((c) => c.id !== activeConvo.id));
+                                    if (selectedConversation === activeConvo.id) {
+                                        setSelectedConversation("");
+                                    }
+                                }}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
@@ -593,6 +812,7 @@ export default function UniboxPage() {
                             </div>
                             <Button
                                 disabled={!messageInput.trim()}
+                                onClick={() => void sendMessage()}
                                 className="h-10 w-10 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 p-0 text-white hover:from-purple-500 hover:to-purple-400 disabled:opacity-40"
                             >
                                 <Send className="h-4 w-4" />
