@@ -13,6 +13,7 @@ import {
   EnrichByNameSchema,
 } from "@/lib/enrichment/pdl-client";
 import { authOptions } from "@/lib/auth/options";
+import { getWorkspaceIdFromSession } from "@/lib/db/auth-helpers";
 import { aiLimiter, getRateLimitKey } from "@/lib/security/rate-limiter";
 
 /* ─── Constants ─────────────────────────────────────── */
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Too many requests. Please wait." }, { status: 429 });
     }
 
+    // Resolve workspace for usage tracking / audit
+    const workspaceId = await getWorkspaceIdFromSession(session);
+
     const body: unknown = await request.json();
 
     if (typeof body !== "object" || body === null) {
@@ -58,18 +62,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (bodyObj.linkedinUrl) {
       const input = EnrichByLinkedinSchema.parse(body);
       const result = await enrichByLinkedin(input);
+      console.info(`[Lead Enrich] workspace=${workspaceId} method=linkedin`);
       return NextResponse.json(result, { status: 200 });
     }
 
     if (bodyObj.email) {
       const input = EnrichByEmailSchema.parse(body);
       const result = await enrichByEmail(input);
+      console.info(`[Lead Enrich] workspace=${workspaceId} method=email`);
       return NextResponse.json(result, { status: 200 });
     }
 
     if (bodyObj.firstName && bodyObj.lastName) {
       const input = EnrichByNameSchema.parse(body);
       const result = await enrichByName(input);
+      console.info(`[Lead Enrich] workspace=${workspaceId} method=name`);
       return NextResponse.json(result, { status: 200 });
     }
 

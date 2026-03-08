@@ -9,6 +9,7 @@ import {
 } from "@/lib/ai/content-generator";
 import { ZodError, ZodIssue } from "zod";
 import { authOptions } from "@/lib/auth/options";
+import { getWorkspaceIdFromSession } from "@/lib/db/auth-helpers";
 import { aiLimiter, getRateLimitKey } from "@/lib/security/rate-limiter";
 
 /* ─── Constants ─────────────────────────────────────── */
@@ -38,9 +39,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
     }
 
+    // Resolve workspace for usage tracking / audit
+    const workspaceId = await getWorkspaceIdFromSession(session);
+
     const body: unknown = await request.json();
     const input = ContentInputSchema.parse(body);
     const result = await generateContent(input);
+
+    console.info(`[Content Generate] workspace=${workspaceId} tokens=${result.tokensUsed}`);
 
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {

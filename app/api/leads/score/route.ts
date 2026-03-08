@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { scoreLeadsForIcp, IcpScoringInputSchema } from "@/lib/ai/icp-scorer";
 import { ZodError, ZodIssue } from "zod";
 import { authOptions } from "@/lib/auth/options";
+import { getWorkspaceIdFromSession } from "@/lib/db/auth-helpers";
 import { aiLimiter, getRateLimitKey } from "@/lib/security/rate-limiter";
 
 /* ─── Constants ─────────────────────────────────────── */
@@ -37,7 +38,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const body: unknown = await request.json();
     const input = IcpScoringInputSchema.parse(body);
+
+    // Resolve workspace for usage tracking / audit
+    const workspaceId = await getWorkspaceIdFromSession(session);
     const result = await scoreLeadsForIcp(input);
+    console.info(`[ICP Score] workspace=${workspaceId} leads=${input.leads.length} tokens=${result.tokensUsed}`);
 
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {

@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { ZodError, ZodIssue } from "zod";
 import { searchLeads, LeadSearchSchema } from "@/lib/enrichment/pdl-client";
 import { authOptions } from "@/lib/auth/options";
+import { getWorkspaceIdFromSession } from "@/lib/db/auth-helpers";
 import { aiLimiter, getRateLimitKey } from "@/lib/security/rate-limiter";
 
 /* ─── Constants ─────────────────────────────────────── */
@@ -36,7 +37,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const body: unknown = await request.json();
     const input = LeadSearchSchema.parse(body);
+
+    // Resolve workspace for usage tracking / audit
+    const workspaceId = await getWorkspaceIdFromSession(session);
     const result = await searchLeads(input);
+    console.info(`[Lead Search] workspace=${workspaceId} total=${result.total}`);
 
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {

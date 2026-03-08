@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword } from "@/lib/auth/options";
 import { z } from "zod";
+import { authLimiter, getRateLimitKey } from "@/lib/security/rate-limiter";
 
 const signupSchema = z.object({
     fullName: z.string().min(1, "Full name is required"),
@@ -11,6 +12,7 @@ const signupSchema = z.object({
 });
 
 const DEFAULT_WORKSPACE_NAME = "Personal Workspace";
+const INTERNAL_ERROR_MESSAGE = "Account creation failed. Please try again.";
 
 /**
  * POST /api/auth/signup — register a new user with email/password.
@@ -18,6 +20,14 @@ const DEFAULT_WORKSPACE_NAME = "Personal Workspace";
  */
 export async function POST(request: Request): Promise<NextResponse> {
     try {
+        const limitResult = authLimiter.check(getRateLimitKey(request));
+        if (!limitResult.allowed) {
+            return NextResponse.json(
+                { error: "Too many signup attempts. Please wait." },
+                { status: 429 },
+            );
+        }
+
         const body = await request.json();
         const parsed = signupSchema.safeParse(body);
 
@@ -72,8 +82,7 @@ export async function POST(request: Request): Promise<NextResponse> {
             { status: 201 },
         );
     } catch (error) {
-        const message =
-            error instanceof Error ? error.message : "Internal server error";
-        return NextResponse.json({ error: message }, { status: 500 });
+        console.error("[Signup API]", error instanceof Error ? error.message : "Unknown error");
+        return NextResponse.json({ error: INTERNAL_ERROR_MESSAGE }, { status: 500 });
     }
 }
