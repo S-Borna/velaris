@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
     X,
 } from "lucide-react";
 import { EmptyState } from "@/components/common/empty-state";
+import { toast } from "sonner";
 
 /* ─── Types ─────────────────────────────────────────── */
 
@@ -50,6 +51,18 @@ interface ExtractedLead {
     hasPhone: boolean;
     linkedinUrl: string;
     qualityScore: number;
+}
+
+interface DbLeadItem {
+    id: string;
+    fullName: string | null;
+    title: string | null;
+    company: string | null;
+    location: string | null;
+    email: string | null;
+    phone: string | null;
+    linkedinUrl: string | null;
+    icpScore: number | null;
 }
 
 /* ─── Mock data ─────────────────────────────────────── */
@@ -93,8 +106,214 @@ export default function LeadExtractorPage() {
     const [extractUrl, setExtractUrl] = useState("");
     const [maxLeads, setMaxLeads] = useState("500");
     const [selectedJob, setSelectedJob] = useState<string | null>("e1");
+    const [jobs, setJobs] = useState<ExtractionJob[]>(MOCK_JOBS);
+    const [extracted, setExtracted] = useState<ExtractedLead[]>(MOCK_EXTRACTED);
+    const [isStarting, setIsStarting] = useState(false);
 
-    const activeJob = MOCK_JOBS.find((j) => j.id === selectedJob);
+    const activeJob = jobs.find((j) => j.id === selectedJob);
+
+    useEffect(() => {
+        async function loadExtractorLeads(): Promise<void> {
+            const response = await fetch("/api/leads?page=1&pageSize=100&source=extractor", {
+                cache: "no-store",
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const payload: unknown = await response.json();
+            const parsed = payload as { data?: { data?: DbLeadItem[]; total?: number } };
+            const leads = parsed.data?.data ?? [];
+            const total = parsed.data?.total ?? 0;
+
+            if (total === 0 || leads.length === 0) {
+                return;
+            }
+
+            const mappedLeads: ExtractedLead[] = leads.map((lead) => ({
+                id: lead.id,
+                name: lead.fullName ?? "Unknown Lead",
+                title: lead.title ?? "—",
+                company: lead.company ?? "Unknown Company",
+                location: lead.location ?? "Unknown",
+                hasEmail: Boolean(lead.email),
+                hasPhone: Boolean(lead.phone),
+                linkedinUrl: lead.linkedinUrl ?? "#",
+                qualityScore: lead.icpScore ?? 0,
+            }));
+
+            const totalWithEmail = mappedLeads.filter((lead) => lead.hasEmail).length;
+            const totalWithPhone = mappedLeads.filter((lead) => lead.hasPhone).length;
+
+            setExtracted(mappedLeads);
+            setJobs([
+                {
+                    id: "db-extracted",
+                    source: "search",
+                    query: "Persisted extractor results",
+                    status: "completed",
+                    leadsFound: total,
+                    leadsEnriched: total,
+                    startedAt: "From database",
+                    completedAt: "Loaded",
+                    duplicatesSkipped: 0,
+                },
+                ...MOCK_JOBS,
+            ]);
+            setSelectedJob("db-extracted");
+
+            if (totalWithEmail === 0 && totalWithPhone === 0) {
+                toast.info("Extractor leads loaded from DB");
+            }
+        }
+
+        void loadExtractorLeads();
+    }, []);
+
+    async function startExtraction(): Promise<void> {
+        if (!extractUrl.trim()) {
+            toast.error("Enter a search URL or query first");
+            return;
+        }
+
+        const parsedMaxLeads = Number.parseInt(maxLeads, 10);
+        const safeMaxLeads = Number.isNaN(parsedMaxLeads)
+            ? 25
+            : Math.min(100, Math.max(1, parsedMaxLeads));
+
+        setIsStarting(true);
+        const tempJobId = `job-${Date.now()}`;
+
+        setJobs((prev) => [
+            {
+                id: tempJobId,
+                source: selectedSource,
+                query: extractUrl,
+                status: "running",
+                leadsFound: 0,
+                leadsEnriched: 0,
+                startedAt: "Just now",
+                completedAt: null,
+                duplicatesSkipped: 0,
+            },
+            ...prev,
+        ]);
+        setSelectedJob(tempJobId);
+
+        const isLinkedinUrl = /^https?:\/\/.+/i.test(extractUrl.trim());
+
+        try {
+            let extractedLeads: Array<Record<string, unknown>> = [];
+
+            if (isLinkedinUrl) {
+                const extractResponse = await fetch("/api/linkedin/extract", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        account: { accountName: "Workspace Extractor" },
+                        searchUrl: extractUrl.trim(),
+                        maxLeads: safeMaxLeads,
+                    }),
+                });
+
+                if (!extractResponse.ok) {
+                    throw new Error("LinkedIn extraction failed");
+                }
+
+                const payload: unknown = await extractResponse.json();
+                const parsed = payload as { leads?: Array<Record<string, unknown>> };
+                extractedLeads = parsed.leads ?? [];
+            } else {
+                const searchResponse = await fetch("/api/leads/search", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query: extractUrl.trim(), size: safeMaxLeads }),
+                });
+
+                if (!searchResponse.ok) {
+                    throw new Error("Lead search failed");
+                }
+
+                const payload: unknown = await searchResponse.json();
+                const parsed = payload as { leads?: Array<Record<string, unknown>> };
+                extractedLeads = parsed.leads ?? [];
+            }
+
+            const importRows = extractedLeads.map((lead) => {
+                const fullNameRaw = (lead.fullName ?? lead.full_name ?? "") as string;
+                const [firstName = "", ...rest] = fullNameRaw.split(" ");
+                const lastName = rest.join(" ");
+
+                return {
+                    firstName: (lead.firstName as string | undefined) ?? firstName,
+                    lastName: (lead.lastName as string | undefined) ?? lastName,
+                    fullName: fullNameRaw || `${firstName} ${lastName}`.trim(),
+                    linkedinUrl: (lead.linkedinUrl as string | undefined) ?? (lead.linkedin_url as string | undefined),
+                    email: (lead.email as string | undefined) ?? null,
+                    phone: (lead.phone as string | undefined) ?? null,
+                    title: (lead.title as string | undefined) ?? (lead.headline as string | undefined) ?? null,
+                    company: (lead.company as string | undefined) ?? null,
+                    location: (lead.location as string | undefined) ?? null,
+                    avatarUrl: (lead.avatarUrl as string | undefined) ?? null,
+                    source: "extractor",
+                    tags: [],
+                };
+            });
+
+            if (importRows.length > 0) {
+                await fetch("/api/leads/import", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ leads: importRows }),
+                });
+            }
+
+            const mappedLeads: ExtractedLead[] = importRows.map((lead, index) => ({
+                id: `${tempJobId}-${index}`,
+                name: lead.fullName || `${lead.firstName || ""} ${lead.lastName || ""}`.trim() || "Unknown Lead",
+                title: lead.title || "—",
+                company: lead.company || "Unknown Company",
+                location: lead.location || "Unknown",
+                hasEmail: Boolean(lead.email),
+                hasPhone: Boolean(lead.phone),
+                linkedinUrl: lead.linkedinUrl || "#",
+                qualityScore: 80,
+            }));
+
+            setExtracted(mappedLeads);
+            setJobs((prev) =>
+                prev.map((job) =>
+                    job.id === tempJobId
+                        ? {
+                            ...job,
+                            status: "completed",
+                            leadsFound: mappedLeads.length,
+                            leadsEnriched: mappedLeads.length,
+                            completedAt: "Just now",
+                        }
+                        : job,
+                ),
+            );
+            setShowWizard(false);
+            toast.success(`Extraction completed: ${mappedLeads.length} leads`);
+        } catch (_error: unknown) {
+            setJobs((prev) =>
+                prev.map((job) =>
+                    job.id === tempJobId
+                        ? {
+                            ...job,
+                            status: "failed",
+                            completedAt: "Failed",
+                        }
+                        : job,
+                ),
+            );
+            toast.error("Extraction failed");
+        } finally {
+            setIsStarting(false);
+        }
+    }
 
     return (
         <div className="flex h-full flex-1 flex-col">
@@ -221,9 +440,9 @@ export default function LeadExtractorPage() {
                                 >
                                     Cancel
                                 </Button>
-                                <Button className="h-10 gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                                <Button onClick={() => void startExtraction()} disabled={isStarting} className="h-10 gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
                                     <Sparkles className="h-3.5 w-3.5" />
-                                    Start Extraction
+                                    {isStarting ? "Extracting..." : "Start Extraction"}
                                 </Button>
                             </div>
                         </div>
@@ -240,9 +459,9 @@ export default function LeadExtractorPage() {
                             Extraction History
                         </h3>
                     </div>
-                    {MOCK_JOBS.length === 0 ? (
+                    {jobs.length === 0 ? (
                         <EmptyState icon={Search} title="No extractions yet" description="Start by extracting leads from LinkedIn searches or posts." />
-                    ) : MOCK_JOBS.map((job) => {
+                    ) : jobs.map((job) => {
                         const statusCfg = STATUS_STYLES[job.status];
                         const StatusIcon = statusCfg.icon;
                         return (
@@ -435,7 +654,7 @@ export default function LeadExtractorPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {MOCK_EXTRACTED.map((lead) => (
+                                        {extracted.map((lead) => (
                                             <tr
                                                 key={lead.id}
                                                 className="border-b border-white/4 hover:bg-white/3 transition-colors"

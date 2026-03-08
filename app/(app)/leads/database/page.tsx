@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,31 @@ import type { LeadFilters } from "@/components/leads/lead-filters";
 import { LeadTable } from "@/components/leads/lead-table";
 import type { LeadRow, SortKey } from "@/components/leads/lead-table";
 import { EmptyState } from "@/components/common/empty-state";
+
+interface LeadApiRow {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    fullName: string | null;
+    title: string | null;
+    company: string | null;
+    location: string | null;
+    email: string | null;
+    phone: string | null;
+    linkedinUrl: string | null;
+    avatarUrl: string | null;
+    icpScore: number | null;
+    source: "csv" | "extractor" | "database" | "inbound" | null;
+    tags: string[];
+}
+
+const SORT_MAP: Record<SortKey, string> = {
+    name: "fullName",
+    title: "title",
+    company: "company",
+    location: "location",
+    icpScore: "icpScore",
+};
 
 /* ─── Mock data ─────────────────────────────────────── */
 
@@ -69,63 +94,72 @@ export default function LeadDatabasePage() {
     const [sortKey, setSortKey] = useState<SortKey>("icpScore");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
     const [lookalikeSource, setLookalikeSource] = useState<string | null>(null);
+    const [leadRows, setLeadRows] = useState<LeadRow[]>([]);
+    const [totalLeads, setTotalLeads] = useState(0);
 
-    /* ─── Filter + sort logic ───────────────────────── */
+    useEffect(() => {
+        async function loadLeads(): Promise<void> {
+            const params = new URLSearchParams({
+                page: String(page),
+                pageSize: String(PAGE_SIZE),
+                sortBy: SORT_MAP[sortKey],
+                sortOrder: sortDir,
+            });
 
-    const filtered = useMemo(() => {
-        let result = [...MOCK_LEADS];
-
-        // Text search
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            result = result.filter(
-                (l) =>
-                    l.firstName.toLowerCase().includes(q) ||
-                    l.lastName.toLowerCase().includes(q) ||
-                    l.title.toLowerCase().includes(q) ||
-                    l.company.toLowerCase().includes(q) ||
-                    l.location.toLowerCase().includes(q)
-            );
-        }
-
-        // Location filter
-        if (filters.locations.length > 0) {
-            result = result.filter((l) =>
-                filters.locations.some((loc) =>
-                    l.location.toLowerCase().includes(loc.toLowerCase())
-                )
-            );
-        }
-
-        // Sort
-        result.sort((a, b) => {
-            let cmp = 0;
-            switch (sortKey) {
-                case "name":
-                    cmp = `${a.firstName} ${a.lastName}`.localeCompare(
-                        `${b.firstName} ${b.lastName}`
-                    );
-                    break;
-                case "title":
-                    cmp = a.title.localeCompare(b.title);
-                    break;
-                case "company":
-                    cmp = a.company.localeCompare(b.company);
-                    break;
-                case "location":
-                    cmp = a.location.localeCompare(b.location);
-                    break;
-                case "icpScore":
-                    cmp = (a.icpScore ?? 0) - (b.icpScore ?? 0);
-                    break;
+            if (searchQuery.trim()) {
+                params.set("search", searchQuery.trim());
             }
-            return sortDir === "asc" ? cmp : -cmp;
-        });
+            if (filters.locations[0]) {
+                params.set("location", filters.locations[0]);
+            }
+            if (filters.industries[0]) {
+                params.set("industry", filters.industries[0]);
+            }
+            if (filters.companySizes[0]) {
+                params.set("companySize", filters.companySizes[0]);
+            }
 
-        return result;
-    }, [searchQuery, filters, sortKey, sortDir]);
+            const response = await fetch(`/api/leads?${params.toString()}`, { cache: "no-store" });
+            if (!response.ok) {
+                setLeadRows([]);
+                setTotalLeads(0);
+                return;
+            }
 
-    const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+            const payload: unknown = await response.json();
+            const parsed = payload as { data?: { data?: LeadApiRow[]; total?: number } };
+            const rows = parsed.data?.data ?? [];
+            const total = parsed.data?.total ?? 0;
+
+            const mappedRows: LeadRow[] = rows.map((lead) => {
+                const [fullFirstName = "", fullLastName = ""] = (lead.fullName ?? "").split(" ");
+
+                return {
+                    id: lead.id,
+                    firstName: lead.firstName ?? (fullFirstName || "Unknown"),
+                    lastName: lead.lastName ?? (fullLastName || "Lead"),
+                    title: lead.title ?? "—",
+                    company: lead.company ?? "Unknown Company",
+                    companyLogo: (lead.company ?? "U")[0] ?? "U",
+                    location: lead.location ?? "Unknown",
+                    email: lead.email,
+                    phone: lead.phone,
+                    linkedinUrl: lead.linkedinUrl ?? "#",
+                    avatarUrl: lead.avatarUrl ?? "",
+                    icpScore: lead.icpScore,
+                    source: lead.source ?? "database",
+                    tags: lead.tags ?? [],
+                };
+            });
+
+            setLeadRows(mappedRows);
+            setTotalLeads(total);
+        }
+
+        void loadLeads();
+    }, [filters.companySizes, filters.industries, filters.locations, page, searchQuery, sortDir, sortKey]);
+
+    const paged = leadRows;
 
     function handleSort(key: SortKey) {
         if (key === sortKey) {
@@ -339,14 +373,14 @@ export default function LeadDatabasePage() {
                         leads={paged}
                         page={page}
                         pageSize={PAGE_SIZE}
-                        total={filtered.length > MOCK_LEADS.length ? filtered.length : TOTAL_LEADS}
+                        total={totalLeads}
                         onPageChange={setPage}
                         sortKey={sortKey}
                         sortDir={sortDir}
                         onSort={handleSort}
                         onFindSimilar={(lead) => {
                             setLookalikeSource(`${lead.firstName} ${lead.lastName}`);
-                            setSearchQuery("");
+                            setSearchQuery(`${lead.firstName} ${lead.lastName}`);
                             setPage(1);
                         }}
                     />
