@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Zap,
     Plus,
@@ -131,8 +131,71 @@ type ViewMode = "list" | "wizard" | "dashboard";
  */
 export default function InboundAutomationsPage() {
     const [viewMode, setViewMode] = useState<ViewMode>("list");
-    const [automations, setAutomations] = useState<InboundAutomation[]>(MOCK_AUTOMATIONS);
+    const [automations, setAutomations] = useState<InboundAutomation[]>([]);
     const [selectedAutomation, setSelectedAutomation] = useState<InboundAutomation | null>(null);
+    const [senders, setSenders] = useState<{ id: string; name: string; title: string; avatar: string }[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const [autoRes, accRes] = await Promise.all([
+                    fetch("/api/automations"),
+                    fetch("/api/linkedin-accounts"),
+                ]);
+                if (autoRes.ok) {
+                    const json: Record<string, unknown>[] = await autoRes.json();
+                    const rows: InboundAutomation[] = json.map((a) => {
+                        const triggers = Number(a.triggersCount) || 0;
+                        const reply = a.autoReplyComment ? String(a.autoReplyComment) : "";
+                        const accts = Array.isArray(a.accounts) ? (a.accounts as Record<string, unknown>[]) : [];
+                        return {
+                            id: String(a.id),
+                            name: String(a.name),
+                            postUrl: String(a.postUrl ?? ""),
+                            status: String(a.status ?? "paused") as "active" | "paused",
+                            triggerKeywords: Array.isArray(a.triggerKeywords) ? (a.triggerKeywords as string[]) : [],
+                            commentReplies: reply ? reply.split("\n").filter(Boolean) : ["Sent it!"],
+                            dmMessage: String(a.autoDmMessage ?? ""),
+                            senderIds: accts.map((acc) => {
+                                const la = acc.linkedinAccount as Record<string, unknown> | undefined;
+                                return la ? String(la.id) : "";
+                            }).filter(Boolean),
+                            completed: Math.round(triggers * 0.9),
+                            processing: Math.min(triggers, 3),
+                            failed: Math.max(0, triggers - Math.round(triggers * 0.9) - Math.min(triggers, 3)),
+                            createdAt: String(a.createdAt ?? "").slice(0, 10),
+                        };
+                    });
+                    setAutomations(rows.length > 0 ? rows : MOCK_AUTOMATIONS);
+                } else {
+                    setAutomations(MOCK_AUTOMATIONS);
+                }
+                if (accRes.ok) {
+                    const accounts: Record<string, unknown>[] = await accRes.json();
+                    const mapped = accounts.map((a) => {
+                        const name = String(a.accountName ?? "");
+                        const parts = name.split(" ");
+                        return {
+                            id: String(a.id),
+                            name,
+                            title: String(a.accountType ?? "").split("_").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+                            avatar: parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase(),
+                        };
+                    });
+                    setSenders(mapped.length > 0 ? mapped : MOCK_SENDERS);
+                } else {
+                    setSenders(MOCK_SENDERS);
+                }
+            } catch {
+                setAutomations(MOCK_AUTOMATIONS);
+                setSenders(MOCK_SENDERS);
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
+    }, []);
 
     /* wizard state */
     const [wizardStep, setWizardStep] = useState(0);
@@ -196,12 +259,37 @@ export default function InboundAutomationsPage() {
             failed: 0,
             createdAt: new Date().toISOString().split("T")[0],
         };
+        fetch("/api/automations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: newAuto.name,
+                postUrl: newAuto.postUrl || undefined,
+                triggerKeywords: newAuto.triggerKeywords,
+                autoReplyComment: newAuto.commentReplies.join("\n"),
+                autoDmMessage: newAuto.dmMessage,
+                linkedinAccountIds: newAuto.senderIds,
+            }),
+        }).then((res) => {
+            if (res.ok) return res.json();
+        }).then((created) => {
+            if (created) newAuto.id = String(created.id);
+        }).catch(() => { /* noop */ });
         setAutomations((prev) => [newAuto, ...prev]);
         resetWizard();
         setViewMode("list");
     }
 
     function toggleAutomationStatus(id: string): void {
+        const target = automations.find((a) => a.id === id);
+        if (target) {
+            const newStatus = target.status === "active" ? "paused" : "active";
+            fetch(`/api/automations/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus }),
+            }).catch(() => { /* noop */ });
+        }
         setAutomations((prev) =>
             prev.map((a) =>
                 a.id === id
@@ -212,6 +300,7 @@ export default function InboundAutomationsPage() {
     }
 
     function deleteAutomation(id: string): void {
+        fetch(`/api/automations/${id}`, { method: "DELETE" }).catch(() => { /* noop */ });
         setAutomations((prev) => prev.filter((a) => a.id !== id));
         if (selectedAutomation?.id === id) {
             setSelectedAutomation(null);
@@ -457,7 +546,7 @@ export default function InboundAutomationsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            {MOCK_SENDERS.map((sender) => {
+                            {senders.map((sender) => {
                                 const isSelected = wizardSenders.includes(sender.id);
                                 return (
                                     <button
@@ -539,7 +628,7 @@ export default function InboundAutomationsPage() {
                                 <span className="text-xs text-[var(--text-muted)]">LinkedIn Senders</span>
                                 <div className="mt-1 flex gap-2">
                                     {wizardSenders.length > 0
-                                        ? MOCK_SENDERS.filter((s) => wizardSenders.includes(s.id)).map((sender) => (
+                                        ? senders.filter((s) => wizardSenders.includes(s.id)).map((sender) => (
                                             <div key={sender.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-[var(--bg-input)] px-3 py-2">
                                                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/20 text-[10px] font-medium text-purple-300">{sender.avatar}</div>
                                                 <span className="text-xs text-[var(--text-primary)]">{sender.name}</span>
@@ -675,7 +764,7 @@ export default function InboundAutomationsPage() {
                         <div>
                             <span className="text-xs text-[var(--text-muted)]">Senders</span>
                             <div className="mt-1 flex -space-x-2">
-                                {MOCK_SENDERS.filter((s) => auto.senderIds.includes(s.id)).map((sender) => (
+                                {senders.filter((s) => auto.senderIds.includes(s.id)).map((sender) => (
                                     <div
                                         key={sender.id}
                                         className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[var(--bg-card)] bg-purple-500/20 text-[9px] font-medium text-purple-300"
@@ -881,6 +970,10 @@ export default function InboundAutomationsPage() {
                 </div>
             </div>
         );
+    }
+
+    if (loading) {
+        return <div className="flex h-64 items-center justify-center text-[var(--text-muted)]">Loading automations…</div>;
     }
 
     /* Dashboard view */

@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -148,12 +148,93 @@ export default function UniboxPage() {
     const [showAiSuggestions, setShowAiSuggestions] = useState(false);
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
     const [isAiDrafted, setIsAiDrafted] = useState(false);
-    const [starredIds, setStarredIds] = useState<Set<string>>(new Set(["conv6"]));
+    const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({});
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchConvos() {
+            try {
+                const res = await fetch("/api/messages");
+                if (!res.ok) throw new Error("Failed to fetch");
+                const json: Record<string, unknown>[] = await res.json();
+                const convos: Conversation[] = json.map((c) => {
+                    const name = String(c.leadName ?? "");
+                    const parts = name.split(" ");
+                    const initials = parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
+                    const acctName = String(c.linkedinAccountName ?? "");
+                    const acctParts = acctName.split(" ");
+                    const acctInitials = acctParts.length >= 2 ? (acctParts[0][0] + acctParts[1][0]).toUpperCase() : acctName.slice(0, 2).toUpperCase();
+                    const unread = Number(c.unreadCount) || 0;
+                    const msgAt = c.lastMessageAt ? new Date(String(c.lastMessageAt)) : new Date();
+                    const diff = Date.now() - msgAt.getTime();
+                    const mins = Math.floor(diff / 60000);
+                    let when = "Just now";
+                    if (mins >= 2880) when = `${Math.floor(mins / 1440)} days ago`;
+                    else if (mins >= 1440) when = "Yesterday";
+                    else if (mins >= 60) when = `${Math.floor(mins / 60)}h ago`;
+                    else if (mins >= 1) when = `${mins} min ago`;
+                    return {
+                        id: String(c.leadId),
+                        leadName: name,
+                        leadTitle: String(c.leadTitle ?? ""),
+                        leadCompany: String(c.leadCompany ?? ""),
+                        leadAvatar: initials,
+                        linkedinAccountName: acctName,
+                        linkedinAccountAvatar: acctInitials,
+                        lastMessage: String(c.lastMessage ?? ""),
+                        lastMessageAt: when,
+                        lastMessageDirection: String(c.lastMessageDirection ?? "received") as "sent" | "received",
+                        status: (unread > 0 ? "unread" : "read") as ConversationStatus,
+                        unreadCount: unread,
+                        sentiment: null as SentimentTag,
+                        campaignName: c.campaignName ? String(c.campaignName) : null,
+                        note: null,
+                    };
+                });
+                setConversations(convos);
+                if (convos.length > 0) setSelectedConversation(convos[0].id);
+            } catch {
+                setConversations(MOCK_CONVERSATIONS);
+                setSelectedConversation("conv1");
+                setStarredIds(new Set(["conv6"]));
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchConvos();
+    }, []);
+
+    const fetchMessages = useCallback(async (convoId: string) => {
+        if (messagesMap[convoId]) return;
+        try {
+            const res = await fetch(`/api/messages?leadId=${convoId}`);
+            if (!res.ok) return;
+            const json: Record<string, unknown>[] = await res.json();
+            const msgs: Message[] = json.map((m) => ({
+                id: String(m.id),
+                conversationId: convoId,
+                direction: String(m.direction ?? "received") as "sent" | "received",
+                content: String(m.content ?? ""),
+                timestamp: m.sentAt ? new Date(String(m.sentAt)).toLocaleString() : "",
+                type: String(m.messageType ?? "text") as Message["type"],
+                read: Boolean(m.read),
+            }));
+            setMessagesMap((prev) => ({ ...prev, [convoId]: msgs }));
+        } catch {
+            /* keep existing */
+        }
+    }, [messagesMap]);
+
+    useEffect(() => {
+        if (selectedConversation) fetchMessages(selectedConversation);
+    }, [selectedConversation, fetchMessages]);
 
     /* ─── Filtered conversations ────────────────────── */
 
     const filtered = useMemo(() => {
-        let result = [...MOCK_CONVERSATIONS];
+        let result = [...conversations];
 
         if (filterTab === "unread") {
             result = result.filter((c) => c.unreadCount > 0);
@@ -174,10 +255,10 @@ export default function UniboxPage() {
         }
 
         return result;
-    }, [filterTab, searchQuery, starredIds]);
+    }, [conversations, filterTab, searchQuery, starredIds]);
 
-    const activeConvo = MOCK_CONVERSATIONS.find((c) => c.id === selectedConversation);
-    const messages = selectedConversation ? MOCK_MESSAGES[selectedConversation] ?? [] : [];
+    const activeConvo = conversations.find((c) => c.id === selectedConversation);
+    const messages = selectedConversation ? messagesMap[selectedConversation] ?? [] : [];
     const suggestions = selectedConversation ? AI_SUGGESTIONS[selectedConversation] ?? [] : [];
 
     function toggleStar(id: string) {
@@ -191,6 +272,23 @@ export default function UniboxPage() {
             return next;
         });
     }
+
+    async function handleSendMessage() {
+        if (!messageInput.trim() || !activeConvo) return;
+        try {
+            await fetch("/api/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ leadId: activeConvo.id, content: messageInput.trim(), direction: "sent", messageType: "text" }),
+            });
+            const newMsg: Message = { id: `msg-${Date.now()}`, conversationId: activeConvo.id, direction: "sent", content: messageInput.trim(), timestamp: new Date().toLocaleString(), type: "text", read: true };
+            setMessagesMap((prev) => ({ ...prev, [activeConvo.id]: [...(prev[activeConvo.id] ?? []), newMsg] }));
+            setMessageInput("");
+            setIsAiDrafted(false);
+        } catch { /* noop */ }
+    }
+
+    if (loading) return <div className="flex h-96 items-center justify-center"><p className="text-sm text-[var(--text-muted)]">Loading inbox…</p></div>;
 
     return (
         <div className="flex h-full flex-1 overflow-hidden">
@@ -593,6 +691,7 @@ export default function UniboxPage() {
                             </div>
                             <Button
                                 disabled={!messageInput.trim()}
+                                onClick={handleSendMessage}
                                 className="h-10 w-10 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 p-0 text-white hover:from-purple-500 hover:to-purple-400 disabled:opacity-40"
                             >
                                 <Send className="h-4 w-4" />

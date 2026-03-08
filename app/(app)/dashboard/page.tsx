@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -143,14 +143,74 @@ export default function DashboardPage() {
     const [campaignFilter, setCampaignFilter] = useState<CampaignFilter>("All Campaigns");
     const [sortKey, setSortKey] = useState<SortKey>("sent");
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+    const [analyticsRows, setAnalyticsRows] = useState<AccountAnalyticsRow[]>([]);
+    const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>([]);
+    const [kpiDeltas, setKpiDeltas] = useState<string[]>(KPI_DELTAS);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const [statsRes, activityRes, campaignsRes] = await Promise.all([
+                    fetch("/api/dashboard/stats"),
+                    fetch("/api/dashboard/activity?pageSize=10"),
+                    fetch("/api/campaigns?pageSize=100"),
+                ]);
+                if (statsRes.ok) {
+                    const stats = await statsRes.json();
+                    const pc = stats.percentChanges ?? {};
+                    setKpiDeltas([
+                        `${Number(pc.connectionsSent) >= 0 ? "+" : ""}${Number(pc.connectionsSent ?? 0).toFixed(1)}%`,
+                        `${Number(pc.connectionsAccepted) >= 0 ? "+" : ""}${Number(pc.connectionsAccepted ?? 0).toFixed(1)}%`,
+                        `${Number(pc.messagesSent) >= 0 ? "+" : ""}${Number(pc.messagesSent ?? 0).toFixed(1)}%`,
+                        `${Number(pc.repliesReceived) >= 0 ? "+" : ""}${Number(pc.repliesReceived ?? 0).toFixed(1)}%`,
+                        `${Number(pc.opportunitiesValue) >= 0 ? "+" : ""}${Number(pc.opportunitiesValue ?? 0).toFixed(1)}%`,
+                    ]);
+                }
+                if (activityRes.ok) {
+                    const actData = await activityRes.json();
+                    const events: ActivityEvent[] = (actData.data ?? []).map((a: Record<string, unknown>, i: number) => {
+                        const diffMs = Date.now() - new Date(String(a.createdAt)).getTime();
+                        const mins = Math.floor(diffMs / 60000);
+                        let when = "Just now";
+                        if (mins >= 1440) when = `${Math.floor(mins / 1440)}d ago`;
+                        else if (mins >= 60) when = `${Math.floor(mins / 60)}h ago`;
+                        else if (mins >= 1) when = `${mins} min ago`;
+                        return { id: String(a.id ?? i), actor: "System", action: String(a.action ?? ""), when };
+                    });
+                    setActivityFeed(events.length > 0 ? events : REALTIME_FEED);
+                }
+                if (campaignsRes.ok) {
+                    const campData = await campaignsRes.json();
+                    const rows: AccountAnalyticsRow[] = (campData.data ?? []).slice(0, 6).map((c: Record<string, unknown>) => ({
+                        account: String(c.name).split(" ").slice(0, 2).join(" "),
+                        campaign: String(c.name) as CampaignFilter,
+                        sent: Number(c.connectionsSent) || 0,
+                        accepted: Number(c.connectionsAccepted) || 0,
+                        messages: Number(c.messagesSent) || 0,
+                        replies: Number(c.repliesReceived) || 0,
+                        opportunitiesValue: Number(c.opportunitiesValue) || 0,
+                    }));
+                    if (rows.length > 0) setAnalyticsRows(rows);
+                    else setAnalyticsRows(ACCOUNT_ANALYTICS);
+                }
+            } catch {
+                setAnalyticsRows(ACCOUNT_ANALYTICS);
+                setActivityFeed(REALTIME_FEED);
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
+    }, []);
 
     const filteredRows = useMemo(() => {
         if (campaignFilter === "All Campaigns") {
-            return ACCOUNT_ANALYTICS;
+            return analyticsRows;
         }
 
-        return ACCOUNT_ANALYTICS.filter((row) => row.campaign === campaignFilter);
-    }, [campaignFilter]);
+        return analyticsRows.filter((row) => row.campaign === campaignFilter);
+    }, [campaignFilter, analyticsRows]);
 
     const sortedRows = useMemo(() => sortRows(filteredRows, sortKey, sortOrder), [filteredRows, sortKey, sortOrder]);
 
@@ -190,6 +250,8 @@ export default function DashboardPage() {
     }
 
     const campaigns: CampaignFilter[] = ["All Campaigns", "Agency Owners", "SaaS Founders", "Inbound Campaign"];
+
+    if (loading) return <div className="flex h-96 items-center justify-center"><p className="text-sm text-[var(--text-muted)]">Loading dashboard…</p></div>;
 
     return (
         <div className="space-y-6">
@@ -233,7 +295,7 @@ export default function DashboardPage() {
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Connections Sent</p>
                         <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{totals.sent.toLocaleString()}</p>
-                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{KPI_DELTAS[0]}</p>
+                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{kpiDeltas[0]}</p>
                     </div>
                 </div>
 
@@ -242,7 +304,7 @@ export default function DashboardPage() {
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Connections Accepted</p>
                         <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{totals.accepted.toLocaleString()}</p>
-                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{KPI_DELTAS[1]}</p>
+                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{kpiDeltas[1]}</p>
                     </div>
                 </div>
 
@@ -251,7 +313,7 @@ export default function DashboardPage() {
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Messages Sent</p>
                         <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{totals.messages.toLocaleString()}</p>
-                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{KPI_DELTAS[2]}</p>
+                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{kpiDeltas[2]}</p>
                     </div>
                 </div>
 
@@ -260,7 +322,7 @@ export default function DashboardPage() {
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Reply Received</p>
                         <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{totals.replies.toLocaleString()}</p>
-                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{KPI_DELTAS[3]}</p>
+                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{kpiDeltas[3]}</p>
                     </div>
                 </div>
 
@@ -269,7 +331,7 @@ export default function DashboardPage() {
                     <div className="p-4">
                         <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">Opportunities</p>
                         <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{formatCurrency(totals.opportunities)}</p>
-                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{KPI_DELTAS[4]}</p>
+                        <p className="mt-2 inline-flex items-center text-xs text-green-400"><ArrowUpRight className="mr-1 h-3 w-3" />{kpiDeltas[4]}</p>
                     </div>
                 </div>
             </div>
@@ -327,7 +389,7 @@ export default function DashboardPage() {
                             <Badge className="border border-green-500/30 bg-green-500/10 text-green-300">Live</Badge>
                         </div>
                         <ul className="space-y-3 text-sm">
-                            {REALTIME_FEED.map((event) => (
+                            {activityFeed.map((event) => (
                                 <li key={event.id} className="rounded-lg border border-white/8 bg-white/[0.02] p-3 transition-colors duration-150 hover:bg-white/[0.04]">
                                     <p className="text-[var(--text-primary)]"><span className="font-medium">{event.actor}</span> {event.action}</p>
                                     <p className="mt-1 text-xs text-[var(--text-secondary)]">{event.when}</p>

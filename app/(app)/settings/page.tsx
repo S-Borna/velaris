@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
     User,
@@ -94,6 +94,7 @@ const NOTIFICATION_SETTINGS: NotificationSetting[] = [
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState<TabKey>("profile");
     const [saved, setSaved] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     /* Profile form state */
     const [fullName, setFullName] = useState("Said Borna");
@@ -103,14 +104,67 @@ export default function SettingsPage() {
 
     /* Workspace state */
     const [workspaceName, setWorkspaceName] = useState("Personal Workspace");
+    const [memberCount, setMemberCount] = useState(1);
+    const [linkedinAccountCount, setLinkedinAccountCount] = useState(3);
+    const [workspacePlan, setWorkspacePlan] = useState("solo");
 
     /* Notification state */
     const [notifications, setNotifications] = useState(NOTIFICATION_SETTINGS);
 
-    function handleSave(): void {
+    /* ── Fetch profile + workspace from API ──────────── */
+    useEffect(() => {
+        async function load(): Promise<void> {
+            try {
+                const [profileRes, workspaceRes] = await Promise.all([
+                    fetch("/api/settings/profile"),
+                    fetch("/api/settings/workspace"),
+                ]);
+                if (profileRes.ok) {
+                    const p = await profileRes.json() as {
+                        id: string; email: string; fullName: string | null; avatarUrl: string | null;
+                    };
+                    if (p.fullName) setFullName(p.fullName);
+                    if (p.email) setEmail(p.email);
+                }
+                if (workspaceRes.ok) {
+                    const w = await workspaceRes.json() as {
+                        id: string; name: string; plan: string; memberCount: number; linkedinAccountCount: number;
+                    };
+                    setWorkspaceName(w.name);
+                    setMemberCount(w.memberCount);
+                    setLinkedinAccountCount(w.linkedinAccountCount);
+                    setWorkspacePlan(w.plan);
+                }
+            } catch {
+                /* keep defaults */
+            } finally {
+                setLoading(false);
+            }
+        }
+        void load();
+    }, []);
+
+    async function handleSave(): Promise<void> {
         setSaved(true);
-        toast.success("Settings saved successfully");
-        setTimeout(() => setSaved(false), 2000);
+        try {
+            await Promise.all([
+                fetch("/api/settings/profile", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ fullName }),
+                }),
+                fetch("/api/settings/workspace", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: workspaceName }),
+                }),
+            ]);
+            toast.success("Settings saved successfully");
+        } catch {
+            toast.error("Failed to save settings");
+        } finally {
+            setTimeout(() => setSaved(false), 2000);
+        }
     }
 
     function toggleNotification(id: string, channel: "email" | "push"): void {
@@ -119,6 +173,10 @@ export default function SettingsPage() {
                 n.id === id ? { ...n, [channel]: !n[channel] } : n,
             ),
         );
+    }
+
+    if (loading) {
+        return <div className="flex h-64 items-center justify-center text-[var(--text-muted)]">Loading settings…</div>;
     }
 
     return (
@@ -169,7 +227,7 @@ export default function SettingsPage() {
                             {/* Avatar */}
                             <div className="flex items-center gap-4">
                                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-500/20 text-xl font-bold text-purple-300">
-                                    SB
+                                    {fullName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "??"}
                                 </div>
                                 <div>
                                     <Button variant="outline" size="sm" className="gap-1.5 border-white/10 text-[var(--text-secondary)]">
@@ -232,12 +290,12 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="rounded-lg border border-white/6 bg-white/[0.02] p-4 text-center">
                                     <Globe className="mx-auto mb-2 h-5 w-5 text-blue-400" />
-                                    <p className="text-lg font-bold text-[var(--text-primary)]">3</p>
+                                    <p className="text-lg font-bold text-[var(--text-primary)]">{linkedinAccountCount}</p>
                                     <p className="text-xs text-[var(--text-muted)]">LinkedIn Accounts</p>
                                 </div>
                                 <div className="rounded-lg border border-white/6 bg-white/[0.02] p-4 text-center">
                                     <Users className="mx-auto mb-2 h-5 w-5 text-green-400" />
-                                    <p className="text-lg font-bold text-[var(--text-primary)]">1</p>
+                                    <p className="text-lg font-bold text-[var(--text-primary)]">{memberCount}</p>
                                     <p className="text-xs text-[var(--text-muted)]">Team Members</p>
                                 </div>
                             </div>
@@ -266,11 +324,11 @@ export default function SettingsPage() {
                                                     ACTIVE
                                                 </Badge>
                                             </div>
-                                            <p className="text-xs text-[var(--text-muted)]">1 member · Created Feb 2026</p>
+                                            <p className="text-xs text-[var(--text-muted)]">{memberCount} member{memberCount !== 1 ? "s" : ""} · {workspacePlan} plan</p>
                                         </div>
                                     </div>
                                     <Badge variant="outline" className="border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs">
-                                        3 Senders
+                                        {linkedinAccountCount} Sender{linkedinAccountCount !== 1 ? "s" : ""}
                                     </Badge>
                                 </div>
                             </div>
@@ -306,8 +364,8 @@ export default function SettingsPage() {
                                     <div className="flex items-center gap-3">
                                         <Crown className="h-5 w-5 text-purple-400" />
                                         <div>
-                                            <p className="text-sm font-medium text-[var(--text-primary)]">Solo Plan</p>
-                                            <p className="text-xs text-[var(--text-secondary)]">$49/month · Renews March 15, 2026</p>
+                                            <p className="text-sm font-medium text-[var(--text-primary)]">{workspacePlan.charAt(0).toUpperCase() + workspacePlan.slice(1)} Plan</p>
+                                            <p className="text-xs text-[var(--text-secondary)]">${PLANS.find((p) => p.id === workspacePlan)?.price ?? 0}/month</p>
                                         </div>
                                     </div>
                                     <Badge variant="outline" className="border-green-500/30 bg-green-500/15 text-green-300">
@@ -318,10 +376,12 @@ export default function SettingsPage() {
 
                             {/* Plan cards */}
                             <div className="grid grid-cols-4 gap-4">
-                                {PLANS.map((plan) => (
+                                {PLANS.map((plan) => {
+                                    const isCurrent = plan.id === workspacePlan;
+                                    return (
                                     <div
                                         key={plan.id}
-                                        className={`rounded-xl border p-5 transition ${plan.current
+                                        className={`rounded-xl border p-5 transition ${isCurrent
                                             ? "border-purple-500/40 bg-purple-500/5"
                                             : plan.popular
                                                 ? "border-purple-500/20 bg-[var(--bg-card)]"
@@ -347,18 +407,19 @@ export default function SettingsPage() {
                                             ))}
                                         </ul>
                                         <Button
-                                            variant={plan.current ? "outline" : "default"}
+                                            variant={isCurrent ? "outline" : "default"}
                                             size="sm"
-                                            className={`mt-4 w-full ${plan.current
+                                            className={`mt-4 w-full ${isCurrent
                                                 ? "border-purple-500/30 text-purple-300"
                                                 : "bg-gradient-to-r from-purple-500 to-purple-600 text-white"
                                                 }`}
-                                            disabled={plan.current}
+                                            disabled={isCurrent}
                                         >
-                                            {plan.current ? "Current Plan" : "Upgrade"}
+                                            {isCurrent ? "Current Plan" : "Upgrade"}
                                         </Button>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Payment method */}

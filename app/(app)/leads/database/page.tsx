@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,11 +69,47 @@ export default function LeadDatabasePage() {
     const [sortKey, setSortKey] = useState<SortKey>("icpScore");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
     const [lookalikeSource, setLookalikeSource] = useState<string | null>(null);
+    const [leads, setLeads] = useState<LeadRow[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [totalFromApi, setTotalFromApi] = useState(TOTAL_LEADS);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const res = await fetch("/api/leads?pageSize=200");
+                if (!res.ok) throw new Error("Failed to fetch");
+                const json = await res.json();
+                setTotalFromApi(json.total ?? TOTAL_LEADS);
+                const rows: LeadRow[] = (json.data ?? []).map((l: Record<string, unknown>) => ({
+                    id: String(l.id),
+                    firstName: String(l.firstName ?? ""),
+                    lastName: String(l.lastName ?? ""),
+                    title: String(l.title ?? ""),
+                    company: String(l.company ?? ""),
+                    companyLogo: String(l.company ?? "?").charAt(0),
+                    location: String(l.location ?? ""),
+                    email: l.email ? String(l.email) : null,
+                    phone: l.phone ? String(l.phone) : null,
+                    linkedinUrl: String(l.linkedinUrl ?? "#"),
+                    avatarUrl: l.avatarUrl ? String(l.avatarUrl) : "",
+                    icpScore: l.icpScore != null ? Number(l.icpScore) : null,
+                    source: String(l.source ?? "database") as LeadRow["source"],
+                    tags: Array.isArray(l.tags) ? (l.tags as string[]) : [],
+                }));
+                setLeads(rows);
+            } catch {
+                setLeads(MOCK_LEADS);
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
+    }, []);
 
     /* ─── Filter + sort logic ───────────────────────── */
 
     const filtered = useMemo(() => {
-        let result = [...MOCK_LEADS];
+        let result = [...leads];
 
         // Text search
         if (searchQuery) {
@@ -123,7 +159,7 @@ export default function LeadDatabasePage() {
         });
 
         return result;
-    }, [searchQuery, filters, sortKey, sortDir]);
+    }, [leads, searchQuery, filters, sortKey, sortDir]);
 
     const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -136,6 +172,8 @@ export default function LeadDatabasePage() {
         }
         setPage(1);
     }
+
+    if (loading) return <div className="flex h-96 items-center justify-center"><p className="text-sm text-[var(--text-muted)]">Loading leads…</p></div>;
 
     return (
         <div className="flex h-full flex-1">
@@ -339,7 +377,7 @@ export default function LeadDatabasePage() {
                         leads={paged}
                         page={page}
                         pageSize={PAGE_SIZE}
-                        total={filtered.length > MOCK_LEADS.length ? filtered.length : TOTAL_LEADS}
+                        total={filtered.length > leads.length ? filtered.length : totalFromApi}
                         onPageChange={setPage}
                         sortKey={sortKey}
                         sortDir={sortDir}

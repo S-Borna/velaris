@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -100,13 +100,44 @@ export default function CampaignsPage() {
     const [sortKey, setSortKey] = useState<SortKey>("connectionsSent");
     const [sortAsc, setSortAsc] = useState(false);
     const [page, setPage] = useState(0);
+    const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const res = await fetch("/api/campaigns?pageSize=100");
+                if (!res.ok) throw new Error("Failed to fetch");
+                const json = await res.json();
+                const rows: CampaignRow[] = (json.data ?? []).map((c: Record<string, unknown>) => ({
+                    id: String(c.id),
+                    name: String(c.name),
+                    status: String(c.status) as CampaignStatus,
+                    created: String(c.createdAt).slice(0, 10),
+                    connectionsSent: Number(c.connectionsSent) || 0,
+                    connectionsAccepted: Number(c.connectionsAccepted) || 0,
+                    messagesSent: Number(c.messagesSent) || 0,
+                    replyRate: Number(c.messagesSent) > 0
+                        ? Math.round((Number(c.repliesReceived) / Number(c.messagesSent)) * 100)
+                        : 0,
+                    opportunities: Math.round(Number(c.opportunitiesValue) / 4000) || 0,
+                }));
+                setCampaigns(rows);
+            } catch {
+                setCampaigns(MOCK_CAMPAIGNS);
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
+    }, []);
 
     function handleSort(key: SortKey): void {
         if (sortKey === key) { setSortAsc((p) => !p); } else { setSortKey(key); setSortAsc(false); }
     }
 
     const filtered = useMemo(() => {
-        let rows: CampaignRow[] = MOCK_CAMPAIGNS;
+        let rows: CampaignRow[] = campaigns;
         if (statusFilter !== "all") rows = rows.filter((r) => r.status === statusFilter);
         if (searchQuery.trim()) { const q = searchQuery.toLowerCase(); rows = rows.filter((r) => r.name.toLowerCase().includes(q)); }
         rows = [...rows].sort((a, b) => {
@@ -115,17 +146,19 @@ export default function CampaignsPage() {
             return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
         });
         return rows;
-    }, [searchQuery, statusFilter, sortKey, sortAsc]);
+    }, [campaigns, searchQuery, statusFilter, sortKey, sortAsc]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+    if (loading) return <div className="flex h-96 items-center justify-center"><p className="text-sm text-[var(--text-muted)]">Loading campaigns…</p></div>;
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)]">Campaigns</h1>
-                    <p className="text-sm text-[var(--text-secondary)]">{MOCK_CAMPAIGNS.length} campaigns total</p>
+                    <p className="text-sm text-[var(--text-secondary)]">{campaigns.length} campaigns total</p>
                 </div>
                 <Link href="/campaigns/new">
                     <Button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">

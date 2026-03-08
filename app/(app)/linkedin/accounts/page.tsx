@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Linkedin, Plus } from "lucide-react";
@@ -102,7 +102,62 @@ function HealthBadge({ score }: { score: number }) {
 }
 
 export default function LinkedInAccountsPage() {
-    const [accounts, setAccounts] = useState<LinkedInAccountRow[]>(INITIAL_ACCOUNTS);
+    const [accounts, setAccounts] = useState<LinkedInAccountRow[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const res = await fetch("/api/linkedin-accounts");
+                if (!res.ok) throw new Error("Failed to fetch");
+                const json: Record<string, unknown>[] = await res.json();
+                const TYPE_LABELS: Record<string, string> = { sales_navigator: "Sales Navigator", premium: "Premium", basic: "Basic" };
+                const CONN_ESTIMATES: Record<string, number> = { sales_navigator: 14820, premium: 8240, basic: 3192 };
+                const rows: LinkedInAccountRow[] = json.map((a) => {
+                    const acctType = String(a.accountType ?? "basic");
+                    const status = String(a.status ?? "error");
+                    const msgsUsed = Number(a.dailyMessagesUsed) || 0;
+                    const msgsLimit = Number(a.dailyMessageLimit) || 50;
+                    const hasProxy = Boolean(a.proxyUrl);
+                    const usageRatio = msgsLimit > 0 ? msgsUsed / msgsLimit : 0;
+                    let health = 50;
+                    if (status === "connected") health += 20;
+                    else if (status === "syncing") health += 10;
+                    health += Math.round((1 - usageRatio) * 20);
+                    if (hasProxy) health += 10;
+                    health = Math.min(100, Math.max(0, health));
+                    let lastSync = "Never";
+                    if (status === "syncing") lastSync = "Syncing now";
+                    else if (a.lastSyncAt) {
+                        const diff = Date.now() - new Date(String(a.lastSyncAt)).getTime();
+                        const mins = Math.floor(diff / 60000);
+                        if (mins < 1) lastSync = "Just now";
+                        else if (mins < 60) lastSync = `${mins} min ago`;
+                        else { const hrs = Math.floor(mins / 60); lastSync = hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs / 24)}d ago`; }
+                    }
+                    return {
+                        id: String(a.id),
+                        account: String(a.accountName),
+                        status: (status === "disconnected" ? "error" : status) as AccountStatus,
+                        type: TYPE_LABELS[acctType] ?? acctType,
+                        connections: CONN_ESTIMATES[acctType] ?? 3000,
+                        dailyMessagesUsed: msgsUsed,
+                        dailyMessagesLimit: msgsLimit,
+                        healthScore: health,
+                        lastSync,
+                        warmupEnabled: acctType === "sales_navigator" || status === "syncing",
+                        proxyConfigured: hasProxy,
+                    };
+                });
+                setAccounts(rows);
+            } catch {
+                setAccounts(INITIAL_ACCOUNTS);
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
+    }, []);
 
     const summary = useMemo(() => {
         const healthAverage = Math.round(accounts.reduce((sum, row) => sum + row.healthScore, 0) / accounts.length);
@@ -112,6 +167,8 @@ export default function LinkedInAccountsPage() {
 
         return { healthAverage, connectedCount, warmupCount, proxyCount };
     }, [accounts]);
+
+    if (loading) return <div className="flex h-96 items-center justify-center"><p className="text-sm text-[var(--text-muted)]">Loading accounts…</p></div>;
 
     function toggleWarmup(id: string): void {
         setAccounts((current) =>

@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -147,6 +147,45 @@ export default function ContentAssistantPage() {
     const [brandVoiceSamples, setBrandVoiceSamples] = useState<string[]>(["", "", ""]);
     const [isTrainingVoice, setIsTrainingVoice] = useState(false);
     const [voiceTrained, setVoiceTrained] = useState(false);
+    const [libraryPosts, setLibraryPosts] = useState<LibraryPost[]>([]);
+    const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const res = await fetch("/api/content-posts?pageSize=100");
+                if (!res.ok) throw new Error("Failed to fetch");
+                const json = await res.json();
+                const posts: Record<string, unknown>[] = json.data ?? json;
+                const lib: LibraryPost[] = posts.map((p) => ({
+                    id: String(p.id),
+                    content: String(p.generatedContent ?? p.topic ?? ""),
+                    status: String(p.status ?? "draft") as LibraryPost["status"],
+                    scheduledAt: p.scheduledAt ? String(p.scheduledAt) : null,
+                    postedAt: p.postedAt ? String(p.postedAt) : null,
+                    impressions: null,
+                    reactions: null,
+                    comments: null,
+                    createdAt: String(p.createdAt ?? "").slice(0, 10),
+                }));
+                const sched: ScheduledPost[] = posts
+                    .filter((p) => String(p.status) === "scheduled")
+                    .map((p) => ({
+                        id: String(p.id),
+                        content: String(p.generatedContent ?? p.topic ?? ""),
+                        scheduledAt: String(p.scheduledAt ?? ""),
+                        linkedinAccount: "Said Borna",
+                        status: "scheduled" as const,
+                    }));
+                setLibraryPosts(lib.length > 0 ? lib : MOCK_LIBRARY);
+                setScheduledPosts(sched.length > 0 ? sched : MOCK_SCHEDULED);
+            } catch {
+                setLibraryPosts(MOCK_LIBRARY);
+                setScheduledPosts(MOCK_SCHEDULED);
+            }
+        }
+        load();
+    }, []);
 
     async function handleGenerate() {
         if (!topic.trim() || !audience.trim()) {
@@ -640,7 +679,7 @@ export default function ContentAssistantPage() {
             {activeTab === "library" && (
                 <div className="flex-1 overflow-y-auto p-6">
                     <div className="space-y-4">
-                        {MOCK_LIBRARY.map((post) => (
+                        {libraryPosts.map((post) => (
                             <div
                                 key={post.id}
                                 className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4 hover:border-white/10 transition-colors"
@@ -698,10 +737,10 @@ export default function ContentAssistantPage() {
                         <div>
                             <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
                                 <Clock className="h-4 w-4 text-blue-400" />
-                                Scheduled ({MOCK_SCHEDULED.length})
+                                Scheduled ({scheduledPosts.length})
                             </h3>
                             <div className="space-y-3">
-                                {MOCK_SCHEDULED.map((post) => (
+                                {scheduledPosts.map((post) => (
                                     <div
                                         key={post.id}
                                         className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4"
@@ -729,10 +768,10 @@ export default function ContentAssistantPage() {
                         <div>
                             <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-[var(--text-primary)]">
                                 <FileText className="h-4 w-4 text-green-400" />
-                                Recently Posted ({MOCK_LIBRARY.filter((p) => p.status === "posted").length})
+                                Recently Posted ({libraryPosts.filter((p) => p.status === "posted").length})
                             </h3>
                             <div className="space-y-3">
-                                {MOCK_LIBRARY.filter((p) => p.status === "posted").map((post) => (
+                                {libraryPosts.filter((p) => p.status === "posted").map((post) => (
                                     <div
                                         key={post.id}
                                         className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4"
