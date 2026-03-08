@@ -1,12 +1,14 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Copy, FileText, Settings, X } from "lucide-react";
 import { SequenceBuilder } from "@/components/campaigns/sequence-builder";
+import { toast } from "sonner";
 
 type TabKey = "analytics" | "leads" | "sequences" | "schedule" | "accounts";
 
@@ -35,9 +37,87 @@ const SEQUENCE_TEMPLATES: SequenceTemplate[] = [
     { id: "t5", name: "Event-Based Outreach", description: "Leverage shared events or webinars for warm introductions.", steps: ["View Profile", "Send Connection (event note)", "Wait 1d", "Send Message", "Wait 2d", "Voice Note"], replyRate: "30-40%", category: "Events" },
 ];
 
+interface CampaignEditorPayload {
+    id: string;
+    name: string;
+    status: "draft" | "active" | "paused" | "completed" | "archived";
+    scheduleTimezone: string;
+    scheduleStartHour: number;
+    scheduleEndHour: number;
+    scheduleDays: string[];
+}
+
 export default function CampaignCreatePage() {
+    const params = useParams<{ id: string }>();
+    const campaignId = params?.id ?? "";
     const [tab, setTab] = useState<TabKey>("sequences");
     const [showTemplates, setShowTemplates] = useState(false);
+    const [campaign, setCampaign] = useState<CampaignEditorPayload | null>(null);
+
+    useEffect(() => {
+        async function loadCampaign(): Promise<void> {
+            if (!campaignId) {
+                return;
+            }
+
+            const response = await fetch(`/api/campaigns/${campaignId}`, { cache: "no-store" });
+            if (!response.ok) {
+                return;
+            }
+
+            const payload: unknown = await response.json();
+            const parsed = payload as { data?: CampaignEditorPayload };
+            if (parsed.data) {
+                setCampaign(parsed.data);
+            }
+        }
+
+        void loadCampaign();
+    }, [campaignId]);
+
+    async function duplicateCampaignAction(): Promise<void> {
+        if (!campaignId) {
+            return;
+        }
+
+        const response = await fetch(`/api/campaigns/${campaignId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "duplicate" }),
+        });
+
+        if (!response.ok) {
+            toast.error("Failed to duplicate campaign");
+            return;
+        }
+
+        toast.success("Campaign duplicated");
+    }
+
+    async function saveCampaignChanges(): Promise<void> {
+        if (!campaign) {
+            return;
+        }
+
+        const response = await fetch(`/api/campaigns/${campaign.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: campaign.name,
+                scheduleTimezone: campaign.scheduleTimezone,
+                scheduleStartHour: campaign.scheduleStartHour,
+                scheduleEndHour: campaign.scheduleEndHour,
+                scheduleDays: campaign.scheduleDays,
+            }),
+        });
+
+        if (!response.ok) {
+            toast.error("Failed to save campaign");
+            return;
+        }
+
+        toast.success("Campaign changes saved");
+    }
 
     return (
         <div className="space-y-6">
@@ -50,16 +130,16 @@ export default function CampaignCreatePage() {
                         <h1 className="text-2xl font-bold text-[var(--text-primary)]">Edit Campaign</h1>
                         <Badge className="border border-amber-500/30 bg-amber-500/15 text-amber-300">EDITING</Badge>
                     </div>
-                    <p className="text-sm text-[var(--text-secondary)]">Outreach to Agency Owners</p>
+                    <p className="text-sm text-[var(--text-secondary)]">{campaign?.name ?? "Outreach to Agency Owners"}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" onClick={() => setShowTemplates(true)} className="border border-white/10 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
                         <FileText className="mr-2 h-4 w-4" /> Templates
                     </Button>
-                    <Button variant="ghost" className="border border-white/10 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
+                    <Button variant="ghost" onClick={() => void duplicateCampaignAction()} className="border border-white/10 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
                         <Copy className="mr-2 h-4 w-4" /> Duplicate Campaign
                     </Button>
-                    <Button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                    <Button onClick={() => void saveCampaignChanges()} className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
                         <Settings className="mr-2 h-4 w-4" /> Save Changes
                     </Button>
                 </div>

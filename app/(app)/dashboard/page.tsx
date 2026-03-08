@@ -1,14 +1,14 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { ArrowUpRight, ChevronUp, Lightbulb, Share2, Sparkles } from "lucide-react";
 
 type TimeFilter = "1 day" | "1 week" | "1 month";
-type CampaignFilter = "All Campaigns" | "Agency Owners" | "SaaS Founders" | "Inbound Campaign";
+type CampaignFilter = string;
 type SortKey = "sent" | "accepted" | "messages" | "replies" | "opportunitiesValue";
 type SortOrder = "asc" | "desc";
 
@@ -29,12 +29,48 @@ interface ActivityEvent {
     when: string;
 }
 
+interface DashboardStatsPayload {
+    connectionsSent: number;
+    connectionsAccepted: number;
+    messagesSent: number;
+    repliesReceived: number;
+    opportunitiesValue: number;
+}
+
+interface DashboardAccountPayload {
+    accountId: string;
+    accountName: string;
+    connectionsSent: number;
+    connectionsAccepted: number;
+    messagesSent: number;
+    repliesReceived: number;
+    opportunitiesValue: number;
+}
+
+interface CampaignPayload {
+    id: string;
+    name: string;
+}
+
+interface ActivityLogPayload {
+    id: string;
+    action: string;
+    createdAt: string;
+    linkedinAccount: { accountName: string } | null;
+}
+
 const TIME_FILTERS: TimeFilter[] = ["1 day", "1 week", "1 month"];
 
 const TIME_MULTIPLIER: Record<TimeFilter, number> = {
     "1 day": 0.15,
     "1 week": 0.55,
     "1 month": 1,
+};
+
+const API_RANGE_BY_FILTER: Record<TimeFilter, "1d" | "7d" | "30d"> = {
+    "1 day": "1d",
+    "1 week": "7d",
+    "1 month": "30d",
 };
 
 const KPI_DELTAS = ["+8.2%", "+5.4%", "+4.1%", "+2.7%", "+11.0%"];
@@ -103,6 +139,28 @@ function formatCurrency(amount: number): string {
     return `$${(amount / 1000).toFixed(1)}K`;
 }
 
+function formatRelativeTime(isoDate: string): string {
+    const time = new Date(isoDate).getTime();
+    const now = Date.now();
+    const diffMs = Math.max(0, now - time);
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+
+    if (diffMs < minute) return "Just now";
+    if (diffMs < hour) return `${Math.floor(diffMs / minute)} min ago`;
+    if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
+    return `${Math.floor(diffMs / day)}d ago`;
+}
+
+function humanizeAction(action: string): string {
+    if (action === "connection_sent") return "sent a connection request";
+    if (action === "reply_received") return "received a reply";
+    if (action === "message_sent") return "sent a message";
+
+    return action.replaceAll("_", " ");
+}
+
 function sortRows(rows: AccountAnalyticsRow[], key: SortKey, order: SortOrder): AccountAnalyticsRow[] {
     const sorted = [...rows].sort((left, right) => left[key] - right[key]);
     if (order === "desc") {
@@ -143,20 +201,127 @@ export default function DashboardPage() {
     const [campaignFilter, setCampaignFilter] = useState<CampaignFilter>("All Campaigns");
     const [sortKey, setSortKey] = useState<SortKey>("sent");
     const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+    const [dashboardStats, setDashboardStats] = useState<DashboardStatsPayload | null>(null);
+    const [accountRows, setAccountRows] = useState<AccountAnalyticsRow[]>(ACCOUNT_ANALYTICS);
+    const [activityFeed, setActivityFeed] = useState<ActivityEvent[]>(REALTIME_FEED);
+    const [campaignOptions, setCampaignOptions] = useState<CampaignPayload[]>([]);
+
+    useEffect(() => {
+        async function loadCampaigns(): Promise<void> {
+            try {
+                const response = await fetch("/api/campaigns?page=1&pageSize=100", { cache: "no-store" });
+                if (!response.ok) return;
+
+                const payload: unknown = await response.json();
+                const parsed = payload as { data?: { data?: CampaignPayload[] } };
+                const campaigns = parsed.data?.data;
+                if (campaigns && campaigns.length > 0) {
+                    setCampaignOptions(campaigns);
+                }
+            } catch (error: unknown) {
+                console.error("Failed to load campaigns", error);
+            }
+        }
+
+        void loadCampaigns();
+    }, []);
+
+    useEffect(() => {
+        async function loadDashboardData(): Promise<void> {
+            try {
+                const selectedCampaign = campaignOptions.find((campaign) => campaign.name === campaignFilter);
+                const query = new URLSearchParams({ range: API_RANGE_BY_FILTER[timeFilter] });
+                if (selectedCampaign) {
+                    query.set("campaignId", selectedCampaign.id);
+                }
+
+                const [statsResponse, activityResponse] = await Promise.all([
+                    fetch(`/api/dashboard/stats?${query.toString()}`, { cache: "no-store" }),
+                    fetch(`/api/dashboard/activity?range=${API_RANGE_BY_FILTER[timeFilter]}&page=1&pageSize=20`, {
+                        cache: "no-store",
+                    }),
+                ]);
+
+                if (statsResponse.ok) {
+                    const payload: unknown = await statsResponse.json();
+                    const parsed = payload as {
+                        data?: {
+                            stats?: DashboardStatsPayload;
+                            accountAnalytics?: DashboardAccountPayload[];
+                        };
+                    };
+
+                    if (parsed.data?.stats) {
+                        setDashboardStats(parsed.data.stats);
+                    }
+
+                    if (parsed.data?.accountAnalytics && parsed.data.accountAnalytics.length > 0) {
+                        const rows: AccountAnalyticsRow[] = parsed.data.accountAnalytics.map((row) => ({
+                            account: row.accountName,
+                            campaign: "All Campaigns",
+                            sent: row.connectionsSent,
+                            accepted: row.connectionsAccepted,
+                            messages: row.messagesSent,
+                            replies: row.repliesReceived,
+                            opportunitiesValue: row.opportunitiesValue,
+                        }));
+                        setAccountRows(rows);
+                    }
+                }
+
+                if (activityResponse.ok) {
+                    const payload: unknown = await activityResponse.json();
+                    const parsed = payload as {
+                        data?: {
+                            recentActivity?: {
+                                data?: ActivityLogPayload[];
+                            };
+                        };
+                    };
+
+                    const logs = parsed.data?.recentActivity?.data;
+                    if (logs && logs.length > 0) {
+                        const feed = logs.map((entry) => ({
+                            id: entry.id,
+                            actor: entry.linkedinAccount?.accountName ?? "System",
+                            action: humanizeAction(entry.action),
+                            when: formatRelativeTime(entry.createdAt),
+                        }));
+                        setActivityFeed(feed);
+                    }
+                }
+            } catch (error: unknown) {
+                console.error("Failed to load dashboard data", error);
+            }
+        }
+
+        void loadDashboardData();
+    }, [campaignFilter, campaignOptions, timeFilter]);
 
     const filteredRows = useMemo(() => {
         if (campaignFilter === "All Campaigns") {
-            return ACCOUNT_ANALYTICS;
+            return accountRows;
         }
 
-        return ACCOUNT_ANALYTICS.filter((row) => row.campaign === campaignFilter);
-    }, [campaignFilter]);
+        const filtered = accountRows.filter((row) => row.campaign === campaignFilter);
+        return filtered.length > 0 ? filtered : accountRows;
+    }, [campaignFilter, accountRows]);
 
     const sortedRows = useMemo(() => sortRows(filteredRows, sortKey, sortOrder), [filteredRows, sortKey, sortOrder]);
 
-    const multiplier = TIME_MULTIPLIER[timeFilter];
+    const multiplier = dashboardStats ? 1 : TIME_MULTIPLIER[timeFilter];
 
     const totals = useMemo(() => {
+        if (dashboardStats) {
+            return {
+                sent: dashboardStats.connectionsSent,
+                accepted: dashboardStats.connectionsAccepted,
+                messages: dashboardStats.messagesSent,
+                replies: dashboardStats.repliesReceived,
+                opportunities: Math.round(dashboardStats.opportunitiesValue),
+            };
+        }
+
         const sent = filteredRows.reduce((sum, row) => sum + row.sent, 0);
         const accepted = filteredRows.reduce((sum, row) => sum + row.accepted, 0);
         const messages = filteredRows.reduce((sum, row) => sum + row.messages, 0);
@@ -170,7 +335,7 @@ export default function DashboardPage() {
             replies: Math.round(replies * multiplier),
             opportunities: Math.round(opportunities * multiplier),
         };
-    }, [filteredRows, multiplier]);
+    }, [dashboardStats, filteredRows, multiplier]);
 
     const funnel = {
         sent: totals.sent,
@@ -189,7 +354,13 @@ export default function DashboardPage() {
         setSortOrder("desc");
     }
 
-    const campaigns: CampaignFilter[] = ["All Campaigns", "Agency Owners", "SaaS Founders", "Inbound Campaign"];
+    const campaigns: CampaignFilter[] = useMemo(() => {
+        if (campaignOptions.length === 0) {
+            return ["All Campaigns", "Agency Owners", "SaaS Founders", "Inbound Campaign"];
+        }
+
+        return ["All Campaigns", ...campaignOptions.map((campaign) => campaign.name)];
+    }, [campaignOptions]);
 
     return (
         <div className="space-y-6">
@@ -327,7 +498,7 @@ export default function DashboardPage() {
                             <Badge className="border border-green-500/30 bg-green-500/10 text-green-300">Live</Badge>
                         </div>
                         <ul className="space-y-3 text-sm">
-                            {REALTIME_FEED.map((event) => (
+                            {activityFeed.map((event) => (
                                 <li key={event.id} className="rounded-lg border border-white/8 bg-white/[0.02] p-3 transition-colors duration-150 hover:bg-white/[0.04]">
                                     <p className="text-[var(--text-primary)]"><span className="font-medium">{event.actor}</span> {event.action}</p>
                                     <p className="mt-1 text-xs text-[var(--text-secondary)]">{event.when}</p>

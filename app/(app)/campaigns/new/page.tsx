@@ -1,11 +1,12 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { ArrowLeft, ArrowRight, Check, FileText, Linkedin, Users, Calendar, Workflow } from "lucide-react";
+import { toast } from "sonner";
 
 const STEPS = [
     { key: "setup", label: "Setup", icon: FileText },
@@ -29,6 +30,12 @@ const MOCK_ACCOUNTS = [
     { id: "a3", name: "Ezra Kaplan", type: "Premium" },
 ];
 
+interface LinkedinAccountApi {
+    id: string;
+    accountName: string;
+    accountType: string;
+}
+
 export default function NewCampaignPage() {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
@@ -38,10 +45,34 @@ export default function NewCampaignPage() {
     const [timezone, setTimezone] = useState("Europe/Stockholm");
     const [startHour, setStartHour] = useState("09:00");
     const [endHour, setEndHour] = useState("17:00");
+    const [accounts, setAccounts] = useState(MOCK_ACCOUNTS);
+    const [creating, setCreating] = useState(false);
 
     const step = STEPS[currentStep];
     const isFirst = currentStep === 0;
     const isLast = currentStep === STEPS.length - 1;
+
+    useEffect(() => {
+        async function loadAccounts(): Promise<void> {
+            const response = await fetch("/api/linkedin-accounts", { cache: "no-store" });
+            if (!response.ok) {
+                return;
+            }
+
+            const payload: unknown = await response.json();
+            const parsed = payload as { data?: LinkedinAccountApi[] };
+            const apiAccounts = parsed.data ?? [];
+            if (apiAccounts.length > 0) {
+                setAccounts(apiAccounts.map((account) => ({
+                    id: account.id,
+                    name: account.accountName,
+                    type: account.accountType.replaceAll("_", " "),
+                })));
+            }
+        }
+
+        void loadAccounts();
+    }, []);
 
     function canProceed(): boolean {
         if (step.key === "setup") return campaignName.trim().length > 0;
@@ -54,7 +85,34 @@ export default function NewCampaignPage() {
         setSelectedAccounts((prev) => prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]);
     }
 
-    function handleFinish(): void {
+    async function handleFinish(): Promise<void> {
+        setCreating(true);
+
+        const start = Number.parseInt(startHour.split(":")[0] ?? "9", 10);
+        const end = Number.parseInt(endHour.split(":")[0] ?? "17", 10);
+
+        const response = await fetch("/api/campaigns", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                name: campaignName,
+                scheduleTimezone: timezone,
+                scheduleStartHour: Number.isNaN(start) ? 9 : start,
+                scheduleEndHour: Number.isNaN(end) ? 17 : end,
+                scheduleDays: ["mon", "tue", "wed", "thu", "fri"],
+            }),
+        });
+
+        setCreating(false);
+
+        if (!response.ok) {
+            toast.error("Failed to create campaign");
+            return;
+        }
+
+        toast.success("Campaign created");
         router.push("/campaigns");
     }
 
@@ -117,7 +175,7 @@ export default function NewCampaignPage() {
                 {step.key === "accounts" && (
                     <div className="space-y-3">
                         <h3 className="text-sm font-medium text-[var(--text-primary)]">Select LinkedIn Accounts</h3>
-                        {MOCK_ACCOUNTS.map((acc) => (
+                        {accounts.map((acc) => (
                             <button key={acc.id} type="button" onClick={() => toggleAccount(acc.id)}
                                 className={`flex w-full items-center gap-4 rounded-lg border p-4 text-left transition ${selectedAccounts.includes(acc.id) ? "border-purple-500/50 bg-purple-500/10" : "border-white/10 bg-[var(--bg-input)] hover:bg-white/5"}`}>
                                 <div className="h-8 w-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs font-medium text-purple-300">{acc.name.charAt(0)}</div>
@@ -178,7 +236,7 @@ export default function NewCampaignPage() {
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back
                 </Button>
                 {isLast ? (
-                    <Button onClick={handleFinish} className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                    <Button onClick={() => void handleFinish()} disabled={creating} className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
                         <Check className="mr-2 h-4 w-4" /> Create Campaign
                     </Button>
                 ) : (

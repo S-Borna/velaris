@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,18 @@ interface CampaignRow {
     messagesSent: number;
     replyRate: number;
     opportunities: number;
+}
+
+interface CampaignApiRow {
+    id: string;
+    name: string;
+    status: CampaignStatus;
+    createdAt: string;
+    connectionsSent: number;
+    connectionsAccepted: number;
+    messagesSent: number;
+    repliesReceived: number;
+    opportunitiesValue: number;
 }
 
 interface CampaignGrade {
@@ -100,22 +112,99 @@ export default function CampaignsPage() {
     const [sortKey, setSortKey] = useState<SortKey>("connectionsSent");
     const [sortAsc, setSortAsc] = useState(false);
     const [page, setPage] = useState(0);
+    const [rows, setRows] = useState<CampaignRow[]>([]);
 
     function handleSort(key: SortKey): void {
         if (sortKey === key) { setSortAsc((p) => !p); } else { setSortKey(key); setSortAsc(false); }
     }
 
+    useEffect(() => {
+        async function loadCampaigns(): Promise<void> {
+            const params = new URLSearchParams({ page: "1", pageSize: "100" });
+            if (statusFilter !== "all") {
+                params.set("status", statusFilter);
+            }
+            if (searchQuery.trim()) {
+                params.set("search", searchQuery.trim());
+            }
+
+            const response = await fetch(`/api/campaigns?${params.toString()}`, { cache: "no-store" });
+            if (!response.ok) {
+                setRows([]);
+                return;
+            }
+
+            const payload: unknown = await response.json();
+            const parsed = payload as { data?: { data?: CampaignApiRow[] } };
+            const campaignData = parsed.data?.data ?? [];
+
+            const mapped: CampaignRow[] = campaignData.map((campaign) => {
+                const replyRate = campaign.messagesSent > 0
+                    ? Math.round((campaign.repliesReceived / campaign.messagesSent) * 100)
+                    : 0;
+
+                return {
+                    id: campaign.id,
+                    name: campaign.name,
+                    status: campaign.status,
+                    created: campaign.createdAt.split("T")[0],
+                    connectionsSent: campaign.connectionsSent,
+                    connectionsAccepted: campaign.connectionsAccepted,
+                    messagesSent: campaign.messagesSent,
+                    replyRate,
+                    opportunities: Math.round(Number(campaign.opportunitiesValue)),
+                };
+            });
+
+            setRows(mapped);
+        }
+
+        void loadCampaigns();
+    }, [searchQuery, statusFilter]);
+
+    useEffect(() => {
+        setPage(0);
+    }, [searchQuery, statusFilter]);
+
+    async function handleDuplicate(row: CampaignRow): Promise<void> {
+        const response = await fetch(`/api/campaigns/${row.id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "duplicate" }),
+        });
+
+        if (response.ok) {
+            toast.success(`"${row.name}" duplicated`);
+            setRows((prev) => [...prev]);
+            return;
+        }
+
+        toast.error("Failed to duplicate campaign");
+    }
+
+    async function handleDelete(row: CampaignRow): Promise<void> {
+        const response = await fetch(`/api/campaigns/${row.id}`, {
+            method: "DELETE",
+        });
+
+        if (response.ok) {
+            setRows((prev) => prev.filter((campaign) => campaign.id !== row.id));
+            toast.success(`"${row.name}" deleted`);
+            return;
+        }
+
+        toast.error("Failed to delete campaign");
+    }
+
     const filtered = useMemo(() => {
-        let rows: CampaignRow[] = MOCK_CAMPAIGNS;
-        if (statusFilter !== "all") rows = rows.filter((r) => r.status === statusFilter);
-        if (searchQuery.trim()) { const q = searchQuery.toLowerCase(); rows = rows.filter((r) => r.name.toLowerCase().includes(q)); }
-        rows = [...rows].sort((a, b) => {
+        let filteredRows: CampaignRow[] = rows;
+        filteredRows = [...filteredRows].sort((a, b) => {
             const av = a[sortKey]; const bv = b[sortKey];
             if (typeof av === "number" && typeof bv === "number") return sortAsc ? av - bv : bv - av;
             return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
         });
-        return rows;
-    }, [searchQuery, statusFilter, sortKey, sortAsc]);
+        return filteredRows;
+    }, [rows, sortKey, sortAsc]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -125,7 +214,7 @@ export default function CampaignsPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-[var(--text-primary)]">Campaigns</h1>
-                    <p className="text-sm text-[var(--text-secondary)]">{MOCK_CAMPAIGNS.length} campaigns total</p>
+                    <p className="text-sm text-[var(--text-secondary)]">{filtered.length} campaigns total</p>
                 </div>
                 <Link href="/campaigns/new">
                     <Button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
@@ -191,8 +280,8 @@ export default function CampaignsPage() {
                                     <td className="px-3 py-3">{row.opportunities}</td>
                                     <td className="px-3 py-3">
                                         <div className="flex items-center gap-1">
-                                            <button type="button" title="Duplicate" onClick={() => toast.success(`"${row.name}" duplicated`)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><Copy className="h-3.5 w-3.5" /></button>
-                                            <button type="button" title="Delete" onClick={() => toast.success(`"${row.name}" deleted`)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-red-500/15 hover:text-red-400 transition"><Trash2 className="h-3.5 w-3.5" /></button>
+                                            <button type="button" title="Duplicate" onClick={() => void handleDuplicate(row)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><Copy className="h-3.5 w-3.5" /></button>
+                                            <button type="button" title="Delete" onClick={() => void handleDelete(row)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-red-500/15 hover:text-red-400 transition"><Trash2 className="h-3.5 w-3.5" /></button>
                                             <button type="button" title="More" className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition"><MoreHorizontal className="h-3.5 w-3.5" /></button>
                                         </div>
                                     </td>
