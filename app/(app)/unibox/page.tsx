@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/common/empty-state";
@@ -121,12 +122,12 @@ const AI_SUGGESTIONS: Record<string, AiSuggestion[]> = {
 
 type FilterTab = "all" | "unread" | "starred" | "archived";
 
-const FILTER_TABS: { value: FilterTab; label: string; count: number }[] = [
-    { value: "all", label: "All", count: 8 },
-    { value: "unread", label: "Unread", count: 2 },
-    { value: "starred", label: "Starred", count: 1 },
-    { value: "archived", label: "Archived", count: 0 },
-];
+const FILTER_TAB_LABELS: Record<FilterTab, string> = {
+    all: "All",
+    unread: "Unread",
+    starred: "Starred",
+    archived: "Archived",
+};
 
 const SENTIMENT_STYLES: Record<string, { bg: string; text: string; label: string }> = {
     positive: { bg: "bg-green-500/15 border-green-500/30", text: "text-green-300", label: "Positive" },
@@ -257,20 +258,63 @@ export default function UniboxPage() {
         return result;
     }, [conversations, filterTab, searchQuery, starredIds]);
 
+    const filterTabs = useMemo(() => {
+        const counts: Record<FilterTab, number> = {
+            all: conversations.length,
+            unread: conversations.filter((c) => c.unreadCount > 0).length,
+            starred: conversations.filter((c) => starredIds.has(c.id)).length,
+            archived: conversations.filter((c) => c.status === "archived").length,
+        };
+        return (Object.keys(FILTER_TAB_LABELS) as FilterTab[]).map((value) => ({
+            value,
+            label: FILTER_TAB_LABELS[value],
+            count: counts[value],
+        }));
+    }, [conversations, starredIds]);
+
     const activeConvo = conversations.find((c) => c.id === selectedConversation);
     const messages = selectedConversation ? messagesMap[selectedConversation] ?? [] : [];
     const suggestions = selectedConversation ? AI_SUGGESTIONS[selectedConversation] ?? [] : [];
 
     function toggleStar(id: string) {
+        const wasStarred = starredIds.has(id);
         setStarredIds((prev) => {
             const next = new Set(prev);
-            if (next.has(id)) {
-                next.delete(id);
-            } else {
-                next.add(id);
-            }
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
             return next;
         });
+        // Persist star toggle — find a message from this conversation
+        const convMessages = messagesMap[id] ?? [];
+        if (convMessages.length > 0) {
+            void fetch(`/api/messages/${convMessages[0].id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ starred: !wasStarred }),
+            });
+        }
+    }
+
+    /** Mark conversation messages as read when selected */
+    function markAsRead(convoId: string): void {
+        const convMessages = messagesMap[convoId] ?? [];
+        const unread = convMessages.filter((m) => !m.read && m.direction === "received");
+        for (const msg of unread) {
+            void fetch(`/api/messages/${msg.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ read: true }),
+            });
+        }
+        // Update local conversation unread count
+        setConversations((prev) =>
+            prev.map((c) => c.id === convoId ? { ...c, unreadCount: 0, status: "read" as ConversationStatus } : c)
+        );
+    }
+
+    function selectConversation(convoId: string): void {
+        setSelectedConversation(convoId);
+        markAsRead(convoId);
     }
 
     async function handleSendMessage() {
@@ -285,7 +329,9 @@ export default function UniboxPage() {
             setMessagesMap((prev) => ({ ...prev, [activeConvo.id]: [...(prev[activeConvo.id] ?? []), newMsg] }));
             setMessageInput("");
             setIsAiDrafted(false);
-        } catch { /* noop */ }
+        } catch {
+            toast.error("Failed to send message");
+        }
     }
 
     if (loading) return <div className="flex h-96 items-center justify-center"><p className="text-sm text-[var(--text-muted)]">Loading inbox…</p></div>;
@@ -309,7 +355,7 @@ export default function UniboxPage() {
 
                 {/* Filter tabs */}
                 <div className="flex border-b border-white/6">
-                    {FILTER_TABS.map((tab) => (
+                    {filterTabs.map((tab) => (
                         <button
                             key={tab.value}
                             onClick={() => setFilterTab(tab.value)}
@@ -348,7 +394,7 @@ export default function UniboxPage() {
                         filtered.map((convo) => (
                             <button
                                 key={convo.id}
-                                onClick={() => setSelectedConversation(convo.id)}
+                                onClick={() => selectConversation(convo.id)}
                                 className={`w-full border-b border-white/4 px-4 py-3 text-left transition-colors ${selectedConversation === convo.id
                                     ? "bg-purple-500/10 border-l-2 border-l-purple-500"
                                     : "hover:bg-white/3"
