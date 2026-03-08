@@ -812,3 +812,44 @@ Phase 10A landing page complete — all 12 sections built (Hero, Trust Logos, Fe
 - HEAD: `b83dd13` on main (6 commits ahead of origin)
 - Build: PASS (tsc clean, zero errors)
 - Status: ROADMAP.md updated to show all 5 points complete
+
+---
+
+## [2026-03-08 00:25] Checkpoint — Live UI Recovery + Backend Wiring
+
+### Completed
+
+- Created clean recovery branch from production baseline: `recovery/live-ui-backend` (based on `origin/main` / `e462fc4`)
+- Cherry-picked backend-safe commits only:
+  - `6b719de` — Block 1 service layer
+  - `cf366d0` — Block 2 CRUD API routes
+  - `3f36687` — demo seed script
+- Implemented live-UI-parity backend wiring without redesign on:
+  - `app/(app)/dashboard/page.tsx`
+  - `app/(app)/campaigns/page.tsx`
+  - `app/(app)/campaigns/new/page.tsx`
+  - `app/(app)/campaigns/[id]/page.tsx`
+  - `app/(app)/campaigns/[id]/create/page.tsx`
+- Created integration commit:
+  - `e25e630` — feat: wire dashboard and campaigns to backend with live UI parity
+
+### Validation
+
+- `npm run build` passed after integration changes
+- Type checks passed for modified pages
+- No push performed
+
+### Current State
+
+- Branch: `recovery/live-ui-backend`
+- Commit chain on recovery branch (new work):
+  - `6b719de`
+  - `cf366d0`
+  - `3f36687`
+  - `e25e630`
+
+### Next Steps
+
+- Block 5: wire `leads/database` + `leads/extractor` to backend with the same live-UI parity rule
+- Block 6: wire `unibox` + `linkedin/accounts`
+- Block 7: wire `content/assistant`, `automations/inbound`, `settings`
