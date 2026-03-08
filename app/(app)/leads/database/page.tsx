@@ -1,7 +1,7 @@
 // Copyright (c) Said Borna. All rights reserved.
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,95 +73,59 @@ export default function LeadDatabasePage() {
     const [loading, setLoading] = useState(true);
     const [totalFromApi, setTotalFromApi] = useState(TOTAL_LEADS);
 
-    useEffect(() => {
-        async function load() {
-            try {
-                const res = await fetch("/api/leads?pageSize=200");
-                if (!res.ok) throw new Error("Failed to fetch");
-                const json = await res.json();
-                setTotalFromApi(json.total ?? TOTAL_LEADS);
-                const rows: LeadRow[] = (json.data ?? []).map((l: Record<string, unknown>) => ({
-                    id: String(l.id),
-                    firstName: String(l.firstName ?? ""),
-                    lastName: String(l.lastName ?? ""),
-                    title: String(l.title ?? ""),
-                    company: String(l.company ?? ""),
-                    companyLogo: String(l.company ?? "?").charAt(0),
-                    location: String(l.location ?? ""),
-                    email: l.email ? String(l.email) : null,
-                    phone: l.phone ? String(l.phone) : null,
-                    linkedinUrl: String(l.linkedinUrl ?? "#"),
-                    avatarUrl: l.avatarUrl ? String(l.avatarUrl) : "",
-                    icpScore: l.icpScore != null ? Number(l.icpScore) : null,
-                    source: String(l.source ?? "database") as LeadRow["source"],
-                    tags: Array.isArray(l.tags) ? (l.tags as string[]) : [],
-                }));
-                setLeads(rows);
-            } catch {
-                setLeads(MOCK_LEADS);
-            } finally {
-                setLoading(false);
-            }
+    /** Map client sort key to API column name */
+    const SORT_MAP: Record<SortKey, string> = {
+        name: "fullName",
+        title: "title",
+        company: "company",
+        location: "location",
+        icpScore: "icpScore",
+    };
+
+    const mapLead = useCallback((l: Record<string, unknown>): LeadRow => ({
+        id: String(l.id),
+        firstName: String(l.firstName ?? ""),
+        lastName: String(l.lastName ?? ""),
+        title: String(l.title ?? ""),
+        company: String(l.company ?? ""),
+        companyLogo: String(l.company ?? "?").charAt(0),
+        location: String(l.location ?? ""),
+        email: l.email ? String(l.email) : null,
+        phone: l.phone ? String(l.phone) : null,
+        linkedinUrl: String(l.linkedinUrl ?? "#"),
+        avatarUrl: l.avatarUrl ? String(l.avatarUrl) : "",
+        icpScore: l.icpScore != null ? Number(l.icpScore) : null,
+        source: String(l.source ?? "database") as LeadRow["source"],
+        tags: Array.isArray(l.tags) ? (l.tags as string[]) : [],
+    }), []);
+
+    const fetchLeads = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.set("page", String(page));
+            params.set("pageSize", String(PAGE_SIZE));
+            if (searchQuery.trim()) params.set("search", searchQuery.trim());
+            params.set("sort", SORT_MAP[sortKey]);
+            params.set("order", sortDir);
+            if (filters.locations.length > 0) params.set("locations", filters.locations.join(","));
+            if (filters.industries.length > 0) params.set("industries", filters.industries.join(","));
+            if (filters.companySizes.length > 0) params.set("companySizes", filters.companySizes.join(","));
+
+            const res = await fetch(`/api/leads?${params.toString()}`);
+            if (!res.ok) throw new Error("Failed to fetch");
+            const json = await res.json() as { data: Record<string, unknown>[]; total?: number };
+            setTotalFromApi(json.total ?? TOTAL_LEADS);
+            setLeads((json.data ?? []).map(mapLead));
+        } catch {
+            setLeads(MOCK_LEADS);
+            setTotalFromApi(TOTAL_LEADS);
+        } finally {
+            setLoading(false);
         }
-        load();
-    }, []);
+    }, [page, searchQuery, sortKey, sortDir, filters, mapLead, SORT_MAP]);
 
-    /* ─── Filter + sort logic ───────────────────────── */
-
-    const filtered = useMemo(() => {
-        let result = [...leads];
-
-        // Text search
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            result = result.filter(
-                (l) =>
-                    l.firstName.toLowerCase().includes(q) ||
-                    l.lastName.toLowerCase().includes(q) ||
-                    l.title.toLowerCase().includes(q) ||
-                    l.company.toLowerCase().includes(q) ||
-                    l.location.toLowerCase().includes(q)
-            );
-        }
-
-        // Location filter
-        if (filters.locations.length > 0) {
-            result = result.filter((l) =>
-                filters.locations.some((loc) =>
-                    l.location.toLowerCase().includes(loc.toLowerCase())
-                )
-            );
-        }
-
-        // Sort
-        result.sort((a, b) => {
-            let cmp = 0;
-            switch (sortKey) {
-                case "name":
-                    cmp = `${a.firstName} ${a.lastName}`.localeCompare(
-                        `${b.firstName} ${b.lastName}`
-                    );
-                    break;
-                case "title":
-                    cmp = a.title.localeCompare(b.title);
-                    break;
-                case "company":
-                    cmp = a.company.localeCompare(b.company);
-                    break;
-                case "location":
-                    cmp = a.location.localeCompare(b.location);
-                    break;
-                case "icpScore":
-                    cmp = (a.icpScore ?? 0) - (b.icpScore ?? 0);
-                    break;
-            }
-            return sortDir === "asc" ? cmp : -cmp;
-        });
-
-        return result;
-    }, [leads, searchQuery, filters, sortKey, sortDir]);
-
-    const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    useEffect(() => { void fetchLeads(); }, [fetchLeads]);
 
     function handleSort(key: SortKey) {
         if (key === sortKey) {
@@ -173,12 +137,32 @@ export default function LeadDatabasePage() {
         setPage(1);
     }
 
+    function handleExport(): void {
+        const header = "First Name,Last Name,Title,Company,Location,Email,Phone,ICP Score";
+        const rows = leads.map((l) =>
+            [l.firstName, l.lastName, l.title, l.company, l.location, l.email ?? "", l.phone ?? "", l.icpScore ?? ""].join(",")
+        );
+        const csv = [header, ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `leads-export-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function handleFilterChange(newFilters: LeadFilters): void {
+        setFilters(newFilters);
+        setPage(1);
+    }
+
     if (loading) return <div className="flex h-96 items-center justify-center"><p className="text-sm text-[var(--text-muted)]">Loading leads…</p></div>;
 
     return (
         <div className="flex h-full flex-1">
             {/* Filter panel */}
-            <LeadFilterPanel filters={filters} onChange={setFilters} />
+            <LeadFilterPanel filters={filters} onChange={handleFilterChange} />
 
             {/* Main content */}
             <div className="flex flex-1 flex-col">
@@ -233,6 +217,7 @@ export default function LeadDatabasePage() {
                         <Button
                             variant="outline"
                             size="sm"
+                            onClick={handleExport}
                             className="h-8 gap-1.5 border-white/10 bg-white/5 text-[var(--text-secondary)] hover:bg-white/10"
                         >
                             <Download className="h-3.5 w-3.5" />
@@ -293,14 +278,14 @@ export default function LeadDatabasePage() {
                 </div>
 
                 {/* Grid view */}
-                {paged.length === 0 ? (
+                {leads.length === 0 ? (
                     <div className="flex-1 overflow-y-auto p-6">
                         <EmptyState icon={Users} title="No leads found" description="No leads found matching your filters. Try adjusting your search criteria." />
                     </div>
                 ) : view === VIEW_GRID ? (
                     <div className="flex-1 overflow-y-auto p-6">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {paged.map((lead) => (
+                            {leads.map((lead) => (
                                 <div
                                     key={lead.id}
                                     className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4 hover:border-white/10 transition-colors"
@@ -374,10 +359,10 @@ export default function LeadDatabasePage() {
                     </div>
                 ) : (
                     <LeadTable
-                        leads={paged}
+                        leads={leads}
                         page={page}
                         pageSize={PAGE_SIZE}
-                        total={filtered.length > leads.length ? filtered.length : totalFromApi}
+                        total={totalFromApi}
                         onPageChange={setPage}
                         sortKey={sortKey}
                         sortDir={sortDir}
