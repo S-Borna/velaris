@@ -56,6 +56,15 @@ const TOTAL_LEADS = 500;
 const VIEW_TABLE = "table" as const;
 const VIEW_GRID = "grid" as const;
 
+/** Map client sort key to API column name. Module-level to avoid re-render loops. */
+const SORT_MAP: Record<SortKey, string> = {
+    name: "fullName",
+    title: "title",
+    company: "company",
+    location: "location",
+    icpScore: "icpScore",
+};
+
 /**
  * Lead Database page — verified contacts with advanced filters.
  * Matches CLAUDE.md spec: search bar, 11 filter categories (83 total filters),
@@ -72,15 +81,6 @@ export default function LeadDatabasePage() {
     const [leads, setLeads] = useState<LeadRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalFromApi, setTotalFromApi] = useState(TOTAL_LEADS);
-
-    /** Map client sort key to API column name */
-    const SORT_MAP: Record<SortKey, string> = {
-        name: "fullName",
-        title: "title",
-        company: "company",
-        location: "location",
-        icpScore: "icpScore",
-    };
 
     const mapLead = useCallback((l: Record<string, unknown>): LeadRow => ({
         id: String(l.id),
@@ -123,7 +123,7 @@ export default function LeadDatabasePage() {
         } finally {
             setLoading(false);
         }
-    }, [page, searchQuery, sortKey, sortDir, filters, mapLead, SORT_MAP]);
+    }, [page, searchQuery, sortKey, sortDir, filters, mapLead]);
 
     useEffect(() => { void fetchLeads(); }, [fetchLeads]);
 
