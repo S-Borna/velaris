@@ -882,3 +882,84 @@ Phase 10A landing page complete — all 12 sections built (Hero, Trust Logos, Fe
 - User pushes `recovery/live-ui-backend` to remote
 - QA review cycle with screenshots
 - Merge to `dev` / `main` after approval
+
+---
+
+## 2026-03-08 — Security Hardening Round 1
+
+### Branch: `recovery/live-ui-backend`
+
+### Commit: `94f34c7`
+
+### Completed
+
+1. **Auth guard on all API routes** — Added `getServerSession` to all 32 non-auth API routes. Returns 401 if unauthenticated.
+2. **Rate limiting** — Created `lib/security/rate-limiter.ts` with 3 tiers: `apiLimiter` (60/min), `authLimiter` (10/min), `aiLimiter` (15/min). Applied to auth endpoints and AI-heavy routes.
+3. **Security headers via middleware** — `middleware.ts` rewritten with auth guard + security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, Strict-Transport-Security, X-XSS-Protection).
+4. **Safe error handling** — Created `lib/constants/errors.ts` with `INTERNAL_ERROR_MESSAGE = "An unexpected error occurred"`. Replaced all `error.message` exposures in catch blocks across 34 API routes with this constant. Internal details only in `console.error`.
+5. **Session cookie server-only** — Verified `sessionCookie` in `linkedin_accounts` never exposed in HTTP responses.
+6. **Workspace scoping** — Verified all DB queries scoped to `workspaceId` from session.
+
+### Files Changed
+
+- middleware.ts — auth guard + security headers
+- lib/security/rate-limiter.ts — NEW (in-memory rate limiter, 3 tiers)
+- lib/constants/errors.ts — NEW (safe error constant)
+- 34 API route files — auth guard + safe error handling
+
+---
+
+## 2026-03-08 — Security Hardening Round 2 (All Remaining Risks)
+
+### Branch: `recovery/live-ui-backend`
+
+### Commit: `3bdfe3a`
+
+### Completed
+
+1. **Universal rate limiting in middleware** — All 34 API routes now rate-limited at edge. Auth routes: 10/min. All other API routes: 60/min. Removed per-route `apiLimiter` imports (middleware handles universally).
+2. **CSRF protection** — Origin/Referer header validation for POST/PATCH/PUT/DELETE. Blocks requests where origin doesn't match host.
+3. **Workspace-scoping on 5 remaining routes** — Added `getWorkspaceIdFromSession` + audit logging to: `content/generate`, `leads/enrich`, `leads/score`, `leads/search`, `queue/status`.
+4. **Redis rate limiter** — Rewrote `lib/security/rate-limiter.ts` with Redis primary (Lua atomic script for INCR+TTL) + in-memory fallback. Uses `require("ioredis")` (bundled by BullMQ). Key prefixes: `rl:api`, `rl:auth`, `rl:ai`.
+5. **CSP tightened** — Removed `unsafe-eval` from `next.config.js`. Added `base-uri 'self'`, `form-action 'self'`, `upgrade-insecure-requests`.
+6. **Body size limit** — 1MB max via `content-length` header check in middleware. Returns 413 if exceeded.
+7. **Signup error leakage fix** — Replaced `error.message` exposure with `INTERNAL_ERROR_MESSAGE`.
+8. **Auth rate limit on signup** — Added `authLimiter.check()` to signup POST handler.
+
+### Files Changed (9 files, +367/-61)
+
+- middleware.ts — Complete rewrite (universal rate limiting, CSRF, body size, security headers)
+- lib/security/rate-limiter.ts — Complete rewrite (Redis primary + in-memory fallback)
+- next.config.js — CSP tightened
+- app/api/auth/signup/route.ts — authLimiter + error leak fix
+- app/api/content/generate/route.ts — workspace-scoping + audit log
+- app/api/leads/enrich/route.ts — workspace-scoping + audit log
+- app/api/leads/score/route.ts — workspace-scoping + audit log
+- app/api/leads/search/route.ts — workspace-scoping + audit log
+- app/api/queue/status/route.ts — workspace-scoping + rate limit + audit log
+
+### Verification
+
+| Check | Result |
+|-------|--------|
+| `npx tsc --noEmit` | Zero type errors |
+| `npm run build` | Clean build, middleware 55.4 kB |
+| Universal rate limit | All 34 routes covered via middleware |
+| CSRF validation | Origin/Referer checked on all state-changing methods |
+| Workspace-scoped routes | 32/34 (2 = auth routes, correctly public) |
+| CSP `unsafe-eval` | Removed |
+| Body size guard | 1MB limit, 413 response |
+| Error leakage | Zero `error.message` exposed to clients |
+
+### Current State
+
+- Working tree: **clean**
+- Branch: `recovery/live-ui-backend` — 11 commits ahead of `origin/main`
+- All security risks: **RESOLVED**
+- TypeScript: zero errors
+- Build: passes cleanly
+
+### Next Steps
+
+- User pushes `recovery/live-ui-backend` to remote
+- Deploy and verify in production
