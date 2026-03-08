@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
     Zap,
     Plus,
@@ -274,7 +275,9 @@ export default function InboundAutomationsPage() {
             if (res.ok) return res.json();
         }).then((created) => {
             if (created) newAuto.id = String(created.id);
-        }).catch(() => { /* noop */ });
+        }).catch(() => {
+            toast.error("Failed to create automation");
+        });
         setAutomations((prev) => [newAuto, ...prev]);
         resetWizard();
         setViewMode("list");
@@ -288,7 +291,9 @@ export default function InboundAutomationsPage() {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: newStatus }),
-            }).catch(() => { /* noop */ });
+            }).catch(() => {
+                toast.error("Failed to update automation status");
+            });
         }
         setAutomations((prev) =>
             prev.map((a) =>
@@ -300,7 +305,9 @@ export default function InboundAutomationsPage() {
     }
 
     function deleteAutomation(id: string): void {
-        fetch(`/api/automations/${id}`, { method: "DELETE" }).catch(() => { /* noop */ });
+        fetch(`/api/automations/${id}`, { method: "DELETE" }).catch(() => {
+            toast.error("Failed to delete automation");
+        });
         setAutomations((prev) => prev.filter((a) => a.id !== id));
         if (selectedAutomation?.id === id) {
             setSelectedAutomation(null);
@@ -321,6 +328,26 @@ export default function InboundAutomationsPage() {
             failed: 0,
             createdAt: new Date().toISOString().split("T")[0],
         };
+        fetch("/api/automations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: dupe.name,
+                postUrl: dupe.postUrl || undefined,
+                triggerKeywords: dupe.triggerKeywords,
+                autoReplyComment: dupe.commentReplies.join("\n"),
+                autoDmMessage: dupe.dmMessage,
+                linkedinAccountIds: dupe.senderIds,
+            }),
+        }).then((res) => {
+            if (res.ok) return res.json();
+        }).then((created) => {
+            if (created) {
+                setAutomations((prev) => prev.map((a) => a.id === dupe.id ? { ...a, id: String(created.id) } : a));
+            }
+        }).catch(() => {
+            toast.error("Failed to duplicate automation");
+        });
         setAutomations((prev) => [dupe, ...prev]);
     }
 

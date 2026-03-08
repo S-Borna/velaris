@@ -240,6 +240,85 @@ export default function ContentAssistantPage() {
         setTimeout(() => setCopied(false), 2000);
     }
 
+    /** Save generated content as a draft post in the library. */
+    async function handleSaveToLibrary(content: string): Promise<void> {
+        try {
+            const res = await fetch("/api/content-posts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    category,
+                    topic,
+                    targetAudience: audience,
+                    language,
+                    tone,
+                    generatedContent: content,
+                    status: "draft",
+                }),
+            });
+            if (!res.ok) throw new Error("Failed to save");
+            const created = await res.json() as { id: string };
+            setLibraryPosts((prev) => [{
+                id: created.id,
+                content,
+                status: "draft" as const,
+                scheduledAt: null,
+                postedAt: null,
+                impressions: null,
+                reactions: null,
+                comments: null,
+                createdAt: new Date().toISOString().slice(0, 10),
+            }, ...prev]);
+            toast.success("Post saved to library");
+        } catch {
+            toast.error("Failed to save post");
+        }
+    }
+
+    /** Schedule a generated post via API. Creates post first, then schedules it. */
+    async function handleSchedulePost(content: string): Promise<void> {
+        try {
+            const scheduledAt = new Date(Date.now() + 86400000).toISOString();
+            const createRes = await fetch("/api/content-posts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    category,
+                    topic,
+                    targetAudience: audience,
+                    language,
+                    tone,
+                    generatedContent: content,
+                    status: "scheduled",
+                    scheduledAt,
+                }),
+            });
+            if (!createRes.ok) throw new Error("Failed to create post");
+            const created = await createRes.json() as { id: string };
+            setScheduledPosts((prev) => [{
+                id: created.id,
+                content,
+                scheduledAt,
+                linkedinAccount: "Said Borna",
+                status: "scheduled" as const,
+            }, ...prev]);
+            setLibraryPosts((prev) => [{
+                id: created.id,
+                content,
+                status: "scheduled" as const,
+                scheduledAt,
+                postedAt: null,
+                impressions: null,
+                reactions: null,
+                comments: null,
+                createdAt: new Date().toISOString().slice(0, 10),
+            }, ...prev]);
+            toast.success("Post scheduled for tomorrow");
+        } catch {
+            toast.error("Failed to schedule post");
+        }
+    }
+
     const selectedPost = generated.find((p) => p.id === selectedVariant);
 
     const tabs: { value: ContentTab; label: string; icon: typeof PenTool }[] = [
@@ -635,14 +714,22 @@ export default function ContentAssistantPage() {
                                             {/* Actions */}
                                             <div className="flex gap-3">
                                                 <Button
+                                                    onClick={() => handleSaveToLibrary(selectedPost.content)}
+                                                    variant="outline"
+                                                    className="gap-1.5 border-white/10 bg-white/5 text-[var(--text-secondary)] hover:bg-white/10"
+                                                >
+                                                    <FileText className="h-4 w-4" />
+                                                    Save
+                                                </Button>
+                                                <Button
                                                     onClick={() => handleCopy(selectedPost.content)}
                                                     variant="outline"
-                                                    className="flex-1 gap-1.5 border-white/10 bg-white/5 text-[var(--text-secondary)] hover:bg-white/10"
+                                                    className="gap-1.5 border-white/10 bg-white/5 text-[var(--text-secondary)] hover:bg-white/10"
                                                 >
                                                     <Copy className="h-4 w-4" />
                                                     {copied ? "Copied!" : "Copy"}
                                                 </Button>
-                                                <Button className="flex-1 gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                                                <Button onClick={() => handleSchedulePost(selectedPost.content)} className="flex-1 gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
                                                     <Calendar className="h-4 w-4" />
                                                     Schedule Post
                                                 </Button>
