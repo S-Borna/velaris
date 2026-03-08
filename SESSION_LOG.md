@@ -853,3 +853,27 @@ Phase 10A landing page complete — all 12 sections built (Hero, Trust Logos, Fe
 - Block 5: wire `leads/database` + `leads/extractor` to backend with the same live-UI parity rule
 - Block 6: wire `unibox` + `linkedin/accounts`
 - Block 7: wire `content/assistant`, `automations/inbound`, `settings`
+
+---
+
+## [2026-03-08 00:46] Checkpoint — Block 5 Wired (Leads)
+
+### Completed
+
+- Wired `app/(app)/leads/database/page.tsx` to `/api/leads` with server-side pagination, sorting, and filter params while preserving existing UI layout
+- Wired `app/(app)/leads/extractor/page.tsx` extraction flow to real endpoints:
+  - `/api/linkedin/extract` (URL-based extraction)
+  - `/api/leads/search` (query-based search)
+  - `/api/leads/import` (persist extracted leads)
+- Preserved extraction history panel, enrichment stats, quality badges, and result table structure
+- Commit created: `88f88a3` — feat: wire leads database and extractor to backend with live UI parity
+
+### Validation
+
+- `npm run build` passed after Block 5 integration
+- No push performed
+
+### Next Steps
+
+- Block 6: wire `unibox` + `linkedin/accounts` with same live-UI parity constraint
+- Block 7: wire `content/assistant`, `automations/inbound`, `settings`
