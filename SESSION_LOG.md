@@ -877,3 +877,31 @@ Phase 10A landing page complete — all 12 sections built (Hero, Trust Logos, Fe
 
 - Block 6: wire `unibox` + `linkedin/accounts` with same live-UI parity constraint
 - Block 7: wire `content/assistant`, `automations/inbound`, `settings`
+
+---
+
+## [2026-03-08 01:08] Checkpoint — Block 6 Wired (Unibox + LinkedIn Accounts)
+
+### Completed
+
+- Wired `app/(app)/unibox/page.tsx` to backend APIs:
+  - `GET /api/messages` for conversation list
+  - `GET /api/messages?leadId=...` for thread loading
+  - `PATCH /api/messages` to mark conversation as read
+  - `POST /api/messages` to send new messages
+  - `PATCH /api/messages/[id]` for star toggles
+- Wired `app/(app)/linkedin/accounts/page.tsx` to backend APIs:
+  - `GET /api/linkedin-accounts` for account table + summary cards
+  - `POST /api/linkedin-accounts` for add-account action
+  - `PATCH /api/linkedin-accounts/[id]` for manage/sync + warmup status behavior
+- Preserved live layout patterns (badges, tabs, table structure, message UI, action rows)
+- Commit created: `d783fb6` — feat: wire unibox and linkedin accounts to backend with live UI parity
+
+### Validation
+
+- `npm run build` passed after Block 6 integration
+- No push performed
+
+### Next Steps
+
+- Block 7: wire `content/assistant`, `automations/inbound`, `settings` with same live-UI parity rule
