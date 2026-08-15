@@ -262,7 +262,7 @@ export default function LeadDatabasePage() {
 
                     <Button
                         size="sm"
-                        className="h-9 gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                        className="h-9 gap-1.5 bg-purple-600 text-white hover:bg-purple-500"
                     >
                         <Sparkles className="h-3.5 w-3.5" />
                         AI Search
@@ -291,7 +291,7 @@ export default function LeadDatabasePage() {
                                     className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-4 hover:border-white/10 transition-colors"
                                 >
                                     <div className="flex items-start gap-3">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-purple-700/20 text-sm font-medium text-purple-300">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600/25 text-sm font-medium text-purple-300">
                                             {lead.firstName[0]}
                                             {lead.lastName[0]}
                                         </div>

@@ -283,7 +283,7 @@ export default function DashboardPage() {
                         triggerClassName="h-9 w-[180px]"
                     />
 
-                    <Button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                    <Button className="bg-purple-600 text-white hover:bg-purple-500">
                         <Share2 className="mr-2 h-4 w-4" /> Share
                     </Button>
                 </div>
@@ -399,7 +399,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* AI Insights */}
-                <div className="rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent p-5">
+                <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-5">
                         <div className="mb-3 flex items-center justify-between">
                             <h3 className="flex items-center gap-2 text-base font-semibold text-[var(--text-primary)]">
                                 <Sparkles className="h-4 w-4 text-purple-400" />

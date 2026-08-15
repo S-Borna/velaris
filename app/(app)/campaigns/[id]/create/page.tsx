@@ -308,7 +308,7 @@ export default function CampaignCreatePage() {
                     <Button variant="ghost" onClick={() => void handleDuplicate()} className="border border-white/10 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white">
                         <Copy className="mr-2 h-4 w-4" /> Duplicate Campaign
                     </Button>
-                    <Button onClick={() => void handleSave()} disabled={saving} className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400 disabled:opacity-50">
+                    <Button onClick={() => void handleSave()} disabled={saving} className="bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50">
                         <Settings className="mr-2 h-4 w-4" /> {saving ? "Saving…" : "Save Changes"}
                     </Button>
                 </div>

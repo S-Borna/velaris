@@ -58,7 +58,7 @@ export function BlogSection() {
                         {/* Thumbnail placeholder */}
                         <div className="relative h-44 w-full overflow-hidden bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--bg-hover)]">
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-purple-600/20 backdrop-blur-sm" />
+                                <div className="h-16 w-16 rounded-2xl bg-purple-600/20 backdrop-blur-sm" />
                             </div>
                             {/* Category badge */}
                             <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-medium ${post.categoryColor}`}>

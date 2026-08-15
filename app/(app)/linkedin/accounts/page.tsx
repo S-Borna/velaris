@@ -235,7 +235,7 @@ export default function LinkedInAccountsPage() {
                     <p className="text-sm text-[var(--text-secondary)]">Manage sender accounts, usage, sync status and health</p>
                 </div>
 
-                <Button onClick={() => setShowAddModal(true)} className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                <Button onClick={() => setShowAddModal(true)} className="bg-purple-600 text-white hover:bg-purple-500">
                     <Plus className="mr-2 h-4 w-4" />
                     Add LinkedIn Account
                 </Button>
@@ -268,7 +268,7 @@ export default function LinkedInAccountsPage() {
                             </div>
                             <div className="flex justify-end gap-3 pt-2">
                                 <Button variant="ghost" onClick={() => setShowAddModal(false)} className="text-[var(--text-secondary)]">Cancel</Button>
-                                <Button onClick={handleAddAccount} disabled={adding || !newAccountName.trim()} className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                                <Button onClick={handleAddAccount} disabled={adding || !newAccountName.trim()} className="bg-purple-600 text-white hover:bg-purple-500">
                                     {adding ? "Adding…" : "Add Account"}
                                 </Button>
                             </div>

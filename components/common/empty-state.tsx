@@ -43,7 +43,7 @@ export function EmptyState({
             {actionLabel && actionHref && (
                 <Link
                     href={actionHref}
-                    className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-purple-500/20 transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:brightness-110 hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0713]"
+                    className="inline-flex items-center gap-2 rounded-lg bg-purple-500 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-purple-500/20 transition-all hover:brightness-110 hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0713]"
                 >
                     {actionLabel}
                 </Link>
@@ -51,7 +51,7 @@ export function EmptyState({
             {actionLabel && onAction && !actionHref && (
                 <button
                     onClick={onAction}
-                    className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-purple-500/20 transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:brightness-110 hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0713]"
+                    className="inline-flex items-center gap-2 rounded-lg bg-purple-500 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-purple-500/20 transition-all hover:brightness-110 hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0713]"
                 >
                     {actionLabel}
                 </button>

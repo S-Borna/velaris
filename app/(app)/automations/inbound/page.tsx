@@ -978,7 +978,7 @@ export default function InboundAutomationsPage() {
                         <Button
                             size="sm"
                             onClick={createAutomation}
-                            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700"
+                            className="bg-purple-500 text-white hover:from-purple-600 hover:to-purple-700"
                         >
                             <Zap className="mr-1 h-4 w-4" />
                             Create Automation
@@ -988,7 +988,7 @@ export default function InboundAutomationsPage() {
                             size="sm"
                             onClick={() => setWizardStep((prev) => prev + 1)}
                             disabled={!canProceed}
-                            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 disabled:opacity-50"
+                            className="bg-purple-500 text-white hover:from-purple-600 hover:to-purple-700 disabled:opacity-50"
                         >
                             Next
                             <ArrowRight className="ml-1 h-4 w-4" />
@@ -1021,7 +1021,7 @@ export default function InboundAutomationsPage() {
                 </div>
                 <Button
                     onClick={() => setViewMode("wizard")}
-                    className="gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700"
+                    className="gap-2 bg-purple-500 text-white hover:from-purple-600 hover:to-purple-700"
                 >
                     <Plus className="h-4 w-4" />
                     New Automation
@@ -1111,7 +1111,7 @@ export default function InboundAutomationsPage() {
                         </p>
                         <Button
                             onClick={() => setViewMode("wizard")}
-                            className="mt-4 gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+                            className="mt-4 gap-2 bg-purple-500 text-white"
                         >
                             <Plus className="h-4 w-4" />
                             New Automation

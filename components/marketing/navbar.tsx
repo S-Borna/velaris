@@ -82,7 +82,7 @@ export function Navbar() {
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2.5 group">
-                    <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg shadow-purple-900/40 transition-shadow group-hover:shadow-purple-500/30">
+                    <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 shadow-lg shadow-purple-900/40 transition-shadow group-hover:shadow-purple-500/30">
                         <div className="absolute inset-0.5 rounded-full border border-white/20" />
                         <div className="h-2 w-2 rounded-full bg-white/80" />
                     </div>

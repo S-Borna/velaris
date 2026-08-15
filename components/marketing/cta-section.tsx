@@ -29,7 +29,7 @@ export function CtaSection() {
                 <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
                     <Link
                         href="/signup"
-                        className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:brightness-110"
+                        className="group inline-flex items-center gap-2 rounded-full bg-purple-500 px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:brightness-110"
                     >
                         Start for Free
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -132,7 +132,7 @@ function LeadFinderMiniMockup() {
             <div className="space-y-1.5">
                 {MINI_LEADS.map((lead) => (
                     <div key={lead.name} className="flex items-center gap-2 rounded-md border border-white/[0.04] px-2.5 py-2">
-                        <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60" />
+                        <div className="h-6 w-6 rounded-full bg-purple-500/70" />
                         <div>
                             <p className="text-[10px] font-medium text-white">{lead.name}</p>
                             <p className="text-[9px] text-[var(--text-muted)]">{lead.title}</p>

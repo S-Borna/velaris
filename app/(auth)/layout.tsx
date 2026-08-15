@@ -41,7 +41,7 @@ export default function AuthLayout({
             <div className="relative z-10 w-full max-w-md">
                 <div className="mb-8 flex flex-col items-center gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg shadow-purple-900/40">
+                        <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 shadow-lg shadow-purple-900/40">
                             <div className="absolute inset-1 rounded-full border border-white/20" />
                             <div className="h-2.5 w-2.5 rounded-full bg-white/80" />
                         </div>

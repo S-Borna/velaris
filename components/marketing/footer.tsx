@@ -56,7 +56,7 @@ export function Footer() {
                     {/* Logo + tagline */}
                     <div className="lg:max-w-xs">
                         <Link href="/" className="flex items-center gap-2.5">
-                            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg shadow-purple-900/40">
+                            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 shadow-lg shadow-purple-900/40">
                                 <div className="absolute inset-0.5 rounded-full border border-white/20" />
                                 <div className="h-2 w-2 rounded-full bg-white/80" />
                             </div>

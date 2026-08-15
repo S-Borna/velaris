@@ -233,12 +233,12 @@ export default function NewCampaignPage() {
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back
                 </Button>
                 {isLast ? (
-                    <Button onClick={() => void handleFinish()} disabled={creating} className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                    <Button onClick={() => void handleFinish()} disabled={creating} className="bg-purple-600 text-white hover:bg-purple-500">
                         <Check className="mr-2 h-4 w-4" /> {creating ? "Creating…" : "Create Campaign"}
                     </Button>
                 ) : (
                     <Button disabled={!canProceed()} onClick={() => setCurrentStep((s) => s + 1)}
-                        className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400 disabled:opacity-40">
+                        className="bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-40">
                         Next <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 )}

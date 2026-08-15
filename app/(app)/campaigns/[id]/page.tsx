@@ -237,7 +237,7 @@ export default function CampaignDetailPage() {
                 <div className="rounded-xl border border-white/10 bg-[var(--bg-card)] p-6 text-center">
                     <p className="text-[var(--text-secondary)]">Sequence builder view — see campaign editor for full flowchart</p>
                     <Link href={`/campaigns/${campaignId}/create`}>
-                        <Button className="mt-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">Open Sequence Builder</Button>
+                        <Button className="mt-4 bg-purple-600 text-white hover:bg-purple-500">Open Sequence Builder</Button>
                     </Link>
                 </div>
             )}

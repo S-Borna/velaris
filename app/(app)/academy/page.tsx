@@ -170,7 +170,7 @@ export default function AcademyPage() {
                         <span className="font-medium text-[var(--text-primary)]">{progress}%</span>
                     </div>
                     <div className="mt-2 h-2 rounded-full bg-white/5">
-                        <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all" style={{ width: `${progress}%` }} />
+                        <div className="h-full rounded-full bg-purple-500 transition-all" style={{ width: `${progress}%` }} />
                     </div>
                 </div>
 
@@ -253,7 +253,7 @@ export default function AcademyPage() {
                     </div>
                 </div>
                 <div className="mt-3 h-2.5 rounded-full bg-white/5">
-                    <div className="h-full rounded-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all" style={{ width: `${overallProgress}%` }} />
+                    <div className="h-full rounded-full bg-purple-500 transition-all" style={{ width: `${overallProgress}%` }} />
                 </div>
             </div>
 

@@ -403,7 +403,7 @@ export default function UniboxPage() {
                                 <div className="flex items-start gap-3">
                                     {/* Avatar */}
                                     <div className="relative flex-shrink-0">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-purple-700/20 text-sm font-medium text-purple-300">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600/25 text-sm font-medium text-purple-300">
                                             {convo.leadAvatar}
                                         </div>
                                         {convo.unreadCount > 0 && (
@@ -485,7 +485,7 @@ export default function UniboxPage() {
                     {/* Thread header */}
                     <div className="flex items-center justify-between border-b border-white/6 px-6 py-3">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-purple-700/20 text-sm font-medium text-purple-300">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600/25 text-sm font-medium text-purple-300">
                                 {activeConvo.leadAvatar}
                             </div>
                             <div>
@@ -738,7 +738,7 @@ export default function UniboxPage() {
                             <Button
                                 disabled={!messageInput.trim()}
                                 onClick={handleSendMessage}
-                                className="h-10 w-10 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 p-0 text-white hover:from-purple-500 hover:to-purple-400 disabled:opacity-40"
+                                className="h-10 w-10 rounded-xl bg-purple-600 p-0 text-white hover:from-purple-500 hover:to-purple-400 disabled:opacity-40"
                             >
                                 <Send className="h-4 w-4" />
                             </Button>

@@ -191,7 +191,7 @@ export default function SettingsPage() {
                 </div>
                 <Button
                     onClick={handleSave}
-                    className="gap-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700"
+                    className="gap-2 bg-purple-500 text-white hover:from-purple-600 hover:to-purple-700"
                 >
                     {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                     {saved ? "Saved!" : "Save Changes"}
@@ -389,7 +389,7 @@ export default function SettingsPage() {
                                             }`}
                                     >
                                         {plan.popular && (
-                                            <Badge className="mb-3 bg-gradient-to-r from-purple-500 to-purple-600 text-[10px] text-white">
+                                            <Badge className="mb-3 bg-purple-500 text-[10px] text-white">
                                                 Most Popular
                                             </Badge>
                                         )}
@@ -411,7 +411,7 @@ export default function SettingsPage() {
                                             size="sm"
                                             className={`mt-4 w-full ${isCurrent
                                                 ? "border-purple-500/30 text-purple-300"
-                                                : "bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+                                                : "bg-purple-500 text-white"
                                                 }`}
                                             disabled={isCurrent}
                                         >

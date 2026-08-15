@@ -156,7 +156,7 @@ export function PricingSection() {
                     >
                         {/* Recommended badge */}
                         {tier.highlighted && (
-                            <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-4 py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-white">
+                            <div className="bg-purple-500 px-4 py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-white">
                                 Most Popular
                             </div>
                         )}
@@ -195,7 +195,7 @@ export function PricingSection() {
                             <Link
                                 href="/signup"
                                 className={`mt-6 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${tier.highlighted
-                                        ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/20 hover:brightness-110"
+                                        ? "bg-purple-500 text-white shadow-lg shadow-purple-500/20 hover:brightness-110"
                                         : "border border-white/[0.12] text-white hover:bg-white/[0.05]"
                                     }`}
                             >

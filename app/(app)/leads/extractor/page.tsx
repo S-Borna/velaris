@@ -235,7 +235,7 @@ export default function LeadExtractorPage() {
                 </div>
                 <Button
                     onClick={() => setShowWizard(!showWizard)}
-                    className="gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                    className="gap-1.5 bg-purple-600 text-white hover:bg-purple-500"
                 >
                     <Plus className="h-4 w-4" />
                     Extract Leads
@@ -349,7 +349,7 @@ export default function LeadExtractorPage() {
                                 <Button
                                     disabled={extracting}
                                     onClick={() => void handleStartExtraction()}
-                                    className="h-10 gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400 disabled:opacity-50"
+                                    className="h-10 gap-1.5 bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50"
                                 >
                                     <Sparkles className="h-3.5 w-3.5" />
                                     {extracting ? "Extracting…" : "Start Extraction"}
@@ -572,7 +572,7 @@ export default function LeadExtractorPage() {
                                             >
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center gap-2.5">
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-purple-700/20 text-xs font-medium text-purple-300">
+                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600/25 text-xs font-medium text-purple-300">
                                                             {lead.name
                                                                 .split(" ")
                                                                 .map((n) => n[0])
