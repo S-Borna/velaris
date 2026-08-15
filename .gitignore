@@ -38,5 +38,8 @@ next-env.d.ts
 # codetrust
 .codetrust/
 
+# internal working logs — not for portfolio/external viewing
+/internal/
+
 /lib/generated/prisma
 .vercel
