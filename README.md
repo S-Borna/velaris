@@ -1,5 +1,7 @@
 # Velaris
 
+**Live:** [velaris.saidborna.com](https://velaris.saidborna.com)
+
 A full-stack LinkedIn automation + AI content SaaS, built as an independent capacity project.
 
 Velaris covers the core workflow of a modern LinkedIn growth tool: outbound and inbound
