@@ -10,8 +10,10 @@ const prisma = new PrismaClient();
 // ─── Constants ──────────────────────────────────────────
 
 const SALT_ROUNDS = 12;
-const DEMO_EMAIL = "said@saidborna.com";
-const DEMO_PASSWORD = "REDACTED-PASSWORD";
+const DEMO_EMAIL = process.env.SEED_DEMO_EMAIL || "demo@velaris.local";
+const DEMO_PASSWORD =
+  process.env.SEED_DEMO_PASSWORD ||
+  require("crypto").randomBytes(12).toString("hex");
 
 // Deterministic UUIDs for stable references
 const USER_ID = "a0000000-0000-4000-8000-000000000001";

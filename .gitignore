@@ -40,3 +40,13 @@ next-env.d.ts
 
 /lib/generated/prisma
 .vercel
+
+# internal working logs — not for portfolio/external viewing
+/internal/
+CLAUDE.md
+
+# local-only planning docs, never for the public repo
+/PROJECT_SPEC.md
+/VELARIS_7_BLOCKS.md
+/Velaris.pdf
+/_wrapper-extras/
