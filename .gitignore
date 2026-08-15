@@ -44,3 +44,9 @@ CLAUDE.md
 
 /lib/generated/prisma
 .vercel
+
+# local-only planning docs, never for the public repo
+/PROJECT_SPEC.md
+/VELARIS_7_BLOCKS.md
+/Velaris.pdf
+/_wrapper-extras/
