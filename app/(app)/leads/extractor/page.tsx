@@ -64,11 +64,11 @@ const MOCK_JOBS: ExtractionJob[] = [
 ];
 
 const MOCK_EXTRACTED: ExtractedLead[] = [
-    { id: "x1", name: "Marcus Reyes", title: "CEO", company: "Apple", location: "Cupertino", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 98 },
-    { id: "x2", name: "Devansh Rao", title: "CEO", company: "Microsoft", location: "Redmond", hasEmail: true, hasPhone: false, linkedinUrl: "#", qualityScore: 96 },
-    { id: "x3", name: "Arvind Mehta", title: "CEO", company: "Alphabet", location: "Mountain View", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 94 },
-    { id: "x4", name: "Elian Cross", title: "CEO", company: "Anthropic", location: "San Francisco", hasEmail: false, hasPhone: false, linkedinUrl: "#", qualityScore: 92 },
-    { id: "x5", name: "Wei Tanaka", title: "CEO & Founder", company: "NVIDIA", location: "Santa Clara", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 97 },
+    { id: "x1", name: "Marcus Reyes", title: "CEO", company: "Solace Technologies", location: "Cupertino", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 98 },
+    { id: "x2", name: "Devansh Rao", title: "CEO", company: "Northwind Software", location: "Redmond", hasEmail: true, hasPhone: false, linkedinUrl: "#", qualityScore: 96 },
+    { id: "x3", name: "Arvind Mehta", title: "CEO", company: "Meridian Labs", location: "Mountain View", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 94 },
+    { id: "x4", name: "Elian Cross", title: "CEO", company: "Cognivance AI", location: "San Francisco", hasEmail: false, hasPhone: false, linkedinUrl: "#", qualityScore: 92 },
+    { id: "x5", name: "Wei Tanaka", title: "CEO & Founder", company: "ChipCore Systems", location: "Santa Clara", hasEmail: true, hasPhone: true, linkedinUrl: "#", qualityScore: 97 },
 ];
 
 const SOURCE_CONFIG: Record<ExtractionSource, { label: string; description: string }> = {

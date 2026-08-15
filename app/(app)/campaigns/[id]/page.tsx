@@ -44,11 +44,11 @@ interface CampaignLead {
 }
 
 const MOCK_LEAD_ROWS = [
-    { name: "Marcus Reyes", title: "CEO at Apple", status: "replied", score: 98 },
-    { name: "Devansh Rao", title: "CEO at Microsoft", status: "connected", score: 96 },
-    { name: "Arvind Mehta", title: "CEO at Alphabet", status: "messaged", score: 94 },
-    { name: "Elian Cross", title: "CEO at Anthropic", status: "pending", score: 92 },
-    { name: "Adrian Voss", title: "CEO at Meta", status: "opportunity", score: 97 },
+    { name: "Marcus Reyes", title: "CEO at Solace Technologies", status: "replied", score: 98 },
+    { name: "Devansh Rao", title: "CEO at Northwind Software", status: "connected", score: 96 },
+    { name: "Arvind Mehta", title: "CEO at Meridian Labs", status: "messaged", score: 94 },
+    { name: "Elian Cross", title: "CEO at Cognivance AI", status: "pending", score: 92 },
+    { name: "Adrian Voss", title: "CEO at Connectiv", status: "opportunity", score: 97 },
 ];
 
 export default function CampaignDetailPage() {

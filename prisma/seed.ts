@@ -107,7 +107,7 @@ async function main(): Promise<void> {
       data: {
         workspaceId: wId,
         accountName: "Nolan Vance",
-        linkedinUrl: "https://linkedin.com/in/elonmusk",
+        linkedinUrl: "https://linkedin.com/in/nolanvance",
         status: "connected",
         accountType: "Premium",
         dailyConnectionLimit: 50,
@@ -122,7 +122,7 @@ async function main(): Promise<void> {
       data: {
         workspaceId: wId,
         accountName: "Ezra Kaplan",
-        linkedinUrl: "https://linkedin.com/in/samaltman",
+        linkedinUrl: "https://linkedin.com/in/ezrakaplan",
         status: "syncing",
         accountType: "Premium",
         dailyConnectionLimit: 50,
@@ -136,7 +136,7 @@ async function main(): Promise<void> {
       data: {
         workspaceId: wId,
         accountName: "Wei Tanaka",
-        linkedinUrl: "https://linkedin.com/in/jensenhuang",
+        linkedinUrl: "https://linkedin.com/in/weitanaka",
         status: "connected",
         accountType: "Basic",
         dailyConnectionLimit: 50,
@@ -313,31 +313,31 @@ async function main(): Promise<void> {
 
   // ── 7. Leads ──────────────────────────────────────────
   const leadsData = [
-    { firstName: "Tim", lastName: "Cook", title: "CEO", company: "Apple", location: "Cupertino, United States", email: "tcook@apple.com", phone: "+1 408 555 1234", icpScore: 98, source: "database", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Satya", lastName: "Nadella", title: "CEO", company: "Microsoft", location: "Redmond, United States", email: "satya@microsoft.com", phone: "+1 425 555 5678", icpScore: 97, source: "database", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Sundar", lastName: "Pichai", title: "CEO", company: "Alphabet", location: "Mountain View, United States", email: "sundar@google.com", phone: "+1 650 555 9012", icpScore: 96, source: "extractor", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Dario", lastName: "Amodei", title: "CEO", company: "Anthropic", location: "San Francisco, United States", email: "dario@anthropic.com", phone: null, icpScore: 95, source: "database", tags: ["AI", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Mark", lastName: "Zuckerberg", title: "CEO", company: "Meta", location: "Menlo Park, United States", email: null, phone: "+1 650 555 3456", icpScore: 94, source: "database", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Elon", lastName: "Musk", title: "CEO & Technoking", company: "Tesla / SpaceX", location: "Austin, United States", email: "elon@tesla.com", phone: "+1 512 555 7890", icpScore: 93, source: "csv", tags: ["Deep Tech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Sam", lastName: "Altman", title: "CEO", company: "OpenAI", location: "San Francisco, United States", email: "sam@openai.com", phone: null, icpScore: 92, source: "database", tags: ["AI", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Jensen", lastName: "Huang", title: "CEO & Founder", company: "NVIDIA", location: "Santa Clara, United States", email: "jhuang@nvidia.com", phone: "+1 408 555 2345", icpScore: 91, source: "extractor", tags: ["Semiconductors", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Lisa", lastName: "Su", title: "CEO", company: "AMD", location: "Santa Clara, United States", email: "lisa.su@amd.com", phone: null, icpScore: 90, source: "database", tags: ["Semiconductors", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Andy", lastName: "Jassy", title: "CEO", company: "Amazon", location: "Seattle, United States", email: "ajassy@amazon.com", phone: "+1 206 555 6789", icpScore: 89, source: "database", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Sheryl", lastName: "Sandberg", title: "Board Director", company: "Meta", location: "Menlo Park, United States", email: "sheryl@meta.com", phone: "+1 650 555 0199", icpScore: 88, source: "database", tags: ["Big Tech", "C-Suite"], enrichmentStatus: "enriched" },
-    { firstName: "Brian", lastName: "Chesky", title: "CEO & Co-Founder", company: "Airbnb", location: "San Francisco, United States", email: null, phone: null, icpScore: 87, source: "extractor", tags: ["Travel Tech", "CEO"], enrichmentStatus: "pending" },
-    { firstName: "Marc", lastName: "Benioff", title: "CEO & Co-Founder", company: "Salesforce", location: "San Francisco, United States", email: "marc@salesforce.com", phone: null, icpScore: 86, source: "database", tags: ["Enterprise SaaS", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Daniel", lastName: "Ek", title: "CEO & Co-Founder", company: "Spotify", location: "Stockholm, Sweden", email: "daniel@spotify.com", phone: "+46 70 555 0177", icpScore: 85, source: "csv", tags: ["Music Tech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Jack", lastName: "Dorsey", title: "CEO", company: "Block", location: "San Francisco, United States", email: "jack@block.xyz", phone: null, icpScore: 84, source: "database", tags: ["FinTech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Patrick", lastName: "Collison", title: "CEO & Co-Founder", company: "Stripe", location: "San Francisco, United States", email: "patrick@stripe.com", phone: "+1 415 555 8899", icpScore: 83, source: "database", tags: ["FinTech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Tobi", lastName: "Lütke", title: "CEO & Founder", company: "Shopify", location: "Ottawa, Canada", email: "tobi@shopify.com", phone: null, icpScore: 82, source: "extractor", tags: ["E-Commerce", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Reed", lastName: "Hastings", title: "Co-Founder & Executive Chairman", company: "Netflix", location: "Los Gatos, United States", email: null, phone: null, icpScore: 81, source: "database", tags: ["Streaming", "Founder"], enrichmentStatus: "pending" },
-    { firstName: "Stewart", lastName: "Butterfield", title: "Co-Founder", company: "Slack", location: "San Francisco, United States", email: "stewart@slack.com", phone: "+1 415 555 4567", icpScore: 80, source: "database", tags: ["SaaS", "Founder"], enrichmentStatus: "enriched" },
-    { firstName: "Drew", lastName: "Houston", title: "CEO & Co-Founder", company: "Dropbox", location: "San Francisco, United States", email: "drew@dropbox.com", phone: null, icpScore: 79, source: "database", tags: ["SaaS", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Marissa", lastName: "Mayer", title: "CEO & Co-Founder", company: "Sunshine", location: "Palo Alto, United States", email: "marissa@sunshine.com", phone: "+1 650 555 6780", icpScore: 78, source: "csv", tags: ["Tech", "CEO"], enrichmentStatus: "enriched" },
-    { firstName: "Jeff", lastName: "Bezos", title: "Executive Chairman", company: "Amazon", location: "Miami, United States", email: null, phone: null, icpScore: 77, source: "database", tags: ["Big Tech", "Founder"], enrichmentStatus: "pending" },
-    { firstName: "Susan", lastName: "Wojcicki", title: "Former CEO", company: "YouTube", location: "San Bruno, United States", email: null, phone: null, icpScore: 76, source: "extractor", tags: ["Big Tech", "Executive"], enrichmentStatus: "pending" },
-    { firstName: "Travis", lastName: "Kalanick", title: "Founder", company: "CloudKitchens", location: "Los Angeles, United States", email: "travis@ck.com", phone: "+1 213 555 456", icpScore: 75, source: "database", tags: ["Logistics", "Founder"], enrichmentStatus: "enriched" },
-    { firstName: "Ginni", lastName: "Rometty", title: "Former CEO", company: "IBM", location: "New York, United States", email: null, phone: null, icpScore: 74, source: "database", tags: ["Enterprise", "Executive"], enrichmentStatus: "pending" },
+    { firstName: "Marcus", lastName: "Reyes", title: "CEO", company: "Solace Technologies", location: "Cupertino, United States", email: "mreyes@solace.example", phone: "+1 408 555 8821", icpScore: 98, source: "database", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Devansh", lastName: "Rao", title: "CEO", company: "Northwind Software", location: "Redmond, United States", email: "devansh@northwind.example", phone: "+1 425 555 3390", icpScore: 97, source: "database", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Arvind", lastName: "Mehta", title: "CEO", company: "Meridian Labs", location: "Mountain View, United States", email: "arvind@meridian.example", phone: "+1 650 555 4471", icpScore: 96, source: "extractor", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Elian", lastName: "Cross", title: "CEO", company: "Cognivance AI", location: "San Francisco, United States", email: "elian@cognivance.example", phone: null, icpScore: 95, source: "database", tags: ["AI", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Adrian", lastName: "Voss", title: "CEO", company: "Connectiv", location: "Menlo Park, United States", email: null, phone: "+1 650 555 7765", icpScore: 94, source: "database", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Nolan", lastName: "Vance", title: "CEO & Technoking", company: "Voltera Motors / Starhaven Aerospace", location: "Austin, United States", email: "nolan@voltera.example", phone: "+1 512 555 2214", icpScore: 93, source: "csv", tags: ["Deep Tech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Ezra", lastName: "Kaplan", title: "CEO", company: "Mindforge AI", location: "San Francisco, United States", email: "ezra@mindforge.example", phone: null, icpScore: 92, source: "database", tags: ["AI", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Wei", lastName: "Tanaka", title: "CEO & Founder", company: "ChipCore Systems", location: "Santa Clara, United States", email: "wtanaka@chipcore.example", phone: "+1 408 555 6689", icpScore: 91, source: "extractor", tags: ["Semiconductors", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Mei", lastName: "Chen", title: "CEO", company: "SiliconEdge", location: "Santa Clara, United States", email: "mei.chen@siliconedge.example", phone: null, icpScore: 90, source: "database", tags: ["Semiconductors", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Derek", lastName: "Holt", title: "CEO", company: "Cartway", location: "Seattle, United States", email: "dholt@cartway.example", phone: "+1 206 555 1123", icpScore: 89, source: "database", tags: ["Big Tech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Rachel", lastName: "Voss", title: "Board Director", company: "Connectiv", location: "Menlo Park, United States", email: "rachel@connectiv.example", phone: "+1 650 555 9042", icpScore: 88, source: "database", tags: ["Big Tech", "C-Suite"], enrichmentStatus: "enriched" },
+    { firstName: "Julian", lastName: "Marsh", title: "CEO & Co-Founder", company: "Havenly", location: "San Francisco, United States", email: null, phone: null, icpScore: 87, source: "extractor", tags: ["Travel Tech", "CEO"], enrichmentStatus: "pending" },
+    { firstName: "Victor", lastName: "Lane", title: "CEO & Co-Founder", company: "Cloudpeak", location: "San Francisco, United States", email: "victor@cloudpeak.example", phone: null, icpScore: 86, source: "database", tags: ["Enterprise SaaS", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Anders", lastName: "Lindqvist", title: "CEO & Co-Founder", company: "Sonora", location: "Stockholm, Sweden", email: "anders@sonora.example", phone: "+46 70 555 8834", icpScore: 85, source: "csv", tags: ["Music Tech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Miles", lastName: "Hutton", title: "CEO", company: "Squarepay", location: "San Francisco, United States", email: "miles@squarepay.example", phone: null, icpScore: 84, source: "database", tags: ["FinTech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Connor", lastName: "Doyle", title: "CEO & Co-Founder", company: "Payflow", location: "San Francisco, United States", email: "connor@payflow.example", phone: "+1 415 555 3312", icpScore: 83, source: "database", tags: ["FinTech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Finn", lastName: "Kessler", title: "CEO & Founder", company: "Cartly", location: "Ottawa, Canada", email: "finn@cartly.example", phone: null, icpScore: 82, source: "extractor", tags: ["E-Commerce", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Owen", lastName: "Farrell", title: "Co-Founder & Executive Chairman", company: "Streamix", location: "Los Gatos, United States", email: null, phone: null, icpScore: 81, source: "database", tags: ["Streaming", "Founder"], enrichmentStatus: "pending" },
+    { firstName: "Graham", lastName: "Ellis", title: "Co-Founder", company: "Chatterbox", location: "San Francisco, United States", email: "graham@chatterbox.example", phone: "+1 415 555 9981", icpScore: 80, source: "database", tags: ["SaaS", "Founder"], enrichmentStatus: "enriched" },
+    { firstName: "Cole", lastName: "Bennett", title: "CEO & Co-Founder", company: "Filevault", location: "San Francisco, United States", email: "cole@filevault.example", phone: null, icpScore: 79, source: "database", tags: ["SaaS", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Nadia", lastName: "Sorensen", title: "CEO & Co-Founder", company: "Sunshine", location: "Palo Alto, United States", email: "nadia@sunshine.example", phone: "+1 650 555 2298", icpScore: 78, source: "csv", tags: ["Tech", "CEO"], enrichmentStatus: "enriched" },
+    { firstName: "Walter", lastName: "Kingston", title: "Executive Chairman", company: "Cartway", location: "Miami, United States", email: null, phone: null, icpScore: 77, source: "database", tags: ["Big Tech", "Founder"], enrichmentStatus: "pending" },
+    { firstName: "Elena", lastName: "Ward", title: "Former CEO", company: "Vidstream", location: "San Bruno, United States", email: null, phone: null, icpScore: 76, source: "extractor", tags: ["Big Tech", "Executive"], enrichmentStatus: "pending" },
+    { firstName: "Dean", lastName: "Foley", title: "Founder", company: "GhostKitchen Co", location: "Los Angeles, United States", email: "dean@ghostkitchen.example", phone: "+1 213 555 7743", icpScore: 75, source: "database", tags: ["Logistics", "Founder"], enrichmentStatus: "enriched" },
+    { firstName: "Carol", lastName: "Whitfield", title: "Former CEO", company: "Enterlogic", location: "New York, United States", email: null, phone: null, icpScore: 74, source: "database", tags: ["Enterprise", "Executive"], enrichmentStatus: "pending" },
   ];
 
   const leads = await Promise.all(
@@ -388,7 +388,7 @@ async function main(): Promise<void> {
   // Elian Cross conversation (6 messages)
   await prisma.message.createMany({
     data: [
-      { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: darioLead.id, campaignId: campSaaS.id, direction: "sent", content: "Hi Dario! I came across Anthropic and I'm really impressed with the safety-first approach to AI. I'm building an AI-powered LinkedIn automation platform and would love to get your thoughts.", messageType: "connection_request", read: true, sentAt: daysAgo(1) },
+      { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: darioLead.id, campaignId: campSaaS.id, direction: "sent", content: "Hi Elian! I came across Cognivance AI and I'm really impressed with the safety-first approach to AI. I'm building an AI-powered LinkedIn automation platform and would love to get your thoughts.", messageType: "connection_request", read: true, sentAt: daysAgo(1) },
       { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: darioLead.id, campaignId: campSaaS.id, direction: "received", content: "Hey Said! Thanks for reaching out. Always interesting to hear about new tools in this space. What makes yours different?", messageType: "text", read: true, sentAt: new Date(daysAgo(1).getTime() + 4 * 3600 * 1000) },
       { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: darioLead.id, campaignId: campSaaS.id, direction: "sent", content: "Great question! Three key differentiators:\n\n1. AI-powered ICP scoring — we use Claude to research each lead and score 0-100 based on your ideal customer profile\n2. Visual sequence builder — bug-free node-based flow editor (biggest complaint about competitors)\n3. All-in-one: outreach + content + inbox in one dashboard\n\nWould love to show you a quick demo.", messageType: "text", read: true, sentAt: new Date(daysAgo(1).getTime() + 5.25 * 3600 * 1000) },
       { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: darioLead.id, campaignId: campSaaS.id, direction: "received", content: "Those are solid differentiators. The ICP scoring sounds particularly interesting. How accurate is it?", messageType: "text", read: true, sentAt: minutesAgo(120) },
@@ -400,7 +400,7 @@ async function main(): Promise<void> {
   // Adrian Voss conversation (2 messages)
   await prisma.message.createMany({
     data: [
-      { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: markLead.id, campaignId: campAgency.id, direction: "sent", content: "Hi Mark! Big fan of what you're building at Meta. Would love to connect and exchange ideas on AI-powered outreach.", messageType: "connection_request", read: true, sentAt: minutesAgo(30) },
+      { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: markLead.id, campaignId: campAgency.id, direction: "sent", content: "Hi Adrian! Big fan of what you're building at Connectiv. Would love to connect and exchange ideas on AI-powered outreach.", messageType: "connection_request", read: true, sentAt: minutesAgo(30) },
       { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: markLead.id, campaignId: campAgency.id, direction: "received", content: "Thanks for reaching out! I'm curious about what you're building.", messageType: "text", read: false, sentAt: minutesAgo(15) },
     ],
   });
@@ -415,7 +415,7 @@ async function main(): Promise<void> {
   // Arvind Mehta (1 sent)
   await prisma.message.createMany({
     data: [
-      { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: sundarLead.id, campaignId: campSaaS.id, direction: "sent", content: "Hi Sundar, I wanted to follow up on our conversation last week. Are you still interested in exploring this further?", messageType: "text", read: true, sentAt: hoursAgo(3) },
+      { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: sundarLead.id, campaignId: campSaaS.id, direction: "sent", content: "Hi Arvind, I wanted to follow up on our conversation last week. Are you still interested in exploring this further?", messageType: "text", read: true, sentAt: hoursAgo(3) },
     ],
   });
 
@@ -429,7 +429,7 @@ async function main(): Promise<void> {
   // Marcus Reyes conversation (4 messages, starred)
   await prisma.message.createMany({
     data: [
-      { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: timLead.id, campaignId: campSeries.id, direction: "sent", content: "Hi Tim, I saw your keynote about innovation at scale — really resonated with my experience. We've built a tool that automates the entire outreach process.", messageType: "connection_request", read: true, starred: true, sentAt: daysAgo(3) },
+      { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: timLead.id, campaignId: campSeries.id, direction: "sent", content: "Hi Marcus, I saw your keynote about innovation at scale — really resonated with my experience. We've built a tool that automates the entire outreach process.", messageType: "connection_request", read: true, starred: true, sentAt: daysAgo(3) },
       { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: timLead.id, campaignId: campSeries.id, direction: "received", content: "Hey! Yeah that post got a lot of traction. What tool are you building?", messageType: "text", read: true, starred: true, sentAt: daysAgo(2) },
       { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: timLead.id, campaignId: campSeries.id, direction: "sent", content: "It's called Velaris — think of it as the all-in-one LinkedIn automation platform. AI content generation, smart sequences, unified inbox, and advanced lead search. All in one dashboard.", messageType: "text", read: true, sentAt: new Date(daysAgo(2).getTime() + 1.5 * 3600 * 1000) },
       { workspaceId: wId, linkedinAccountId: accSaid.id, leadId: timLead.id, campaignId: campSeries.id, direction: "received", content: "Absolutely, I'd love to see a demo. Can you send me a link?", messageType: "text", read: true, sentAt: daysAgo(1) },
