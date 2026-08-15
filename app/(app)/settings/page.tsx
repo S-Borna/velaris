@@ -292,7 +292,7 @@ export default function SettingsPage() {
 
                                             {/* Avatar */}
                                             <div className="mb-5 flex items-center gap-4">
-                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-purple-700/20 text-xl font-bold text-purple-300">
+                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-600/25 text-xl font-bold text-purple-300">
                                                     {(profile.fullName ?? profile.email)
                                                         .charAt(0)
                                                         .toUpperCase()}
@@ -340,7 +340,7 @@ export default function SettingsPage() {
                                                 <Button
                                                     onClick={saveProfile}
                                                     disabled={profileSaving}
-                                                    className="gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                                                    className="gap-1.5 bg-purple-600 text-white hover:bg-purple-500"
                                                 >
                                                     {profileSaving ? (
                                                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -448,7 +448,7 @@ export default function SettingsPage() {
                                                 <Button
                                                     onClick={saveWorkspace}
                                                     disabled={workspaceSaving}
-                                                    className="gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                                                    className="gap-1.5 bg-purple-600 text-white hover:bg-purple-500"
                                                 >
                                                     {workspaceSaving ? (
                                                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -679,7 +679,7 @@ export default function SettingsPage() {
                                     <div className="mt-5 flex justify-end">
                                         <Button
                                             disabled
-                                            className="gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white opacity-50"
+                                            className="gap-1.5 bg-purple-600 text-white opacity-50"
                                         >
                                             <Shield className="h-4 w-4" />
                                             Update Password

@@ -373,7 +373,7 @@ function LeadsFeature() {
                             className="flex items-center justify-between rounded-lg border border-white/[0.04] px-3 py-2.5 transition-colors hover:bg-white/[0.02]"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60 text-[10px] font-bold text-white">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/70 text-[10px] font-bold text-white">
                                     {lead.name.split(" ").map((n) => n[0]).join("")}
                                 </div>
                                 <div>
@@ -432,7 +432,7 @@ function QualifyFeature() {
                         <span className="font-bold text-purple-400">70</span>
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-                        <div className="h-full w-[70%] rounded-full bg-gradient-to-r from-purple-500 to-purple-400" />
+                        <div className="h-full w-[70%] rounded-full bg-purple-500" />
                     </div>
                 </div>
 
@@ -453,7 +453,7 @@ function QualifyFeature() {
                             className="flex items-center justify-between rounded-lg border border-white/[0.04] px-3 py-2.5"
                         >
                             <div className="flex items-center gap-2">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60 text-[10px] font-bold text-white">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-500/70 text-[10px] font-bold text-white">
                                     {lead.name.split(" ").map((n) => n[0]).join("")}
                                 </div>
                                 <span className="text-xs text-white">{lead.name}</span>
@@ -480,7 +480,7 @@ function QualifyFeature() {
                         {[0, 1, 2].map((i) => (
                             <div
                                 key={i}
-                                className="h-5 w-5 rounded-full border-2 border-[var(--bg-card)] bg-gradient-to-br from-purple-400 to-purple-600"
+                                className="h-5 w-5 rounded-full border-2 border-[var(--bg-card)] bg-purple-500"
                             />
                         ))}
                     </div>
@@ -528,7 +528,7 @@ function ScaleFeature() {
                         >
                             <div className="flex items-center gap-3">
                                 <div className="relative">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60 text-[10px] font-bold text-white">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/70 text-[10px] font-bold text-white">
                                         {sender.name.split(" ").map((n) => n[0]).join("")}
                                     </div>
                                     <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--bg-card)] ${sender.status === "active" ? "bg-green-400" : "bg-yellow-400"
@@ -605,12 +605,12 @@ function ContactFeature() {
                         <div key={node.id} className="flex flex-col items-center">
                             <FlowNodeCard node={node} />
                             {index < FLOW_NODES.length - 1 && (
-                                <div className="h-4 w-px bg-gradient-to-b from-purple-500/40 to-purple-500/20" />
+                                <div className="h-4 w-px bg-purple-500/30" />
                             )}
                         </div>
                     ))}
                     {/* End node */}
-                    <div className="h-4 w-px bg-gradient-to-b from-purple-500/40 to-purple-500/20" />
+                    <div className="h-4 w-px bg-purple-500/30" />
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500/20 text-green-400">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                     </div>
@@ -726,7 +726,7 @@ function UniboxFeature() {
                 {/* Message thread */}
                 <div className="flex w-3/5 flex-col p-3">
                     <div className="mb-3 flex items-center gap-2 border-b border-white/[0.06] pb-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60 text-[8px] font-bold text-white">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/70 text-[8px] font-bold text-white">
                             SB
                         </div>
                         <span className="text-xs font-medium text-white">

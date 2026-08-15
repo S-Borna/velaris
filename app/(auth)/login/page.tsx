@@ -50,7 +50,7 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="relative rounded-2xl bg-gradient-to-b from-purple-400/20 via-white/[0.08] to-white/[0.03] p-[1px] shadow-2xl shadow-purple-950/40">
+        <div className="relative rounded-2xl bg-white/[0.05] p-[1px] shadow-2xl shadow-purple-950/40">
             <div className="relative rounded-2xl bg-[#1A1025]/85 p-10 backdrop-blur-xl">
                 <div
                     className="pointer-events-none absolute -bottom-8 left-1/2 h-16 w-64 -translate-x-1/2 rounded-full bg-purple-500/25 blur-3xl"

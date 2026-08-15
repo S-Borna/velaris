@@ -237,7 +237,7 @@ export function LeadTable({
                                     {/* Name */}
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-purple-700/20 text-sm font-medium text-purple-300">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-600/25 text-sm font-medium text-purple-300">
                                                 {lead.firstName[0]}
                                                 {lead.lastName[0]}
                                             </div>

@@ -290,7 +290,7 @@ export default function CampaignsPage() {
                     </p>
                 </div>
                 <Link href="/campaigns/new">
-                    <Button className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                    <Button className="bg-purple-600 text-white hover:bg-purple-500">
                         <Plus className="mr-2 h-4 w-4" />
                         Create new Campaign
                     </Button>

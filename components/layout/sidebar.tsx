@@ -189,10 +189,7 @@ function SidebarContent({
             {/* Logo */}
             <div className="flex h-14 items-center gap-2.5 px-4">
                 <div
-                    className="h-7 w-7 shrink-0 rounded-md"
-                    style={{
-                        background: "linear-gradient(135deg, #8B5CF6, #A855F7)",
-                    }}
+                    className="h-7 w-7 shrink-0 rounded-md bg-[#8B5CF6]"
                     aria-hidden="true"
                 />
                 <span className="text-base font-bold tracking-tight text-[var(--text-primary)]">
@@ -204,7 +201,7 @@ function SidebarContent({
             <div className="px-3 pb-2">
                 <Button
                     asChild
-                    className="w-full justify-start gap-2 bg-gradient-to-r from-[var(--purple-500)] to-[#A855F7] text-sm font-medium text-white transition-all duration-200 hover:from-[var(--purple-600)] hover:to-[var(--purple-500)] hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-[1px]"
+                    className="w-full justify-start gap-2 bg-[var(--purple-500)] text-sm font-medium text-white transition-all duration-200 hover:bg-[var(--purple-600)] hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-[1px]"
                     size="sm"
                 >
                     <Link href="/campaigns/new" onClick={onNavClick}>

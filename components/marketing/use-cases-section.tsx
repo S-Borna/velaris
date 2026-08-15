@@ -29,7 +29,7 @@ const CASE_STUDIES: CaseStudy[] = [
         metricLabel: "faster content creation",
         description: "Generate on-brand LinkedIn posts, carousels, and lead magnets with AI — then schedule across all your profiles.",
         icon: <Eye className="h-5 w-5" />,
-        accentColor: "from-blue-500 to-cyan-400",
+        accentColor: "from-amber-500 to-orange-400",
     },
     {
         title: "Convert inbound engagement automatically",
@@ -37,7 +37,7 @@ const CASE_STUDIES: CaseStudy[] = [
         metricLabel: "automated workflows",
         description: "Monitor posts for trigger keywords, auto-reply to comments, and DM engaged prospects — all on autopilot.",
         icon: <Users className="h-5 w-5" />,
-        accentColor: "from-purple-500 to-pink-400",
+        accentColor: "from-rose-500 to-red-400",
     },
 ];
 

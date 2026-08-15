@@ -385,7 +385,7 @@ export default function ContentAssistantPage() {
                             <Button
                                 onClick={handleGenerate}
                                 disabled={isGenerating}
-                                className="w-full gap-2 bg-gradient-to-r from-purple-600 to-purple-500 py-5 text-white hover:from-purple-500 hover:to-purple-400 disabled:opacity-50"
+                                className="w-full gap-2 bg-purple-600 py-5 text-white hover:bg-purple-500 disabled:opacity-50"
                             >
                                 {isGenerating ? (
                                     <>
@@ -522,7 +522,7 @@ export default function ContentAssistantPage() {
                                         {/* LinkedIn preview */}
                                         <div className="rounded-xl border border-white/6 bg-[var(--bg-card)] p-5">
                                             <div className="mb-4 flex items-center gap-3">
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-purple-700/20 text-sm font-bold text-purple-300">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-600/25 text-sm font-bold text-purple-300">
                                                     SB
                                                 </div>
                                                 <div>
@@ -692,7 +692,7 @@ export default function ContentAssistantPage() {
                                                     <Copy className="h-4 w-4" />
                                                     {copied ? "Copied!" : "Copy"}
                                                 </Button>
-                                                <Button className="flex-1 gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400">
+                                                <Button className="flex-1 gap-1.5 bg-purple-600 text-white hover:bg-purple-500">
                                                     <Calendar className="h-4 w-4" />
                                                     Schedule Post
                                                 </Button>

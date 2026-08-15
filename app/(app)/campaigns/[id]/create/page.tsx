@@ -160,7 +160,7 @@ export default function CampaignEditorPage({
                             size="sm"
                             onClick={handleSaveSchedule}
                             disabled={saving}
-                            className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                            className="bg-purple-600 text-white hover:bg-purple-500"
                         >
                             <Save className="mr-1 h-3.5 w-3.5" />
                             {saving ? "Saving..." : "Save Changes"}

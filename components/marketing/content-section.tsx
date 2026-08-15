@@ -195,7 +195,7 @@ function CreateTab() {
                     </FormField>
                     <button
                         type="button"
-                        className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/20"
+                        className="inline-flex items-center gap-2 rounded-lg bg-purple-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/20"
                     >
                         <Sparkles className="h-4 w-4" />
                         Generate Content
@@ -211,7 +211,7 @@ function CreateTab() {
                 <div className="p-5">
                     {/* Author header */}
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60" />
+                        <div className="h-10 w-10 rounded-full bg-purple-500/70" />
                         <div>
                             <p className="text-sm font-semibold text-white">Said Borna</p>
                             <p className="text-[10px] text-[var(--text-muted)]">CEO & Founder @ Velaris</p>
@@ -294,7 +294,7 @@ function ScheduleTab() {
                 <div className="divide-y divide-white/[0.04] p-2">
                     {SCHEDULED_POSTS.map((post) => (
                         <div key={post.preview} className="flex items-start gap-3 px-3 py-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60 text-[10px] font-bold text-white">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500/70 text-[10px] font-bold text-white">
                                 {post.author.split(" ").map((n) => n[0]).join("")}
                             </div>
                             <div className="min-w-0 flex-1">
@@ -322,7 +322,7 @@ function ScheduleTab() {
                 <div className="divide-y divide-white/[0.04] p-2">
                     {POSTED.map((post) => (
                         <div key={post.preview} className="flex items-start gap-3 px-3 py-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-400/60 to-blue-500/60 text-[10px] font-bold text-white">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500/70 text-[10px] font-bold text-white">
                                 {post.author.split(" ").map((n) => n[0]).join("")}
                             </div>
                             <div className="min-w-0 flex-1">

@@ -400,7 +400,7 @@ export default function NewCampaignPage() {
                     <Button
                         onClick={() => setStep((s) => s + 1)}
                         disabled={!canProceed()}
-                        className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                        className="bg-purple-600 text-white hover:bg-purple-500"
                     >
                         Next <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -408,7 +408,7 @@ export default function NewCampaignPage() {
                     <Button
                         onClick={handleFinish}
                         disabled={saving || !name.trim()}
-                        className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                        className="bg-purple-600 text-white hover:bg-purple-500"
                     >
                         {saving ? "Creating..." : "Create Campaign"}
                     </Button>

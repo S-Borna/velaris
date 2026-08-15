@@ -240,7 +240,7 @@ export default function LeadExtractorPage() {
                 </div>
                 <Button
                     onClick={() => setShowWizard(!showWizard)}
-                    className="bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                    className="bg-purple-600 text-white hover:bg-purple-500"
                 >
                     {showWizard ? (
                         <X className="mr-2 h-4 w-4" />
@@ -335,7 +335,7 @@ export default function LeadExtractorPage() {
                             size="sm"
                             onClick={handleExtract}
                             disabled={extracting || !searchQuery.trim()}
-                            className="bg-gradient-to-r from-purple-600 to-purple-500 text-white"
+                            className="bg-purple-600 text-white"
                         >
                             {extracting ? (
                                 <>

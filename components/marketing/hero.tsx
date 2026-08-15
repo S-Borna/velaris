@@ -181,7 +181,7 @@ export function Hero() {
                 >
                     <Link
                         href="/signup"
-                        className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:brightness-110"
+                        className="group inline-flex items-center gap-2 rounded-full bg-purple-500 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-all hover:brightness-110"
                     >
                         Start for Free
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -334,7 +334,7 @@ function DashboardMockup() {
                         className="grid grid-cols-4 gap-4 border-t border-white/[0.04] px-4 py-3 text-xs sm:text-sm"
                     >
                         <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-400 to-purple-600" />
+                            <div className="h-6 w-6 rounded-full bg-purple-500" />
                             <span className="text-white">{account.name}</span>
                         </div>
                         <span className="text-center text-[var(--text-secondary)]">

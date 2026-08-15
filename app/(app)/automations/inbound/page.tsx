@@ -306,7 +306,7 @@ export default function InboundAutomationsPage() {
                     </div>
                     <Button
                         onClick={startCreate}
-                        className="gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400"
+                        className="gap-1.5 bg-purple-600 text-white hover:bg-purple-500"
                     >
                         <Plus className="h-4 w-4" />
                         New Automation
@@ -978,7 +978,7 @@ export default function InboundAutomationsPage() {
                             <Button
                                 onClick={submitAutomation}
                                 disabled={saving}
-                                className="gap-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-500 hover:to-purple-400 disabled:opacity-50"
+                                className="gap-1.5 bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50"
                             >
                                 {saving ? (
                                     <>
