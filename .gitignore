@@ -40,6 +40,7 @@ next-env.d.ts
 
 # internal working logs — not for portfolio/external viewing
 /internal/
+CLAUDE.md
 
 /lib/generated/prisma
 .vercel
